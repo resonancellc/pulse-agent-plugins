@@ -1,0 +1,6 @@
+[parameters]
+guacamole_dbhost = @@PLUGIN_GUACAMOLE_DBHOST@@
+guacamole_dbport = @@PLUGIN_GUACAMOLE_DBPORT@@
+guacamole_dbname = @@PLUGIN_GUACAMOLE_DBNAME@@
+guacamole_dbuser = @@PLUGIN_GUACAMOLE_DBUSER@@
+guacamole_dbpasswd = @@PLUGIN_GUACAMOLE_DBPASSWD@@
