@@ -34,6 +34,7 @@ def xmlgeneration(nameconfig, protocol, hostname, port):
 
 @pulginprocess
 def action( objetxmpp, action, sessionid, data, message, dataerreur,result):
+    
     #try :
         #from  fichierdecomf import fileconf
     #except:
@@ -56,7 +57,7 @@ def action( objetxmpp, action, sessionid, data, message, dataerreur,result):
                 file.write(xml)
                 file.write('</configs>\n')
         except IOError:
-            dataerreur['data']['msg'] = "ERROR : write file /etc/guacamole/noauth-config.xml"   
+            dataerreur['data']['msg'] = "ERROR : write file /etc/guacamole/noauth-config.xml"
             dataerreur['ret']=255
             raise
         result['data']['msg'] = "install configuration guacamole"

@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
+
 import json
-#jfk
 from lib.utils import  simplecommandestr, simplecommande, pulgindeploy, merge_dicts, name_random
 import sys, os, platform
-#JFK
 from lib.managepackage import managepackage
-#from lib.managesession import sessiondatainfo, session
 from lib.grafcetdeploy import sequentialevolutionquery
 import pprint
 import traceback
@@ -13,7 +11,6 @@ import traceback
 import logging
 
 logger = logging.getLogger()
-
 
 plugin = { "VERSION" : "1.1", "NAME" : "applicationdeployment", "TYPE" : "all" }
 
@@ -31,6 +28,21 @@ Plugins for deploiment application
 #TED type message END deploy
 #TEVENT remote event
 
+def updatedescriptor(result,descriptor,Devent,Daction):
+    if sys.platform.startswith('linux'):
+        dataupdate = descriptor['linux']['sequence']
+    elif sys.platform.startswith('win'):
+        dataupdate = descriptor['win']['sequence']
+    elif sys.platform.startswith('darwin'):
+        dataupdate = descriptor['Macos']['sequence']
+    else:
+        return
+    for t in dataupdate:
+        if t['event'] == Devent and t['action'] == Daction:
+            t['codeerror'] = result['codeerror']
+            for z in result:
+                t[z] = result[z]
+
 
 def checkosindescriptor(listkeys, os):
     for i in listkeys.keys():
@@ -42,19 +54,26 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
 
     try:
         if not 'Devent' in data : data['Devent'] = ""
+
         if not "Dtypequery" in data : data['Dtypequery'] = "missing"
         if not 'Daction' in data : data['Daction'] = ""
         if not "rsetape" in data : 
-            dede = -1
+            etape = -1
         else: 
-            dede = data['rsetape']
+            etape = data['rsetape']
         logging.info('------------------------------------------------------------------')
         logging.info('{0:12}|{1:25}|{2:20}'.format("MachineType", "plugin", "sessionid"))
         logging.info('{0:12}|{1:25}|{2:20}'.format(objectxmpp.config.agenttype, action, sessionid))
         logging.info('------------------------------------------------------------------')
         logging.info('{0:3}|{1:10}|{2:25}|{3:25}'.format("etape", "querytype", "event", "action"))
-        logging.info('{0:3}|{1:10}|{2:25}|{3:25}'.format(dede, data['Dtypequery'], data['Devent'], data['Daction']))
+        logging.info('{0:3}|{1:10}|{2:25}|{3:25}'.format(etape, data['Dtypequery'], data['Devent'], data['Daction']))
         logging.info('------------------------------------------------------------------')
+
+        if data['Daction']=="actionprocessscript" and data['Devent'] != "" and (data['Dtypequery']=="TR" or data['Dtypequery']=="TE"):
+            # message resultat process arriver
+            # on met à jour descripteur avec resultat
+            updatedescriptor(data['result'],data['descriptor'],data['Devent'],data['Daction'])
+
 
         objectsession =  objectxmpp.session.sessionfromsessiondata(sessionid)
 
@@ -134,11 +153,11 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                 }
 
         if data['Dtypequery'] == 'TED':
-            if objectxmpp.config.agenttype == 'relayserver':
-                msgdata['data'] = data
-                objectxmpp.send_message( mto=objectxmpp.agentmaster,
-                                            mbody=json.dumps(msgdata),
-                                            mtype='chat')
+            #if objectxmpp.config.agenttype == 'relayserver':
+            msgdata['data'] = data
+            objectxmpp.send_message( mto=objectxmpp.agentmaster,
+                                        mbody=json.dumps(msgdata),
+                                        mtype='chat')
             ## fin de session
             msglog['data']['msg']  = "DEPLOYEND %s %s"% (data['name'], sessionid )
             objectxmpp.event("loginfotomaster", msglog)
@@ -279,7 +298,9 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                         print "**********************************************"
                                         print "FICHIER  source et destination son sur 2 serveurs differents"
                                         print "**********************************************"
-                                        cmd = "rsync -av %s/ %s:%s/"%(data['srcpackage'], data['ipmachine'],os.path.join(data['srcdest'],data['srcpackageuuid']))
+                                        cmd = "rsync --delete -av %s/ %s:%s/"%(data['srcpackage'], 
+                                                                      data['ipmachine'],
+                                                                      os.path.join(data['srcdest'], data['srcpackageuuid']))
                                         msglog['data']['msg']  =  "DEPLOYACTION : %s command %s"%(sessionid, cmd)
                                         objectxmpp.event("loginfotomaster", msglog)
                                         msglog['data']['msg']  =  "DEPLOYACTION : %s synchronise package [relayserver/machine] from %s/ to %s:%s/"%(sessionid, data['srcpackage'], data['ipmachine'],os.path.join(data['srcdest'],data['srcpackageuuid']))
@@ -288,7 +309,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                         #synchro = simplecommandestr(cmd)
                                         #mise à jour session
                                         # copy fichier vers machines envoi message TEVENT vers machine
-                                        objectxmpp.mannageprocess.add_processcommand( cmd , sessionid, False, datacontinue, False )
+                                        objectxmpp.mannageprocess.add_processcommand( cmd , sessionid, False, datacontinue, False , 50,[])
                                     else:
                                         msglog['data']['msg']  =  "WARNINGDEPLOY %s  : relay server machine and even machine to sync [task not performed]"%(sessionid)
                                         objectxmpp.event("loginfotomaster", msglog)
@@ -374,7 +395,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
 
                                 objectxmpp.session.reactualisesession(sessionid)
 
-                                # call class dedeploiement pour envoyé reponse:
+                                # call class deploiement pour envoyé reponse:
                                 evolution = sequentialevolutionquery(objectxmpp, msglog, datasignal, data)
                                 msgdata['data'] = evolution.getdata()
                                 msgdata['ret']  = evolution.geterrorcode()
@@ -465,6 +486,9 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                             objectxmpp.event("loginfotomaster", msglog)
                             logging.debug(msglog['data']['msg'])
                             objectxmpp.session.clear(sessionid, objectxmpp)
+                            objectxmpp.send_message( mto=objectxmpp.agentmaster,
+                                        mbody=json.dumps(msgdata),
+                                        mtype='chat')
                         return
 
                     except Exception as e:
