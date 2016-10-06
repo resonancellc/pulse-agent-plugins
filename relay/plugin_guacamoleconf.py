@@ -5,7 +5,7 @@ from lib.utils import  simplecommandestr, simplecommande
 import sys, os, platform
 from  lib.utils import pulginprocess
 from lxml import etree
-
+import MySQLdb
 
 plugin={"VERSION": "1.0", "NAME" :"relayserver", "TYPE":"relayserver"}
 # ce plugin install la configuration de guacamole sur server relais.
@@ -31,7 +31,9 @@ def xmlgeneration(nameconfig, protocol, hostname, port):
     PORT.set('value', str(port))
     return etree.tostring(CONFIG, pretty_print=True)
 
-
+#self.callInstallConfGuacamole(self, jidrs, {'hostname' : data['information']['info']['hostname'],
+                                                                        #'machine_ip' : data['xmppip'],
+                                                                        #'uuid' : str(computer.id) })
 @pulginprocess
 def action( objetxmpp, action, sessionid, data, message, dataerreur,result):
     
