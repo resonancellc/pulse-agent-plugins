@@ -2,9 +2,9 @@ from setuptools import setup, find_packages
 
 import os
 import sys
-import site
+from distutils.sysconfig import get_python_lib
 
-path = site.getsitepackages()[0] ;
+path = get_python_lib() ;
 
 setup(
     classifiers=[
