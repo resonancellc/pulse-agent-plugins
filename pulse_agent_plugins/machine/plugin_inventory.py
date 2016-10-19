@@ -27,9 +27,9 @@ def action( objetxmpp, action, sessionid, data, message, dataerreur, result):
             raise
     elif sys.platform.startswith('win'):
         try:
-            program = os.path.join("C:",'Program Files','FusionInventory-Agent','fusioninventory-agent.bat')
-            namefile = os.path.join(os.environ["TEMP"], 'inventaire.txt')
-            cmd = """%s --local=%s"""%(program,namefile)
+            program = os.path.join(os.environ["ProgramFiles"],'FusionInventory-Agent','fusioninventory-agent.bat')
+            namefile = os.path.join(os.environ["ProgramFiles"], 'Pulse', 'tmp', 'inventaire.txt')
+            cmd = """\"%s\" --local=\"%s\""""%(program,namefile)
             obj = simplecommande(cmd)
             Fichier = open(namefile,'r')
             result['data']['inventory'] = base64.b64encode(zlib.compress(Fichier.read(), 9))
