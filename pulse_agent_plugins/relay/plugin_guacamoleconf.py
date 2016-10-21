@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
 
-from lib.utils import  simplecommandestr, simplecommande
+from lib.utils import  simplecommandstr, simplecommand
 import sys, os, platform
 from  lib.utils import pulginprocess
 from lxml import etree

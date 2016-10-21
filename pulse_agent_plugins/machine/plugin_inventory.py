@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from  lib.utils import pulginprocess
 import sys, os
-from  lib.utils import file_get_content, file_put_content, typelinux, servicelinuxinit, isprogramme, simplecommande, simplecommandestr, CreateWinUser
+from  lib.utils import file_get_content, file_put_content, typelinux, servicelinuxinit, isprogramme, simplecommand, simplecommandstr, CreateWinUser
 import zlib, base64
 import traceback
 
@@ -14,9 +14,9 @@ def action( objetxmpp, action, sessionid, data, message, dataerreur, result):
     print "plugin_inventory"
     #result['base64'] = True
     if sys.platform.startswith('linux'):
-        #obj = simplecommande("fusioninventory-agent  --stdout")
+        #obj = simplecommand("fusioninventory-agent  --stdout")
         try:
-            obj = simplecommande("fusioninventory-agent  --stdout > /tmp/inventaire.txt")
+            obj = simplecommand("fusioninventory-agent  --stdout > /tmp/inventaire.txt")
             Fichier = open("/tmp/inventaire.txt",'r')
             result['data']['inventory'] = Fichier.read()
             Fichier.close()
@@ -30,7 +30,7 @@ def action( objetxmpp, action, sessionid, data, message, dataerreur, result):
             program = os.path.join(os.environ["ProgramFiles"],'FusionInventory-Agent','fusioninventory-agent.bat')
             namefile = os.path.join(os.environ["ProgramFiles"], 'Pulse', 'tmp', 'inventaire.txt')
             cmd = """\"%s\" --local=\"%s\""""%(program,namefile)
-            obj = simplecommande(cmd)
+            obj = simplecommand(cmd)
             Fichier = open(namefile,'r')
             result['data']['inventory'] = base64.b64encode(zlib.compress(Fichier.read(), 9))
             Fichier.close()

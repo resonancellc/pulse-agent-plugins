@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from  lib.utils import pulginprocess
 import sys, os
-from  lib.utils import file_get_content, file_put_content, typelinux, servicelinuxinit, isprogramme, simplecommande, simplecommandestr, CreateWinUser
+from  lib.utils import file_get_content, file_put_content, typelinux, servicelinuxinit, isprogramme, simplecommand, simplecommandstr, CreateWinUser
 
 plugin={"VERSION": "1.0", "NAME" :"shellcommand", "TYPE":"all"}
 
@@ -15,7 +15,7 @@ plugin={"VERSION": "1.0", "NAME" :"shellcommand", "TYPE":"all"}
 
 @pulginprocess
 def action( objetxmpp, action, sessionid, data, message, dataerreur, result):
-    obj = simplecommande(data['cmd'])
+    obj = simplecommand(data['cmd'])
     for i in range(len(obj['result'])):
         obj['result'][i]=obj['result'][i].rstrip('\n')
     a = "\n".join(obj['result'])

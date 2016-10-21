@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import json
-from lib.utils import  simplecommandestr, simplecommande, pulgindeploy, merge_dicts, name_random
+from lib.utils import  simplecommandstr, simplecommand, pulgindeploy, merge_dicts, name_random
 import sys, os, platform
 from lib.managepackage import managepackage
 from lib.grafcetdeploy import sequentialevolutionquery
@@ -306,7 +306,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                         msglog['data']['msg']  =  "DEPLOYACTION : %s synchronise package [relayserver/machine] from %s/ to %s:%s/"%(sessionid, data['srcpackage'], data['ipmachine'],os.path.join(data['srcdest'],data['srcpackageuuid']))
                                         objectxmpp.event("loginfotomaster", msglog)
                                         logging.debug(msglog['data']['msg'])
-                                        #synchro = simplecommandestr(cmd)
+                                        #synchro = simplecommandstr(cmd)
                                         #mise à jour session
                                         # copy fichier vers machines envoi message TEVENT vers machine
                                         objectxmpp.mannageprocess.add_processcommand( cmd , sessionid, False, datacontinue, False , 50,[])
