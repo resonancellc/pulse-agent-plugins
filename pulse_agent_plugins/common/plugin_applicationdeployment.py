@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import json
-from lib.utils import  simplecommandstr, simplecommand, pulgindeploy, merge_dicts, name_random
+from lib.utils import  simplecommandstr, simplecommand, pulgindeploy, merge_dicts, getRandomName
 import sys, os, platform
 from lib.managepackage import managepackage
 from lib.grafcetdeploy import sequentialevolutionquery
