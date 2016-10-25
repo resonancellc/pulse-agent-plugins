@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
-import json
-
-from lib.utils import  simplecommandstr, simplecommand
-import sys, os, platform
+import sys
 from  lib.utils import pulginprocess
-from lxml import etree
 import MySQLdb
 import traceback
 plugin={"VERSION": "1.0", "NAME" :"guacamoleconf", "TYPE":"relayserver"}
