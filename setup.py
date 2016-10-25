@@ -1,7 +1,4 @@
-from setuptools import setup, find_packages
-
-import os
-import sys
+from setuptools import setup
 from distutils.sysconfig import get_python_lib
 
 path = get_python_lib() ;
