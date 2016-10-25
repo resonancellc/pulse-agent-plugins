@@ -1,7 +1,27 @@
 # -*- coding: utf-8 -*-
+#
+# (c) 2016 siveo, http://www.siveo.net
+#
+# This file is part of Pulse 2, http://www.siveo.net
+#
+# Pulse 2 is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# Pulse 2 is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Pulse 2; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+# MA 02110-1301, USA.
+
 from  lib.utils import pulginprocess
 import sys, os
-from  lib.utils import file_get_content, file_put_content, typelinux, servicelinuxinit, isprogramme, simplecommande, simplecommandestr, CreateWinUser
+from  lib.utils import simplecommand
 import zlib, base64
 import traceback
 
@@ -12,11 +32,9 @@ plugin={"VERSION": "1.0", "NAME" :"inventory", "TYPE":"machine"}
 @pulginprocess
 def action( objetxmpp, action, sessionid, data, message, dataerreur, result):
     print "plugin_inventory"
-    #result['base64'] = True
     if sys.platform.startswith('linux'):
-        #obj = simplecommande("fusioninventory-agent  --stdout")
         try:
-            obj = simplecommande("fusioninventory-agent  --stdout > /tmp/inventaire.txt")
+            obj = simplecommand("fusioninventory-agent  --stdout > /tmp/inventaire.txt")
             Fichier = open("/tmp/inventaire.txt",'r')
             result['data']['inventory'] = Fichier.read()
             Fichier.close()
@@ -27,10 +45,10 @@ def action( objetxmpp, action, sessionid, data, message, dataerreur, result):
             raise
     elif sys.platform.startswith('win'):
         try:
-            program = os.path.join("C:",'Program Files','FusionInventory-Agent','fusioninventory-agent.bat')
-            namefile = os.path.join(os.environ["TEMP"], 'inventaire.txt')
-            cmd = """%s --local=%s"""%(program,namefile)
-            obj = simplecommande(cmd)
+            program = os.path.join(os.environ["ProgramFiles"],'FusionInventory-Agent','fusioninventory-agent.bat')
+            namefile = os.path.join(os.environ["ProgramFiles"], 'Pulse', 'tmp', 'inventaire.txt')
+            cmd = """\"%s\" --local=\"%s\""""%(program,namefile)
+            obj = simplecommand(cmd)
             Fichier = open(namefile,'r')
             result['data']['inventory'] = base64.b64encode(zlib.compress(Fichier.read(), 9))
             Fichier.close()
