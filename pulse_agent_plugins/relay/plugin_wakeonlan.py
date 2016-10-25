@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import sys, os, platform, json
 from  lib.utils import pulginprocess
 from wakeonlan import wol
 
