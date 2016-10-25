@@ -138,9 +138,6 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         except:
             pass
 
-        #controle affichage erreur suivant ret
-        if 'ret' in message['body']: 
-            ret = message['body']['ret']
         if "msg" in data: msg = data["msg"]
         if data['Dtypequery'] == "TE":
             msglog['data']['msg']  =  "ERROR CODE %s \nERROR MSG : %s"%(message['body']['ret'], msg)
