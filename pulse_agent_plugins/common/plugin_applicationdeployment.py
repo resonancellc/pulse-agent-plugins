@@ -91,8 +91,6 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             updatedescriptor(data['result'],data['descriptor'],data['Devent'],data['Daction'])
 
 
-        objectsession =  objectxmpp.session.sessionfromsessiondata(sessionid)
-
         #structure message for log 
         msglog = {
                     'action': 'loginfos',
