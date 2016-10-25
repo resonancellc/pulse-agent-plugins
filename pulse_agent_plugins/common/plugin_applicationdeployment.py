@@ -118,9 +118,6 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             #start deploy if Master command
             if not (message['from'].user == 'master' and data['Devent']=="STARDEPLOY" and data['Dtypequery'] ==  "TQ" ):
                 return
- 
-
-        ret = 0
         msg = ""
 
         try:
