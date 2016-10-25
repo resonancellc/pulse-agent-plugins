@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from  lib.utils import pulginprocess
-import sys, os
-from  lib.utils import file_get_content, file_put_content, typelinux, servicelinuxinit, isprogramme, simplecommand, simplecommandstr, CreateWinUser
+from  lib.utils import simplecommand
 
 plugin={"VERSION": "1.0", "NAME" :"shellcommand", "TYPE":"all"}
 
