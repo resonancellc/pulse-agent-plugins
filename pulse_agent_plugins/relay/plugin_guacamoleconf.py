@@ -17,9 +17,6 @@ def insertparameter(id, parameter, value):
 
 @pulginprocess
 def action( objetxmpp, action, sessionid, data, message, dataerreur,result):
-    
-    # print objetxmpp.config
-    # Open database connection
     try:
         db = MySQLdb.connect(   host=objetxmpp.config.guacamole_dbhost,
                                 user=objetxmpp.config.guacamole_dbuser,
