@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from  lib.utils import pulginprocess
 import sys, os
-from  lib.utils import file_get_content, file_put_content, typelinux, servicelinuxinit, isprogramme, simplecommand, simplecommandstr, CreateWinUser
+from  lib.utils import simplecommand
 import zlib, base64
 import traceback
 
@@ -12,9 +12,7 @@ plugin={"VERSION": "1.0", "NAME" :"inventory", "TYPE":"machine"}
 @pulginprocess
 def action( objetxmpp, action, sessionid, data, message, dataerreur, result):
     print "plugin_inventory"
-    #result['base64'] = True
     if sys.platform.startswith('linux'):
-        #obj = simplecommand("fusioninventory-agent  --stdout")
         try:
             obj = simplecommand("fusioninventory-agent  --stdout > /tmp/inventaire.txt")
             Fichier = open("/tmp/inventaire.txt",'r')
