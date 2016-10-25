@@ -321,7 +321,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                             elif data['Devent'] == objectxmpp.session.sessionfromsessiondata(sessionid).datasession['RSerrorevent']:
                                     #on ne peut pas deploye
                                     data['Dtypequery'] = "TE"
-                                    msglog['data']['msg']  =  "ERREURDEPLOY %s %s : can not transfert package files to RS.%s"%(data['name'], sessionid, jidmachine )
+                                    msglog['data']['msg']  =  "ERREURDEPLOY %s %s : can not transfert package files to RS.%s"%(data['name'], sessionid,  data['jidmachine'] )
                                     # message erreur a master 
                                     objectxmpp.event("loginfotomaster", msglog)
                                     logging.error(msglog['data']['msg'])
@@ -353,7 +353,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     #on ne peut pas deploye
                                     print "NOT FILE TRANSFERT RS TO MACHINE FINISH"
                                     data['Dtypequery'] = "TE"
-                                    msglog['data']['msg']  =  "ERREURDEPLOY %s %s : can not transfert package files to machine.%s"%(data['name'], sessionid, jidmachine )
+                                    msglog['data']['msg']  =  "ERREURDEPLOY %s %s : can not transfert package files to machine.%s"%(data['name'], sessionid,  data['jidmachine'] )
                                     # message erreur a master 
                                     objectxmpp.event("loginfotomaster", msglog)
                                     #termine session
