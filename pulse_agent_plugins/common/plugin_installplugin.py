@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
-#"""
-# 
-#"""
 
-import sys, os
+import os
 
 plugin={"VERSION": "1.0", "NAME" : "installplugin", "TYPE" : "all"}
 

@@ -4,9 +4,7 @@
 #"""
 
 
-import base64
 import json
-import subprocess
 
 
 plugin={"VERSION": "1.0", "NAME" :"restartbot", "TYPE" : "all"}
