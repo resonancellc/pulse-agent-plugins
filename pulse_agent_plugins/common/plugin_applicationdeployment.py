@@ -161,7 +161,6 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                 }
 
         if data['Dtypequery'] == 'TED':
-            #if objectxmpp.config.agenttype == 'relayserver':
             msgdata['data'] = data
             objectxmpp.send_message( mto=objectxmpp.agentmaster,
                                         mbody=json.dumps(msgdata),
