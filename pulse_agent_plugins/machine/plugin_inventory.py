@@ -48,7 +48,7 @@ def action( objetxmpp, action, sessionid, data, message, dataerreur, result):
             program = os.path.join(os.environ["ProgramFiles"],'FusionInventory-Agent','fusioninventory-agent.bat')
             namefile = os.path.join(os.environ["ProgramFiles"], 'Pulse', 'tmp', 'inventaire.txt')
             cmd = """\"%s\" --local=\"%s\""""%(program,namefile)
-            obj = simplecommand(cmd)
+
             Fichier = open(namefile,'r')
             result['data']['inventory'] = base64.b64encode(zlib.compress(Fichier.read(), 9))
             Fichier.close()
