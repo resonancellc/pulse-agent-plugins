@@ -28,7 +28,7 @@ def action( objetxmpp, action, sessionid, data, message, dataerreur,result):
     print data
     try:
         wol.send_magic_packet(data['macaddress'])
-        result['data']['demarage'] = "ok"
+        result['data']['start'] = "ok"
     except:
         dataerreur['data']['msg'] = "ERROR : plugin wakeonlan"
         dataerreur['ret'] = 255
