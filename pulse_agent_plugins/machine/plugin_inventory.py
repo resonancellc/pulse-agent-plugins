@@ -19,7 +19,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA 02110-1301, USA.
 
-from  lib.utils import pulginprocess
+from  lib.utils import pluginprocess
 import sys, os
 from  lib.utils import simplecommand
 import zlib, base64
@@ -29,7 +29,7 @@ import traceback
 plugin={"VERSION": "1.0", "NAME" :"inventory", "TYPE":"machine"}
 
 
-@pulginprocess
+@pluginprocess
 def action( objetxmpp, action, sessionid, data, message, dataerreur, result):
     print "plugin_inventory"
     if sys.platform.startswith('linux'):

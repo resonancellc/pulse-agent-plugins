@@ -19,11 +19,11 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA 02110-1301, USA.
 
-from  lib.utils import pulginprocess
+from  lib.utils import pluginprocess
 from wakeonlan import wol
 
 plugin={"VERSION": "1.0", "NAME" :"wakeonlan","TYPE":"relayserver"}
-@pulginprocess
+@pluginprocess
 def action( objetxmpp, action, sessionid, data, message, dataerreur,result):
     print data
     try:

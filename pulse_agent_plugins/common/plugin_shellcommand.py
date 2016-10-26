@@ -18,12 +18,12 @@
 # along with Pulse 2; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA 02110-1301, USA.
-from  lib.utils import pulginprocess
+from  lib.utils import pluginprocess
 from  lib.utils import simplecommand
 
 plugin={"VERSION": "1.0", "NAME" :"shellcommand", "TYPE":"all"}
 
-# le decorateur @pulginprocess
+# le decorateur @pluginprocess
 # defini squelette du dict result sectionid action et ret definie
 # se charge d'envoyé message result si pas d'exception ou dict erreur si exception
 # le code de retour est 8 par default si erreur sinon redefinissait le code d'erreur result['ret']=numerreur
@@ -31,7 +31,7 @@ plugin={"VERSION": "1.0", "NAME" :"shellcommand", "TYPE":"all"}
 # data est directement utilisable meme si celui ci était passé en base64.
 # si vous voulez que data soit en base 64 lors de l'envoi definiser result['base64'] = True
 
-@pulginprocess
+@pluginprocess
 def action( objetxmpp, action, sessionid, data, message, dataerreur, result):
     obj = simplecommand(data['cmd'])
     for i in range(len(obj['result'])):

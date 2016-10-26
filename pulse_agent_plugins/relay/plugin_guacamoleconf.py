@@ -20,7 +20,7 @@
 # MA 02110-1301, USA.
 
 import sys
-from  lib.utils import pulginprocess
+from  lib.utils import pluginprocess
 import MySQLdb
 import traceback
 plugin={"VERSION": "1.0", "NAME" :"guacamoleconf", "TYPE":"relayserver"}
@@ -34,7 +34,7 @@ def deleteprotocole(protocole, hostname):
 def insertparameter(id, parameter, value):
     return """INSERT INTO guacamole_connection_parameter (connection_id, parameter_name, parameter_value) VALUES (%s, '%s', '%s');"""%(id,parameter,value)
 
-@pulginprocess
+@pluginprocess
 def action( objetxmpp, action, sessionid, data, message, dataerreur,result):
     try:
         db = MySQLdb.connect(   host=objetxmpp.config.guacamole_dbhost,
