@@ -25,11 +25,11 @@ import MySQLdb
 import traceback
 plugin={"VERSION": "1.0", "NAME" :"guacamoleconf", "TYPE":"relayserver"}
 
-def insertprotocole(protocole, hostname):
-    return """INSERT INTO guacamole_connection (connection_name, protocol) VALUES ( '%s_%s', '%s');"""%(protocole.upper(), hostname, protocole.lower())
+def insertprotocol(protocol, hostname):
+    return """INSERT INTO guacamole_connection (connection_name, protocol) VALUES ( '%s_%s', '%s');"""%(protocol.upper(), hostname, protocol.lower())
 
-def deleteprotocole(protocole, hostname):
-    return """DELETE FROM `guacamole_connection` WHERE connection_name = '%s_%s';"""%(protocole.upper(),hostname)
+def deleteprotocol(protocol, hostname):
+    return """DELETE FROM `guacamole_connection` WHERE connection_name = '%s_%s';"""%(protocol.upper(),hostname)
 
 def insertparameter(id, parameter, value):
     return """INSERT INTO guacamole_connection_parameter (connection_id, parameter_name, parameter_value) VALUES (%s, '%s', '%s');"""%(id,parameter,value)
@@ -54,12 +54,12 @@ def action( objetxmpp, action, sessionid, data, message, dataerreur,result):
     try:
         #delete connection
         for proto in protos:
-            cursor.execute(deleteprotocole(proto, data['hostname']))
+            cursor.execute(deleteprotocol(proto, data['hostname']))
             db.commit()
         #create connection
         for proto in protos:
             result['data']['connection'][proto.upper()] = -1
-            cursor.execute(insertprotocole(proto, data['hostname']))
+            cursor.execute(insertprotocol(proto, data['hostname']))
             db.commit()
             result['data']['connection'][proto.upper()] = cursor.lastrowid
     except MySQLdb.Error, e:
