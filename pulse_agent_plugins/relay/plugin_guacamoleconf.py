@@ -62,7 +62,7 @@ def action( objetxmpp, action, sessionid, data, message, dataerreur,result):
     #create connection
     for proto in data['remoteservice']:
         if data['remoteservice'][proto] !="":
-            try: 
+            try:
                 result['data']['connection'][proto.upper()] = -1
                 cursor.execute(insertprotocol(proto, data['hostname']))
                 db.commit()
@@ -93,4 +93,4 @@ def action( objetxmpp, action, sessionid, data, message, dataerreur,result):
                 dataerreur['data']['msg'] = "MySQL Error: %s" % str(e)
                 traceback.print_exc(file=sys.stdout)
     db.close()
-    
+
