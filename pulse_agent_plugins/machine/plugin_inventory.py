@@ -34,8 +34,8 @@ def action( objetxmpp, action, sessionid, data, message, dataerreur, result):
     print "plugin_inventory"
     if sys.platform.startswith('linux'):
         try:
-            obj = simplecommand("fusioninventory-agent  --stdout > /tmp/inventaire.txt")
-            Fichier = open("/tmp/inventaire.txt",'r')
+            obj = simplecommand("fusioninventory-agent  --stdout > /tmp/inventory.txt")
+            Fichier = open("/tmp/inventory.txt",'r')
             result['data']['inventory'] = Fichier.read()
             Fichier.close()
             result['data']['inventory'] = base64.b64encode(zlib.compress(result['data']['inventory'],9))
@@ -46,7 +46,7 @@ def action( objetxmpp, action, sessionid, data, message, dataerreur, result):
     elif sys.platform.startswith('win'):
         try:
             program = os.path.join(os.environ["ProgramFiles"],'FusionInventory-Agent','fusioninventory-agent.bat')
-            namefile = os.path.join(os.environ["ProgramFiles"], 'Pulse', 'tmp', 'inventaire.txt')
+            namefile = os.path.join(os.environ["ProgramFiles"], 'Pulse', 'tmp', 'inventory.txt')
             cmd = """\"%s\" --local=\"%s\""""%(program,namefile)
 
             Fichier = open(namefile,'r')
