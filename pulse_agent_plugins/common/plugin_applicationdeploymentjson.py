@@ -27,6 +27,10 @@ import traceback
 import pprint
 import logging
 
+
+from lib.utils import shellcommandtimeout
+
+
 logger = logging.getLogger()
 
 plugin = { "VERSION" : "1.1", "NAME" : "applicationdeploymentjson", "TYPE" : "all" }
@@ -52,6 +56,7 @@ Plugins for deploiment application
 def cleandescriptor(datasend):
     sequence= {}
     if sys.platform.startswith('linux'):
+        typeos="Linux"
         try:
             del datasend['data']['descriptor']['win']['sequence']
         except KeyError:
@@ -67,6 +72,7 @@ def cleandescriptor(datasend):
         except:
             pass
     elif sys.platform.startswith('win'):
+        typeos="Win"
         try:
             del datasend['data']['descriptor']['linux']['sequence']
         except KeyError:
@@ -82,6 +88,7 @@ def cleandescriptor(datasend):
         except:
             pass
     elif sys.platform.startswith('darwin'):
+        typeos="Macos"
         try:
             del datasend['data']['descriptor']['linux']['sequence']
         except KeyError:
@@ -96,6 +103,7 @@ def cleandescriptor(datasend):
             del datasend['data']['descriptor']['Macos']
         except:
             pass
+    datasend['data']['typeos']=typeos
     return datasend
 
 
@@ -122,10 +130,13 @@ def transfert_package(destinataire, datacontinue,objectxmpp):
         cmd = "rsync --delete -av %s/ %s:%s/"%(datacontinue['data']['path'],
                                         datacontinue['data']['ipmachine'],
                                         datacontinue['data']['pathpackageonmachine'])
-        objectxmpp.mannageprocessmessage.add_processcommand( cmd ,datacontinue, destinataire, destinataire,   50)
+        logging.getLogger().debug("cmd %s"% cmd)
+        logging.getLogger().debug("datacontinue %s"% json.dumps(datacontinue, indent=4, sort_keys=True))
+        logging.getLogger().debug("destinataire %s"% destinataire)
+        objectxmpp.process_on_end_send_message_xmpp.add_processcommand( cmd ,datacontinue, destinataire, destinataire,   50)
     else:
         pass
- 
+
 
 def checkosindescriptor(descriptor):
     if sys.platform.startswith('linux'):
@@ -153,14 +164,17 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                     'base64' : False
                 }
 
+ 
     if objectxmpp.config.agenttype == "relayserver":
         logging.getLogger().debug("###############RELAY SERVER##################")
         logging.getLogger().debug("##############deploy %s on %s##############"%(data['name'],data['jidmachine'] ))
         logging.getLogger().debug("#############################################")
         # creation session relay server if not exist
         # demande deploy sur machine
+        print "session est", sessionid
         if not objectxmpp.session.isexist(sessionid):
             #test package exist on relayserver
+            print "**************session non existe"
             if managepackage.getpathpackagename(data['name']) is None:
                 logging.getLogger().info("packages %s missing on relayserver %s"%(data['name'],data['jidrelay']))
                 print "deploye error"
@@ -170,45 +184,52 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                 datasend['data']['descriptor'] =  managepackage.getdescriptorpackagename(data['name'])
                 #creation session
                 objectxmpp.session.createsessiondatainfo(sessionid,  datasession = data, timevalid = 10)
+                logging.getLogger().debug("send data to %s\n %s"%(data['jidmachine'] ,json.dumps(datasend, indent=4, sort_keys=True)))
                 objectxmpp.send_message(    mto=data['jidmachine'],
                                             mbody=json.dumps(datasend),
                                             mtype='chat')
+                print "attend reponse"
             except Exception as e:
+                print str(e)
                 traceback.print_exc(file=sys.stdout)
         else:
-            print "**************session existe"
-            print  data['Devent']
-            print data['Dtypequery']
-            print "**************session existe"
-            if data['Devent'] ==  "packagesmissing" and data['Dtypequery'] == "TR":
-                print  "packagesmissing"
-                # il faut installer package sur machine.
-                logging.getLogger().warn("package missing %s on machine %s"%(data['name'],data['jidmachine']))
-                # transfert pacquage
-                #transfert pacquage transfert le package sur machine et relance deploiement.
-                datasend['data'] = data
-                #supprimem os no used descriptor
+            try:
+                print "**************session existe"
+                print  data['Devent']
+                print data['Dtypequery']
+                print "**************session existe"
+                if data['Devent'] ==  "packagesmissing" and data['Dtypequery'] == "TR":
+                    print  "packagesmissing"
+                    # il faut installer package sur machine.
+                    logging.getLogger().warn("package missing %s on machine %s"%(data['name'],data['jidmachine']))
+                    # transfert pacquage
+                    #transfert pacquage transfert le package sur machine et relance deploiement.
+                    datasend['data'] = data
+                    #supprimem os no used descriptor
 
-                datasend['data']['Devent'] = "STARDEPLOY"
-                datasend['data']['Dtypequery'] = "TQ"
-                transfert_package(data['jidmachine'],datasend,objectxmpp)
+                    datasend['data']['Devent'] = "STARDEPLOY"
+                    datasend['data']['Dtypequery'] = "TQ"
+                    transfert_package(data['jidmachine'],datasend,objectxmpp)
+            except Exception as e:
+                traceback.print_exc(file=sys.stdout)
+        print "quit relayserver"
     else:
         logging.getLogger().debug("#################MACHINE#####################")
         logging.getLogger().debug("##############deploy %s on %s##############"%(data['name'],data['jidmachine'] ))
         logging.getLogger().debug("#############################################")
         #test package exist sur machine
-        print "recois message"
-        print json.dumps(data, indent=4, sort_keys=True)
+        #print "recois message"
+        #print json.dumps(data, indent=4, sort_keys=True)
         try:
             if not 'stepcurrent' in datasend['data']:
-                
+
                 if not 'sequence' in datasend['data']['descriptor'] and not checkosindescriptor(datasend['data']['descriptor']):
                     print 'no checkosindescriptor'
                     return 
-                
+
                 datasend = cleandescriptor(datasend)
                 datasend['data']['pathpackageonmachine'] = os.path.join( managepackage.packagedir(),data['path'].split('/')[-1])
-                
+
                 if managepackage.getpathpackagename(data['name']) is None:
                     logging.getLogger().warn("packages %s missing on machine %s"%(data['name'], data['jidmachine']))
                     datasend['data']['Devent'] = "packagesmissing"
