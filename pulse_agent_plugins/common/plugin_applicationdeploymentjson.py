@@ -41,8 +41,6 @@ Plugins for deploiment application
 """
 
 
-#loginformationinfomaster(self, msgdata)
-
 #TQ type message query
 #TR type message Reponse
 #TE type message Error

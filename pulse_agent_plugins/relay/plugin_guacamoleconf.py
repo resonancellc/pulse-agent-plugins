@@ -25,11 +25,11 @@ import MySQLdb
 import traceback
 plugin={"VERSION": "1.0", "NAME" :"guacamoleconf", "TYPE":"relayserver"}
 
-def insertprotocol(protocol, hostname):
-    return """INSERT INTO guacamole_connection (connection_name, protocol) VALUES ( '%s_%s', '%s');"""%(protocol.upper(), hostname, protocol.lower())
+def insertprotocole(protocole, hostname):
+    return """INSERT INTO guacamole_connection (connection_name, protocol) VALUES ( '%s_%s', '%s');"""%(protocole.upper(), hostname, protocole.lower())
 
-def deleteprotocol(protocol, hostname):
-    return """DELETE FROM `guacamole_connection` WHERE connection_name = '%s_%s';"""%(protocol.upper(),hostname)
+def deleteprotocole(protocole, hostname):
+    return """DELETE FROM `guacamole_connection` WHERE connection_name = '%s_%s';"""%(protocole.upper(),hostname)
 
 def insertparameter(id, parameter, value):
     return """INSERT INTO guacamole_connection_parameter (connection_id, parameter_name, parameter_value) VALUES (%s, '%s', '%s');"""%(id,parameter,value)
@@ -51,46 +51,53 @@ def action( objetxmpp, action, sessionid, data, message, dataerreur,result):
 
     protos = ['rdp','ssh','vnc']
 
-    #delete connection
-    for proto in protos:
-        try:
-            cursor.execute(deleteprotocol(proto, data['hostname']))
+    try:
+        #delete connection
+        for proto in protos:
+            cursor.execute(deleteprotocole(proto, data['hostname']))
             db.commit()
-        except:
-            pass
-
-    #create connection
-    for proto in data['remoteservice']:
-        if data['remoteservice'][proto] !="":
-            try:
-                result['data']['connection'][proto.upper()] = -1
-                cursor.execute(insertprotocol(proto, data['hostname']))
-                db.commit()
-                result['data']['connection'][proto.upper()] = cursor.lastrowid
-            except MySQLdb.Error, e:
-                dataerreur['data']['msg'] = "MySQL Error: %s" % str(e)
-                traceback.print_exc(file=sys.stdout)
-            except Exception, e:
-                dataerreur['data']['msg'] = "MySQL Error: %s" % str(e)
-                traceback.print_exc(file=sys.stdout)
+        #create connection
+        for proto in protos:
+            result['data']['connection'][proto.upper()] = -1
+            cursor.execute(insertprotocole(proto, data['hostname']))
+            db.commit()
+            result['data']['connection'][proto.upper()] = cursor.lastrowid
+    except MySQLdb.Error, e:
+        db.close()
+        dataerreur['data']['msg'] = "MySQL Error: %s" % str(e)
+        traceback.print_exc(file=sys.stdout)
+        raise
+    except Exception, e:
+        dataerreur['data']['msg'] = "MySQL Error: %s" % str(e)
+        traceback.print_exc(file=sys.stdout)
+        db.close()
+        raise
     ###################################
     ##configure parameters
     ###################################
-    for proto in data['remoteservice']:
-        if data['remoteservice'][proto] !="":
-            try:
-                port = data['remoteservice'][proto]
-                cursor.execute(insertparameter(result['data']['connection'][proto.upper()], 'hostname', data['machine_ip']))
-                db.commit()
-                cursor.execute(insertparameter(result['data']['connection'][proto.upper()], 'port', port))
-                db.commit()
-                cursor.execute(insertparameter(result['data']['connection'][proto.upper()], 'color-depth', '24'))
-                db.commit()
-            except MySQLdb.Error, e:
-                dataerreur['data']['msg'] = "MySQL Error: %s" % str(e)
-                traceback.print_exc(file=sys.stdout)
-            except Exception, e:
-                dataerreur['data']['msg'] = "MySQL Error: %s" % str(e)
-                traceback.print_exc(file=sys.stdout)
+    try:
+        for proto in protos:
+            if proto == 'rdp':
+                port = '3389'
+            elif proto == 'ssh':
+                port = '22'
+            else:
+                port = '5901'
+            cursor.execute(insertparameter(result['data']['connection'][proto.upper()], 'hostname', data['machine_ip']))
+            db.commit()
+            cursor.execute(insertparameter(result['data']['connection'][proto.upper()], 'port', port))
+            db.commit()
+            cursor.execute(insertparameter(result['data']['connection'][proto.upper()], 'color-depth', '24'))
+            db.commit()
+    except MySQLdb.Error, e:
+        db.close()
+        dataerreur['data']['msg'] = "MySQL Error: %s" % str(e)
+        traceback.print_exc(file=sys.stdout)
+        raise
+    except Exception, e:
+        dataerreur['data']['msg'] = "MySQL Error: %s" % str(e)
+        traceback.print_exc(file=sys.stdout)
+        db.close()
+        raise
     db.close()
 
