@@ -41,6 +41,7 @@ Plugins for deploiment application
 """
 
 
+
 #TQ type message query
 #TR type message Reponse
 #TE type message Error
@@ -104,7 +105,35 @@ def cleandescriptor(datasend):
     datasend['data']['typeos']=typeos
     return datasend
 
+def keyssh(name="id_rsa.pub"):
+    source = open(os.path.join('/','root','.ssh',name), "r")
+    dede = source.read().strip(" \n\t")
+    source.close()
+    return dede
 
+def installkeyssh(keystr):
+    if sys.platform.startswith('linux'):
+        authorized_keys=os.path.join('/','root','.ssh','authorized_keys')
+    elif sys.platform.startswith('win'):
+        authorized_keys=os.path.join('C',os.environ["ProgramFiles"],'Pulse','.ssh','authorized_keys')
+    elif sys.platform.startswith('darwin'):
+        authorized_keys=os.path.join('var','root','.ssh','authorized_keys')
+    else:
+        pass
+    print authorized_keys
+    #recherche si clef in authorized_keys
+    addkey = True
+    source = open(authorized_keys, "r")
+    for ligne in source:
+        if keystr in ligne:
+            addkey = False
+            break
+    source.close()
+    if addkey:
+        source = open(authorized_keys, "a")
+        source.write('\n')
+        source.write(keystr)
+        source.close()
 
 def updatedescriptor(result,descriptor,Devent,Daction):
     if sys.platform.startswith('linux'):
@@ -122,19 +151,29 @@ def updatedescriptor(result,descriptor,Devent,Daction):
                 t[z] = result[z]
 
 
-def transfert_package(destinataire, datacontinue,objectxmpp):
+def transfert_package(destinataire, datacontinue, objectxmpp):
     logging.getLogger().debug("%s"% json.dumps(datacontinue, indent=4, sort_keys=True))
     if datacontinue['data']['methodetransfert'] == 'rsync':
-        cmd = "rsync --delete -av %s/ %s:%s/"%(datacontinue['data']['path'],
+        if 'Pulse' in datacontinue['data']['pathpackageonmachine'] and 'tmp' in datacontinue['data']['pathpackageonmachine']:
+
+            datacontinue['data']['pathpackageonmachine'] = datacontinue['data']['pathpackageonmachine'].replace("\\","/")
+            tab=datacontinue['data']['pathpackageonmachine'].split('/')[3:]
+            #os.path.join
+            datacontinue['data']['pathpackageonmachine'] = '/'.join(tab)
+            cmd = "rsync --delete -e \"ssh -o IdentityFile=/root/.ssh/id_rsa -o StrictHostKeyChecking=no -o Batchmode=yes -o PasswordAuthentication=no -o ServerAliveInterval=10 -o CheckHostIP=no -o ConnectTimeout=10\" -av %s/ pulse@%s:\"%s/\""%(datacontinue['data']['path'],
                                         datacontinue['data']['ipmachine'],
                                         datacontinue['data']['pathpackageonmachine'])
+        else:
+            cmd = "rsync --delete -e \"ssh -o IdentityFile=/root/.ssh/id_rsa -o StrictHostKeyChecking=no -o Batchmode=yes -o PasswordAuthentication=no -o ServerAliveInterval=10 -o CheckHostIP=no -o ConnectTimeout=10\"   -av %s/ %s:\"%s/\""%(datacontinue['data']['path'],
+                                        datacontinue['data']['ipmachine'],
+                                        datacontinue['data']['pathpackageonmachine'])
+        print datacontinue['data']['pathpackageonmachine']
         logging.getLogger().debug("cmd %s"% cmd)
         logging.getLogger().debug("datacontinue %s"% json.dumps(datacontinue, indent=4, sort_keys=True))
         logging.getLogger().debug("destinataire %s"% destinataire)
         objectxmpp.process_on_end_send_message_xmpp.add_processcommand( cmd ,datacontinue, destinataire, destinataire,   50)
     else:
         pass
-
 
 def checkosindescriptor(descriptor):
     if sys.platform.startswith('linux'):
@@ -164,7 +203,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
 
  
     if objectxmpp.config.agenttype == "relayserver":
-        logging.getLogger().debug("###############RELAY SERVER##################")
+        logging.getLogger().debug("###############RELAY SERVERS##################")
         logging.getLogger().debug("##############deploy %s on %s##############"%(data['name'],data['jidmachine'] ))
         logging.getLogger().debug("#############################################")
         # creation session relay server if not exist
@@ -182,7 +221,10 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                 datasend['data']['descriptor'] =  managepackage.getdescriptorpackagename(data['name'])
                 #creation session
                 objectxmpp.session.createsessiondatainfo(sessionid,  datasession = data, timevalid = 10)
+                logging.getLogger().debug("###############RELAY SERVER################## add clef au message")
+                datasend['data']['keyssh']=keyssh()
                 logging.getLogger().debug("send data to %s\n %s"%(data['jidmachine'] ,json.dumps(datasend, indent=4, sort_keys=True)))
+
                 objectxmpp.send_message(    mto=data['jidmachine'],
                                             mbody=json.dumps(datasend),
                                             mtype='chat')
@@ -215,9 +257,14 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         logging.getLogger().debug("#################MACHINE#####################")
         logging.getLogger().debug("##############deploy %s on %s##############"%(data['name'],data['jidmachine'] ))
         logging.getLogger().debug("#############################################")
-        #test package exist sur machine
-        #print "recois message"
-        #print json.dumps(data, indent=4, sort_keys=True)
+        # test package exist sur machine
+        # print "recois message"
+        # print json.dumps(data, indent=4, sort_keys=True)
+        if  'keyssh' in datasend['data']:
+            logging.getLogger().debug("Install key public RS")
+            installkeyssh(datasend['data']['keyssh'])
+            del datasend['data']['keyssh']
+
         try:
             if not 'stepcurrent' in datasend['data']:
 
@@ -247,6 +294,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                         # creation d'une session
                         if not objectxmpp.session.isexist(sessionid):
                             objectxmpp.session.createsessiondatainfo(sessionid,  datasession = datasend['data'], timevalid = 10)
+                            
                         #logging.getLogger().info("%s"% json.dumps(datasend, indent=4, sort_keys=True))
                         logging.getLogger().debug("start call gracet")
                         grafcet(objectxmpp, datasend) # initialise graphcetgrapcet
