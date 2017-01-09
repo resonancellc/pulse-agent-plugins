@@ -36,7 +36,7 @@ setup(
 
     keywords='pulse agent plugins',
     name='pulse_agent_plugins', 
-    version='0.1',
+    version='1.0',
     description = 'XMPP Agent plugins for pulse',
     url='https://www.siveo.net/',
     packages=[],
