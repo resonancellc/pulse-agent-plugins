@@ -49,7 +49,10 @@ def action( objetxmpp, action, sessionid, data, message, dataerreur,result):
     result['data']['uuid'] = data['uuid']
     result['data']['connection'] = {}
 
-    protos = ['rdp','ssh','vnc']
+    if hasattr(objetxmpp.config, 'guacamole_protocols'):
+        protos = objetxmpp.config.guacamole_protocols.split()
+    else:
+        protos = ['rdp','ssh','vnc']
 
     try:
         #delete connection
