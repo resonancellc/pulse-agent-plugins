@@ -21,7 +21,6 @@
 import json
 import sys, os
 from lib.managepackage import managepackage
-from lib.grafcetdeploy import sequentialevolutionquery
 from lib.grafcetdeploy import grafcet
 import traceback
 import pprint
