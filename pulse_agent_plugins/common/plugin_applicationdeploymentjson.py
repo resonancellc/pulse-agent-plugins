@@ -50,31 +50,32 @@ Plugins for deploiment application
 
 
 def cleandescriptor(datasend):
+    
     sequence= {}
     if sys.platform.startswith('linux'):
         typeos="Linux"
         try:
-            del datasend['descriptor']['win']['sequence']
+            del datasend['descriptor']['win']
         except KeyError:
             pass
         try:
-            del datasend['descriptor']['Macos']['sequence']
+            del datasend['descriptor']['Macos']
         except KeyError:
             pass
         try:
             datasend['descriptor']['sequence'] = datasend['descriptor']['linux']['sequence']
-            #del datasend['descriptor']['linux']['sequence']
             del datasend['descriptor']['linux']
         except:
-            pass
+            return False
+
     elif sys.platform.startswith('win'):
         typeos="Win"
         try:
-            del datasend['descriptor']['linux']['sequence']
+            del datasend['descriptor']['linux']
         except KeyError:
             pass
         try:
-            del datasend['descriptor']['Macos']['sequence']
+            del datasend['descriptor']['Macos']
         except KeyError:
             pass
         try:
@@ -82,15 +83,15 @@ def cleandescriptor(datasend):
             #del datasend['descriptor']['win']['sequence']
             del datasend['descriptor']['win']
         except:
-            pass
+            return False
     elif sys.platform.startswith('darwin'):
         typeos="Macos"
         try:
-            del datasend['descriptor']['linux']['sequence']
+            del datasend['descriptor']['linux']
         except KeyError:
             pass
         try:
-            del datasend['descriptor']['win']['sequence']
+            del datasend['descriptor']['win']
         except KeyError:
             pass
         try:
@@ -98,9 +99,9 @@ def cleandescriptor(datasend):
             #del datasend['descriptor']['Macos']['sequence']
             del datasend['descriptor']['Macos']
         except:
-            pass
+            False
     datasend['typeos']=sys.platform
-    return datasend
+    return True
 
 def keyssh(name="id_rsa.pub"):
     source = open(os.path.join('/','root','.ssh',name), "r")
@@ -235,20 +236,38 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
     logging.getLogger().debug("#################MACHINE#####################")
     logging.getLogger().debug("##############deploy %s on %s##############"%(data['name'],data['jidmachine'] ))
     logging.getLogger().debug("#############################################")
-    print "recois message"
-    print json.dumps(data, indent=4, sort_keys=True)
     if not 'stepcurrent' in datasend['data']:
-        cleandescriptor(data)
-        datasend = {
-                        'action': action,
-                        'sessionid': sessionid,
-                        'data' : data,
-                        'ret' : 0,
-                        'base64' : False
-                    }
-
+        if not cleandescriptor(data):
+            objectxmpp.logtopulse('[xxx]: Terminate deploy ERROR descriptor OS %s missing'%sys.platform,
+                                        type='deploy',
+                                        sessionname = sessionid ,
+                                        priority =0,
+                                        who=objectxmpp.boundjid.bare)
+            datasend = {
+                            'action':  "result" + action,
+                            'sessionid': sessionid,
+                            'data' : data,
+                            'ret' : -1,
+                            'base64' : False
+                        }
+            objectxmpp.logtopulse('[xxx]: Terminate deploy ERROR descriptor OS %s '%sys.platform,
+                                        type='deploy',
+                                        sessionname = sessionid ,
+                                        priority =0,
+                                        who=objectxmpp.boundjid.bare)
+            objectxmpp.send_message(   mto='log@pulse',
+                                            mbody=json.dumps(datasend),
+                                            mtype='chat')
+            return
+        else:
+            datasend = {
+                            'action': action,
+                            'sessionid': sessionid,
+                            'data' : data,
+                            'ret' : 0,
+                            'base64' : False
+                        }
         datasend['data']['pathpackageonmachine'] = os.path.join( managepackage.packagedir(),data['path'].split('/')[-1])
-        print json.dumps(datasend, indent=4, sort_keys=True)
         if data['methodetransfert'] == "curl" and data['transfert'] :
             recuperefile(datasend, objectxmpp )
         datasend['data']['stepcurrent'] = 0 #step initial
@@ -257,7 +276,6 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         logging.getLogger().debug("start call gracet")
         grafcet(objectxmpp, datasend)
     else:
-        print "update session"
         objectxmpp.session.sessionsetdata(sessionid, datasend) #save data in session
         grafcet(objectxmpp, datasend)#grapcet va utiliser la session pour travaillé.
 
