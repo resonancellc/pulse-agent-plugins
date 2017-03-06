@@ -18,28 +18,45 @@
 # along with Pulse 2; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA 02110-1301, USA.
+
 from  lib.utils import pluginprocess
 from  lib.utils import simplecommand
-
+import json
+import traceback
+import sys
 plugin={"VERSION": "1.0", "NAME" :"shellcommand", "TYPE":"all"}
 
-# le decorateur @pluginprocess
-# defini squelette du dict result sectionid action et ret definie
-# se charge d'envoyé message result si pas d'exception ou dict erreur si exception
-# le code de retour est 8 par default si erreur sinon redefinissait le code d'erreur result['ret']=numerreur
-# le message d'erreur par default est "ERROR : %s"%action  sinon redefinir le message d'erreur
-# data est directement utilisable meme si celui ci était passé en base64.
-# si vous voulez que data soit en base 64 lors de l'envoi definiser result['base64'] = True
 
-@pluginprocess
-def action( objetxmpp, action, sessionid, data, message, dataerreur, result):
-    obj = simplecommand(data['cmd'])
-    for i in range(len(obj['result'])):
-        obj['result'][i]=obj['result'][i].rstrip('\n')
-    a = "\n".join(obj['result'])
-    dataerreur['ret'] = obj['code']
-    if obj['code'] == 0:
-        result['data']['result'] = a
-    else:
-        dataerreur['data']['msg']="Erreur commande\n %s"%a
-        raise
+def action( objectxmpp, action, sessionid, data, message, dataerreur):
+    result = {
+                    'action': "result%s"%action,
+                    'sessionid': sessionid,
+                    'data' : {},
+                    'ret' : 0,
+                    'base64' : False
+                }
+    try:
+        obj = simplecommand(data['cmd'])
+        obj['result']= [ x.rstrip('\n') for x in  obj['result'] if x != "\n"]
+        if obj['code'] == 0:
+            result['ret']=0
+            result['data']['result'] = "".join(obj['result'])
+            result['data']['result'] = "".join([ x.decode('latin-1') for x in result['data']['result'] ])
+            print result['data']['result']
+            objectxmpp.send_message(   mto=message['from'],
+                                       mbody=json.dumps(result, sort_keys=True,indent=4),
+                                       mtype='chat')
+        else:
+            dataerreur['ret'] = obj['code']
+            dataerreur['data']['msg']="Erreur commande\n %s"%a
+            objectxmpp.send_message(   mto=message['from'],
+                                            mbody=json.dumps(dataerreur),
+                                            mtype='chat')
+    except :
+            traceback.print_exc(file=sys.stdout)
+            dataerreur['ret'] = -255
+            dataerreur['data']['msg'] = "Erreur commande\n %s"%data['cmd']
+            objectxmpp.send_message(   mto  =message['from'],
+                                            mbody = json.dumps(dataerreur),
+                                            mtype = 'chat')
+
