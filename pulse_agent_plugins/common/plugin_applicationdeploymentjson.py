@@ -19,7 +19,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA 02110-1301, USA.
 import json
-import sys, os
+import sys
+import os
 from lib.managepackage import managepackage
 from lib.grafcetdeploy import grafcet
 import traceback
