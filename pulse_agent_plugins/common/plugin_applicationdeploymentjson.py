@@ -32,11 +32,11 @@ from lib.utils import shellcommandtimeout
 
 logger = logging.getLogger()
 
-plugin = { "VERSION" : "1.1", "NAME" : "applicationdeploymentjson", "TYPE" : "all" }
+plugin = {"VERSION" : "1.1", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
 
 
 """
-Plugins for deploiment application 
+Plugins for deploiment application
 """
 
 
@@ -50,10 +50,10 @@ Plugins for deploiment application
 
 
 def cleandescriptor(datasend):
-    
-    sequence= {}
+
+    sequence = {}
     if sys.platform.startswith('linux'):
-        typeos="Linux"
+        typeos = "Linux"
         try:
             del datasend['descriptor']['win']
         except KeyError:
@@ -69,7 +69,7 @@ def cleandescriptor(datasend):
             return False
 
     elif sys.platform.startswith('win'):
-        typeos="Win"
+        typeos = "Win"
         try:
             del datasend['descriptor']['linux']
         except KeyError:
@@ -85,7 +85,7 @@ def cleandescriptor(datasend):
         except:
             return False
     elif sys.platform.startswith('darwin'):
-        typeos="Macos"
+        typeos = "Macos"
         try:
             del datasend['descriptor']['linux']
         except KeyError:
@@ -100,26 +100,26 @@ def cleandescriptor(datasend):
             del datasend['descriptor']['Macos']
         except:
             False
-    datasend['typeos']=sys.platform
+    datasend['typeos'] = sys.platform
     return True
 
 def keyssh(name="id_rsa.pub"):
-    source = open(os.path.join('/','root','.ssh',name), "r")
+    source = open(os.path.join('/', 'root', '.ssh', name), "r")
     dede = source.read().strip(" \n\t")
     source.close()
     return dede
 
 def installkeyssh(keystr):
     if sys.platform.startswith('linux'):
-        authorized_keys=os.path.join('/','root','.ssh','authorized_keys')
+        authorized_keys = os.path.join('/', 'root', '.ssh', 'authorized_keys')
     elif sys.platform.startswith('win'):
-        authorized_keys=os.path.join('C',os.environ["ProgramFiles"],'Pulse','.ssh','authorized_keys')
+        authorized_keys = os.path.join('C', os.environ["ProgramFiles"], 'Pulse', '.ssh', 'authorized_keys')
     elif sys.platform.startswith('darwin'):
-        authorized_keys=os.path.join('var','root','.ssh','authorized_keys')
+        authorized_keys = os.path.join('var', 'root', '.ssh', 'authorized_keys')
     else:
         pass
     print authorized_keys
-    #recherche si clef in authorized_keys
+    # Search if the key is in authorized_keys
     addkey = True
     source = open(authorized_keys, "r")
     for ligne in source:
@@ -133,7 +133,7 @@ def installkeyssh(keystr):
         source.write(keystr)
         source.close()
 
-def updatedescriptor(result,descriptor,Devent,Daction):
+def updatedescriptor(result, descriptor, Devent, Daction):
     if sys.platform.startswith('linux'):
         dataupdate = descriptor['linux']['sequence']
     elif sys.platform.startswith('win'):
@@ -154,9 +154,8 @@ def transfert_package(destinataire, datacontinue, objectxmpp):
     if datacontinue['data']['methodetransfert'] == 'rsync':
         if 'Pulse' in datacontinue['data']['pathpackageonmachine'] and 'tmp' in datacontinue['data']['pathpackageonmachine']:
 
-            datacontinue['data']['pathpackageonmachine'] = datacontinue['data']['pathpackageonmachine'].replace("\\","/")
-            tab=datacontinue['data']['pathpackageonmachine'].split('/')[3:]
-            #os.path.join
+            datacontinue['data']['pathpackageonmachine'] = datacontinue['data']['pathpackageonmachine'].replace("\\", "/")
+            tab = datacontinue['data']['pathpackageonmachine'].split('/')[3:]
             datacontinue['data']['pathpackageonmachine'] = '/'.join(tab)
             cmd = "rsync --delete -e \"ssh -o IdentityFile=/root/.ssh/id_rsa -o StrictHostKeyChecking=no -o Batchmode=yes -o PasswordAuthentication=no -o ServerAliveInterval=10 -o CheckHostIP=no -o ConnectTimeout=10\" -av %s/ pulse@%s:\"%s/\""%(datacontinue['data']['path'],
                                         datacontinue['data']['ipmachine'],
@@ -169,7 +168,7 @@ def transfert_package(destinataire, datacontinue, objectxmpp):
         logging.getLogger().debug("cmd %s"% cmd)
         logging.getLogger().debug("datacontinue %s"% json.dumps(datacontinue, indent=4, sort_keys=True))
         logging.getLogger().debug("destinataire %s"% destinataire)
-        objectxmpp.process_on_end_send_message_xmpp.add_processcommand( cmd ,datacontinue, destinataire, destinataire,   50)
+        objectxmpp.process_on_end_send_message_xmpp.add_processcommand(cmd, datacontinue, destinataire, destinataire, 50)
     else:
         pass
 
@@ -186,16 +185,16 @@ def checkosindescriptor(descriptor):
         return False
 
 
-def curlgetdownloadfile( destfile, urlfile, insecure = True):
+def curlgetdownloadfile(destfile, urlfile, insecure=True):
     # As long as the file is opened in binary mode, both Python 2 and Python 3
     # can write response body to it without decoding.
     with open(destfile, 'wb') as f:
         c = pycurl.Curl()
         c.setopt(c.URL, urlfile)
         c.setopt(c.WRITEDATA, f)
-        if insecure :
+        if insecure:
             # option equivalent a friser de --insecure
-            c.setopt(pycurl.SSL_VERIFYPEER, 0)   
+            c.setopt(pycurl.SSL_VERIFYPEER, 0)
             c.setopt(pycurl.SSL_VERIFYHOST, 0)
         c.perform()
         c.close()
@@ -204,27 +203,24 @@ def recuperefile(datasend, objectxmpp):
     if not os.path.isdir(datasend['data']['pathpackageonmachine']):
         os.makedirs(datasend['data']['pathpackageonmachine'], mode=0777)
     uuidpackage = datasend['data']['path'].split('/')[-1]
-    curlurlbase = "https://%s:9990/mirror1_files/%s/"%(datasend['data']['iprelay'], uuidpackage )
+    curlurlbase = "https://%s:9990/mirror1_files/%s/"%(datasend['data']['iprelay'], uuidpackage)
     #curl -O -k  https://192.168.56.2:9990/mirror1_files/0be145fa-973c-11e4-8dc5-0800275891ef/7z920.exe
     for filepackage in datasend['data']['packagefile']:
         if datasend['data']['methodetransfert'] == "curl":
-            src  = os.path.join(datasend['data']['path'], filepackage)
+            src = os.path.join(datasend['data']['path'], filepackage)
             dest = os.path.join(datasend['data']['pathpackageonmachine'], filepackage)
-            urlfile= curlurlbase + filepackage
-            print "curl file dest %s  url  %s"%(dest,urlfile)
-            curlgetdownloadfile( dest, urlfile )
-            objectxmpp.logtopulse('download from %s file : %s'%( datasend['data']['jidrelay'], filepackage ) ,
+            urlfile = curlurlbase + filepackage
+            print "curl file dest %s  url  %s"%(dest, urlfile)
+            curlgetdownloadfile(dest, urlfile)
+            objectxmpp.logtopulse('download from %s file : %s'%(datasend['data']['jidrelay'], filepackage),
                                        type='deploy',
-                                       sessionname = datasend['sessionid'] ,
-                                       priority = -1,
-                                       who = objectxmpp.boundjid.bare)
+                                       sessionname=datasend['sessionid'],
+                                       priority=-1,
+                                       who=objectxmpp.boundjid.bare)
 
 
-def action( objectxmpp, action, sessionid, data, message, dataerreur):
+def action(objectxmpp, action, sessionid, data, message, dataerreur):
     logging.getLogger().debug("RECV data message")
-    #if not 'stepcurrent' in data:
-        #logging.getLogger().debug("%s"% json.dumps(data, indent=4, sort_keys=True))
-    #define message template
     datasend = {
                     'action': action,
                     'sessionid': sessionid,
@@ -234,14 +230,14 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                 }
 
     logging.getLogger().debug("#################MACHINE#####################")
-    logging.getLogger().debug("##############deploy %s on %s##############"%(data['name'],data['jidmachine'] ))
+    logging.getLogger().debug("##############deploy %s on %s##############"%(data['name'], data['jidmachine']))
     logging.getLogger().debug("#############################################")
     if not 'stepcurrent' in datasend['data']:
         if not cleandescriptor(data):
             objectxmpp.logtopulse('[xxx]: Terminate deploy ERROR descriptor OS %s missing'%sys.platform,
                                         type='deploy',
-                                        sessionname = sessionid ,
-                                        priority =0,
+                                        sessionname=sessionid,
+                                        priority=0,
                                         who=objectxmpp.boundjid.bare)
             datasend = {
                             'action':  "result" + action,
@@ -252,10 +248,10 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                         }
             objectxmpp.logtopulse('[xxx]: Terminate deploy ERROR descriptor OS %s '%sys.platform,
                                         type='deploy',
-                                        sessionname = sessionid ,
-                                        priority =0,
+                                        sessionname=sessionid,
+                                        priority=0,
                                         who=objectxmpp.boundjid.bare)
-            objectxmpp.send_message(   mto='log@pulse',
+            objectxmpp.send_message(mto='log@pulse',
                                             mbody=json.dumps(datasend),
                                             mtype='chat')
             return
@@ -267,12 +263,12 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                             'ret' : 0,
                             'base64' : False
                         }
-        datasend['data']['pathpackageonmachine'] = os.path.join( managepackage.packagedir(),data['path'].split('/')[-1])
-        if data['methodetransfert'] == "curl" and data['transfert'] :
-            recuperefile(datasend, objectxmpp )
+        datasend['data']['pathpackageonmachine'] = os.path.join(managepackage.packagedir(), data['path'].split('/')[-1])
+        if data['methodetransfert'] == "curl" and data['transfert']:
+            recuperefile(datasend, objectxmpp)
         datasend['data']['stepcurrent'] = 0 #step initial
         if not objectxmpp.session.isexist(sessionid):
-            objectxmpp.session.createsessiondatainfo(sessionid,  datasession = datasend['data'], timevalid = 10)
+            objectxmpp.session.createsessiondatainfo(sessionid, datasession=datasend['data'], timevalid=10)
         logging.getLogger().debug("start call gracet")
         grafcet(objectxmpp, datasend)
     else:
