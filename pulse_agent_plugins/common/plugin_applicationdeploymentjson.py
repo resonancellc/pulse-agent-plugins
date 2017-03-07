@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# (c) 2016 siveo, http://www.siveo.net
+# (c) 2016-2017 siveo, http://www.siveo.net
 #
 # This file is part of Pulse 2, http://www.siveo.net
 #
@@ -23,13 +23,9 @@ import sys
 import os
 from lib.managepackage import managepackage
 from lib.grafcetdeploy import grafcet
-import traceback
 import pprint
 import logging
 import pycurl
-
-from lib.utils import shellcommandtimeout
-
 
 logger = logging.getLogger()
 
