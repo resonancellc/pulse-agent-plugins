@@ -99,7 +99,7 @@ def cleandescriptor(datasend):
             datasend['descriptor']['sequence'] = datasend['descriptor']['Macos']['sequence']
             del datasend['descriptor']['Macos']
         except:
-            False
+            return False
     datasend['typeos'] = sys.platform
     return True
 
