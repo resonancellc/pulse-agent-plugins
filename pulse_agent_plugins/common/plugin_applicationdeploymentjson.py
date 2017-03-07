@@ -97,7 +97,6 @@ def cleandescriptor(datasend):
             pass
         try:
             datasend['descriptor']['sequence'] = datasend['descriptor']['Macos']['sequence']
-            #del datasend['descriptor']['Macos']['sequence']
             del datasend['descriptor']['Macos']
         except:
             False
