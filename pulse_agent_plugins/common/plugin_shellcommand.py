@@ -19,7 +19,6 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA 02110-1301, USA.
 
-from  lib.utils import pluginprocess
 from  lib.utils import simplecommand
 import json
 import traceback
