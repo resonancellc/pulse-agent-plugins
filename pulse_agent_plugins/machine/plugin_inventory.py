@@ -23,7 +23,8 @@ from  lib.utils import pluginprocess
 import sys
 import os
 from  lib.utils import simplecommand
-import zlib, base64
+import zlib
+import base64
 import traceback
 import json
 if sys.platform.startswith('win'):
