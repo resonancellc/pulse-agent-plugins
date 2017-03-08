@@ -20,7 +20,8 @@
 # MA 02110-1301, USA.
 
 from  lib.utils import pluginprocess
-import sys, os
+import sys
+import os
 from  lib.utils import simplecommand
 import zlib, base64
 import traceback
