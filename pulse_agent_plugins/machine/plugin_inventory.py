@@ -31,19 +31,19 @@ if sys.platform.startswith('win'):
     from lib.registerwindows import constantregisterwindows
     import _winreg
 
-plugin={"VERSION": "1.1", "NAME" :"inventory", "TYPE":"machine"}
+plugin = {"VERSION": "1.1", "NAME" :"inventory", "TYPE":"machine"}
 
 
 @pluginprocess
-def action( xmppobject, action, sessionid, data, message, dataerreur, result):
+def action(xmppobject, action, sessionid, data, message, dataerreur, result):
     print "plugin_inventory"
     if sys.platform.startswith('linux'):
         try:
             obj = simplecommand("fusioninventory-agent  --stdout > /tmp/inventory.txt")
-            Fichier = open("/tmp/inventory.txt",'r')
+            Fichier = open("/tmp/inventory.txt", 'r')
             result['data']['inventory'] = Fichier.read()
             Fichier.close()
-            result['data']['inventory'] = base64.b64encode(zlib.compress(result['data']['inventory'],9))
+            result['data']['inventory'] = base64.b64encode(zlib.compress(result['data']['inventory'], 9))
         except Exception, e:
             print "Error: %s" % str(e)
             traceback.print_exc(file=sys.stdout)
@@ -51,11 +51,11 @@ def action( xmppobject, action, sessionid, data, message, dataerreur, result):
     elif sys.platform.startswith('win'):
         try:
             # run the inventory
-            program = os.path.join(os.environ["ProgramFiles"],'FusionInventory-Agent','fusioninventory-agent.bat')
+            program = os.path.join(os.environ["ProgramFiles"], 'FusionInventory-Agent', 'fusioninventory-agent.bat')
             namefile = os.path.join(os.environ["ProgramFiles"], 'Pulse', 'tmp', 'inventory.txt')
-            cmd = """\"%s\" --local=\"%s\""""%(program,namefile)
+            cmd = """\"%s\" --local=\"%s\""""%(program, namefile)
             simplecommand(cmd)
-            Fichier = open(namefile,'r')
+            Fichier = open(namefile, 'r')
             result['data']['inventory'] = base64.b64encode(zlib.compress(Fichier.read(), 9))
             Fichier.close()
             # read max_key_index parameter to find out the number of keys
@@ -65,20 +65,20 @@ def action( xmppobject, action, sessionid, data, message, dataerreur, result):
                 result['data']['reginventory']['info']['max_key_index'] = int(xmppobject.config.max_key_index)
                 nb_iter = int(xmppobject.config.max_key_index) + 1
                 # get the value of each key and create the json file
-                for num in range(1,nb_iter):
+                for num in range(1, nb_iter):
                     reg_key_num = 'reg_key_'+str(num)
                     result['data']['reginventory'][reg_key_num] = {}
-                    registry_key = getattr(xmppobject.config,reg_key_num)
+                    registry_key = getattr(xmppobject.config, reg_key_num)
                     result['data']['reginventory'][reg_key_num]['key'] = registry_key
                     hive = registry_key.split('\\')[0].strip('"')
                     sub_key = registry_key.split('\\')[-1].strip('"')
-                    path = registry_key.replace(hive+'\\','').replace('\\'+sub_key,'').strip('"')
+                    path = registry_key.replace(hive+'\\', '').replace('\\'+sub_key, '').strip('"')
                     print "hive: %s" % hive
                     print "sub_key: %s" % sub_key
                     print "path: %s" % path
                     reg_constants = constantregisterwindows()
                     key = _winreg.OpenKey(reg_constants.getkey(hive), path)
-                    (key_value, key_type) = _winreg.QueryValueEx(key,sub_key)
+                    (key_value, key_type) = _winreg.QueryValueEx(key, sub_key)
                     result['data']['reginventory'][reg_key_num]['value'] = str(key_value)
                     _winreg.CloseKey(key)
                 # generate the json and encode
