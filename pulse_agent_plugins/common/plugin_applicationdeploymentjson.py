@@ -31,11 +31,9 @@ logger = logging.getLogger()
 
 plugin = {"VERSION" : "1.1", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
 
-
 """
 Plugins for deploiment application
 """
-
 
 def cleandescriptor(datasend):
 
