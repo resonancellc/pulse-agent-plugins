@@ -37,15 +37,6 @@ Plugins for deploiment application
 """
 
 
-
-#TQ type message query
-#TR type message Reponse
-#TE type message Error
-#TED type message END deploy
-#TEVENT remote event
-
-
-
 def cleandescriptor(datasend):
 
     sequence = {}
