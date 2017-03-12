@@ -18,6 +18,7 @@
 # along with Pulse 2; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA 02110-1301, USA.
+
 import json
 import sys
 import os
@@ -36,6 +37,14 @@ Plugins for deploiment application
 """
 
 def cleandescriptor(datasend):
+    """ Add here what cleandescriptor does.
+
+    :param datasend: 
+    :type datasend: str.
+    :returns:  bool -- the return code.
+    :raises: KeyError
+
+    """
 
     sequence = {}
     if sys.platform.startswith('linux'):
@@ -89,6 +98,14 @@ def cleandescriptor(datasend):
     return True
 
 def keyssh(name="id_rsa.pub"):
+    """ This function is used to define they sshkey
+        that will be used.
+
+    :param name: The name of the used ssh key
+    :type datasend: str
+    :returns:  str -- the complete path + name of the sshkey
+
+    """
     source = open(os.path.join('/', 'root', '.ssh', name), "r")
     dede = source.read().strip(" \n\t")
     source.close()
