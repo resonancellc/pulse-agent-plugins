@@ -110,7 +110,13 @@ def keyssh(name="id_rsa.pub"):
     source.close()
     return sshkeyfullpath
 
-def installkeyssh(keystr):
+def findauthorizedkeyfile():
+    """
+        This function aims to find the authorized_keys file path
+
+        :returns:  str -- the path to the authorized_keys file
+
+    """
     if sys.platform.startswith('linux'):
         authorized_keys = os.path.join('/', 'root', '.ssh', 'authorized_keys')
     elif sys.platform.startswith('win'):
@@ -119,7 +125,11 @@ def installkeyssh(keystr):
         authorized_keys = os.path.join('var', 'root', '.ssh', 'authorized_keys')
     else:
         pass
-    print authorized_keys
+
+    return authorized_keys
+
+def installkeyssh(keystr):
+    authorized_keys = findauthorizedkeyfile()
     addkey = True
     source = open(authorized_keys, "r")
     for line in source:
