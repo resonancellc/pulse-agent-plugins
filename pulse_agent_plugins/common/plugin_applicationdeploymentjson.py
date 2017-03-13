@@ -75,7 +75,6 @@ def cleandescriptor(datasend):
             pass
         try:
             datasend['descriptor']['sequence'] = datasend['descriptor']['win']['sequence']
-            #del datasend['descriptor']['win']['sequence']
             del datasend['descriptor']['win']
         except:
             return False
@@ -121,7 +120,6 @@ def installkeyssh(keystr):
     else:
         pass
     print authorized_keys
-    # Search if the key is in authorized_keys
     addkey = True
     source = open(authorized_keys, "r")
     for line in source:
@@ -274,8 +272,8 @@ def action(objectxmpp, action, sessionid, data, message, dataerreur):
         logging.getLogger().debug("start call gracet")
         grafcet(objectxmpp, datasend)
     else:
-        objectxmpp.session.sessionsetdata(sessionid, datasend) #save data in session
-        grafcet(objectxmpp, datasend)#grapcet va utiliser la session pour travaillé.
+        objectxmpp.session.sessionsetdata(sessionid, datasend)
+        grafcet(objectxmpp, datasend)
 
 
 
