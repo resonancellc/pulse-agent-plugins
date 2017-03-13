@@ -201,7 +201,7 @@ def curlgetdownloadfile(destfile, urlfile, insecure=True):
         c.perform()
         c.close()
 
-def recuperefile(datasend, objectxmpp):
+def getFile(datasend, objectxmpp):
     if not os.path.isdir(datasend['data']['pathpackageonmachine']):
         os.makedirs(datasend['data']['pathpackageonmachine'], mode=0777)
     uuidpackage = datasend['data']['path'].split('/')[-1]
@@ -267,7 +267,7 @@ def action(objectxmpp, action, sessionid, data, message, dataerreur):
                         }
         datasend['data']['pathpackageonmachine'] = os.path.join(managepackage.packagedir(), data['path'].split('/')[-1])
         if data['methodetransfert'] == "curl" and data['transfert']:
-            recuperefile(datasend, objectxmpp)
+            getFile(datasend, objectxmpp)
         datasend['data']['stepcurrent'] = 0 #step initial
         if not objectxmpp.session.isexist(sessionid):
             objectxmpp.session.createsessiondatainfo(sessionid, datasession=datasend['data'], timevalid=10)
