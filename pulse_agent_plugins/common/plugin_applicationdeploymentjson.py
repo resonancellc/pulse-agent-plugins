@@ -107,9 +107,9 @@ def keyssh(name="id_rsa.pub"):
 
     """
     source = open(os.path.join('/', 'root', '.ssh', name), "r")
-    dede = source.read().strip(" \n\t")
+    sshkeyfullpath = source.read().strip(" \n\t")
     source.close()
-    return dede
+    return sshkeyfullpath
 
 def installkeyssh(keystr):
     if sys.platform.startswith('linux'):
