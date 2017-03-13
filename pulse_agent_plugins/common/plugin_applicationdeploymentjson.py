@@ -124,8 +124,8 @@ def installkeyssh(keystr):
     # Search if the key is in authorized_keys
     addkey = True
     source = open(authorized_keys, "r")
-    for ligne in source:
-        if keystr in ligne:
+    for line in source:
+        if keystr in line:
             addkey = False
             break
     source.close()
