@@ -23,7 +23,7 @@ from  lib.utils import simplecommand
 import json
 import traceback
 import sys
-plugin = {"VERSION": "1.0", "NAME" :"shellcommand", "TYPE":"all"}
+plugin = {"VERSION": "1.1", "NAME" :"shellcommand", "TYPE":"all"}
 
 
 def action(objectxmpp, action, sessionid, data, message, dataerreur):
@@ -58,4 +58,3 @@ def action(objectxmpp, action, sessionid, data, message, dataerreur):
             objectxmpp.send_message(mto=message['from'],
                                     mbody=json.dumps(dataerreur),
                                     mtype='chat')
-

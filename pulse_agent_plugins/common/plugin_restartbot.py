@@ -26,7 +26,7 @@
 import json
 
 
-plugin={"VERSION": "1.0", "NAME" :"restartbot", "TYPE" : "all"}
+plugin={"VERSION": "1.1", "NAME" :"restartbot", "TYPE" : "all"}
 
 def action( objetxmpp, action, sessionid, data, message, dataerreur ):
     print 'plugin restartbot'

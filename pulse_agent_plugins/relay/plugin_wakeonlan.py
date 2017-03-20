@@ -22,7 +22,7 @@
 from  lib.utils import pluginprocess
 from wakeonlan import wol
 
-plugin={"VERSION": "1.0", "NAME" :"wakeonlan","TYPE":"relayserver"}
+plugin={"VERSION": "1.1", "NAME" :"wakeonlan","TYPE":"relayserver"}
 @pluginprocess
 def action( objetxmpp, action, sessionid, data, message, dataerreur,result):
     print data
@@ -33,4 +33,3 @@ def action( objetxmpp, action, sessionid, data, message, dataerreur,result):
         dataerreur['data']['msg'] = "ERROR : plugin wakeonlan"
         dataerreur['ret'] = 255
         raise
-

@@ -20,7 +20,7 @@
 # MA 02110-1301, USA.
 import os
 
-plugin={"VERSION": "1.0", "NAME" : "installplugin", "TYPE" : "all"}
+plugin={"VERSION": "1.1", "NAME" : "installplugin", "TYPE" : "all"}
 
 def action( objetxmpp, action, sessionid, data, message, dataerreur ):
     if action == 'installplugin':

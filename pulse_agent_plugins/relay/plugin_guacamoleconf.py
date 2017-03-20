@@ -23,7 +23,7 @@ import sys
 from  lib.utils import pluginprocess
 import MySQLdb
 import traceback
-plugin = {"VERSION": "1.0", "NAME" :"guacamoleconf", "TYPE":"relayserver"}
+plugin = {"VERSION": "1.1", "NAME" :"guacamoleconf", "TYPE":"relayserver"}
 
 def insertprotocole(protocole, hostname):
     return """INSERT INTO guacamole_connection (connection_name, protocol) VALUES ( '%s_%s', '%s');"""%(protocole.upper(), hostname, protocole.lower())
@@ -103,4 +103,3 @@ def action(objetxmpp, action, sessionid, data, message, dataerreur, result):
         db.close()
         raise
     db.close()
-
