@@ -18,8 +18,6 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA 02110-1301, USA.
 
-#version 1.0
-
 from setuptools import setup
 from distutils.sysconfig import get_python_lib
 
@@ -38,7 +36,7 @@ setup(
 
     keywords='pulse agent plugins',
     name='pulse_agent_plugins', 
-    version='1.0',
+    version='1.1',
     description = 'XMPP Agent plugins for pulse',
     url='https://www.siveo.net/',
     packages=[],
