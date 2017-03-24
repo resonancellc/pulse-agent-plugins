@@ -279,7 +279,7 @@ def action(objectxmpp, action, sessionid, data, message, dataerreur):
         datasend['data']['stepcurrent'] = 0 #step initial
         if not objectxmpp.session.isexist(sessionid):
             objectxmpp.session.createsessiondatainfo(sessionid, datasession=datasend['data'], timevalid=10)
-        logging.getLogger().debug("start call gracet")
+        logging.getLogger().debug("start call grafcet")
         grafcet(objectxmpp, datasend)
     else:
         objectxmpp.session.sessionsetdata(sessionid, datasend)
