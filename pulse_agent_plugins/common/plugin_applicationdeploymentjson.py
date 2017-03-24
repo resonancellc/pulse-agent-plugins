@@ -41,7 +41,9 @@ def cleandescriptor(datasend):
 
     :param datasend: 
     :type datasend: str.
+
     :returns:  bool -- the return code.
+
     :raises: KeyError
 
     """
@@ -101,7 +103,7 @@ def keyssh(name="id_rsa.pub"):
         that will be used.
 
     :param name: The name of the used ssh key
-    :type datasend: str
+    :type name: str
     :returns:  str -- the complete path + name of the sshkey
 
     """
@@ -196,6 +198,22 @@ def checkosindescriptor(descriptor):
 
 
 def curlgetdownloadfile(destfile, urlfile, insecure=True):
+    """
+        This function is called to download files using Curl.
+
+    :param destfile: Name of the file to download
+    :type destfile: str
+
+    :param urfile: URL of the file to download
+    :type urlfile: str
+
+    :param insecure: Set to True to not check certificate.
+    :type insecure: bool
+
+    :returns:
+
+    """
+
     # As long as the file is opened in binary mode, both Python 2 and Python 3
     # can write response body to it without decoding.
     with open(destfile, 'wb') as f:
@@ -210,6 +228,20 @@ def curlgetdownloadfile(destfile, urlfile, insecure=True):
         c.close()
 
 def getFile(datasend, objectxmpp):
+    """
+        This function is used to download files provided by the
+        descriptor.
+
+    :param datasend: The descriptor
+    :type datasend: str
+
+    :param objectxmpp:
+    :type objectxmpp:
+
+    :returns:
+
+    """
+
     if not os.path.isdir(datasend['data']['pathpackageonmachine']):
         os.makedirs(datasend['data']['pathpackageonmachine'], mode=0777)
     uuidpackage = datasend['data']['path'].split('/')[-1]
