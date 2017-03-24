@@ -37,7 +37,7 @@ Plugins for deploiment application
 """
 
 def cleandescriptor(datasend):
-    """ Add here what cleandescriptor does.
+    """ This function is used to clean the descriptor.
 
     :param datasend: 
     :type datasend: str.
