@@ -229,8 +229,8 @@ def curlgetdownloadfile(destfile, urlfile, insecure=True):
 
 def getFile(datasend, objectxmpp):
     """
-        This function is used to download files provided by the
-        descriptor.
+    This function is used to download files provided by the
+    descriptor.
 
     :param datasend: The descriptor
     :type datasend: str
