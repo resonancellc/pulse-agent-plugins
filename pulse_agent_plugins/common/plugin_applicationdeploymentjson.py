@@ -238,7 +238,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
     logging.getLogger().debug("#############################################")
     if not 'stepcurrent' in datasend['data']:
         if not cleandescriptor(data):
-            objectxmpp.logtopulse('[xxx]: Terminate deploy ERROR descriptor OS %s missing'%sys.platform,
+            objectxmpp.logtopulse('<span style="color: red;";>[xxx]: Terminate deploy ERROR descriptor OS %s missing</span>'%sys.platform,
                                         type='deploy',
                                         sessionname = sessionid ,
                                         priority =0,
@@ -249,13 +249,16 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                             'data' : data,
                             'ret' : -1,
                             'base64' : False
-                        }
-            objectxmpp.logtopulse('[xxx]: Terminate deploy ERROR descriptor OS %s '%sys.platform,
-                                        type='deploy',
-                                        sessionname = sessionid ,
-                                        priority =0,
-                                        who=objectxmpp.boundjid.bare)
+            }
+            datasend['data']['descriptor']['sequence']=[{"action" : "ERROR",
+                                                         "description" : "DESCRIPTOR MISSING FOR Paltform %s os[%s]"%(sys.platform,platform.platform()),
+                                                         "step" : -1,
+                                                         "completed" : 1}]
+
             objectxmpp.send_message(   mto='log@pulse',
+                                            mbody=json.dumps(datasend),
+                                            mtype='chat')
+            objectxmpp.send_message(   mto=data['jidmaster'],
                                             mbody=json.dumps(datasend),
                                             mtype='chat')
             return
