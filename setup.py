@@ -1,5 +1,5 @@
 #
-# (c) 2016 siveo, http://www.siveo.net
+# (c) 2016-2017 siveo, http://www.siveo.net
 #
 # This file is part of Pulse 2, http://www.siveo.net
 #
@@ -36,7 +36,7 @@ setup(
 
     keywords='pulse agent plugins',
     name='pulse_agent_plugins', 
-    version='1.0',
+    version='1.1',
     description = 'XMPP Agent plugins for pulse',
     url='https://www.siveo.net/',
     packages=[],

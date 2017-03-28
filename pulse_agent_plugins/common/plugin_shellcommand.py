@@ -19,15 +19,14 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA 02110-1301, USA.
 
-from  lib.utils import pluginprocess
 from  lib.utils import simplecommand
 import json
 import traceback
 import sys
-plugin={"VERSION": "1.0", "NAME" :"shellcommand", "TYPE":"all"}
+plugin = {"VERSION": "1.1", "NAME" :"shellcommand", "TYPE":"all"}
 
 
-def action( objectxmpp, action, sessionid, data, message, dataerreur):
+def action(objectxmpp, action, sessionid, data, message, dataerreur):
     result = {
                     'action': "result%s"%action,
                     'sessionid': sessionid,
@@ -37,26 +36,25 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                 }
     try:
         obj = simplecommand(data['cmd'])
-        obj['result']= [ x.rstrip('\n') for x in  obj['result'] if x != "\n"]
+        obj['result'] = [x.rstrip('\n') for x in  obj['result'] if x != "\n"]
         if obj['code'] == 0:
-            result['ret']=0
+            result['ret'] = 0
             result['data']['result'] = "".join(obj['result'])
-            result['data']['result'] = "".join([ x.decode('latin-1') for x in result['data']['result'] ])
+            result['data']['result'] = "".join([x.decode('latin-1') for x in result['data']['result']])
             print result['data']['result']
-            objectxmpp.send_message(   mto=message['from'],
-                                       mbody=json.dumps(result, sort_keys=True,indent=4),
+            objectxmpp.send_message(mto=message['from'],
+                                       mbody=json.dumps(result, sort_keys=True, indent=4),
                                        mtype='chat')
         else:
             dataerreur['ret'] = obj['code']
-            dataerreur['data']['msg']="Erreur commande\n %s"%a
-            objectxmpp.send_message(   mto=message['from'],
+            dataerreur['data']['msg'] = "Erreur commande\n %s"%a
+            objectxmpp.send_message(mto=message['from'],
                                             mbody=json.dumps(dataerreur),
                                             mtype='chat')
-    except :
+    except:
             traceback.print_exc(file=sys.stdout)
             dataerreur['ret'] = -255
             dataerreur['data']['msg'] = "Erreur commande\n %s"%data['cmd']
-            objectxmpp.send_message(   mto  =message['from'],
-                                            mbody = json.dumps(dataerreur),
-                                            mtype = 'chat')
-
+            objectxmpp.send_message(mto=message['from'],
+                                    mbody=json.dumps(dataerreur),
+                                    mtype='chat')

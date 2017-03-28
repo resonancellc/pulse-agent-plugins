@@ -23,36 +23,36 @@ import sys
 from  lib.utils import pluginprocess
 import MySQLdb
 import traceback
-plugin={"VERSION": "1.0", "NAME" :"guacamoleconf", "TYPE":"relayserver"}
+plugin = {"VERSION": "1.1", "NAME" :"guacamoleconf", "TYPE":"relayserver"}
 
 def insertprotocole(protocole, hostname):
     return """INSERT INTO guacamole_connection (connection_name, protocol) VALUES ( '%s_%s', '%s');"""%(protocole.upper(), hostname, protocole.lower())
 
 def deleteprotocole(protocole, hostname):
-    return """DELETE FROM `guacamole_connection` WHERE connection_name = '%s_%s';"""%(protocole.upper(),hostname)
+    return """DELETE FROM `guacamole_connection` WHERE connection_name = '%s_%s';"""%(protocole.upper(), hostname)
 
 def insertparameter(id, parameter, value):
-    return """INSERT INTO guacamole_connection_parameter (connection_id, parameter_name, parameter_value) VALUES (%s, '%s', '%s');"""%(id,parameter,value)
+    return """INSERT INTO guacamole_connection_parameter (connection_id, parameter_name, parameter_value) VALUES (%s, '%s', '%s');"""%(id, parameter, value)
 
 @pluginprocess
-def action( objetxmpp, action, sessionid, data, message, dataerreur,result):
+def action(objetxmpp, action, sessionid, data, message, dataerreur, result):
     try:
-        db = MySQLdb.connect(   host=objetxmpp.config.guacamole_dbhost,
-                                user=objetxmpp.config.guacamole_dbuser,
-                                passwd=objetxmpp.config.guacamole_dbpasswd,
-                                db=objetxmpp.config.guacamole_dbname )
+        db = MySQLdb.connect(host=objetxmpp.config.guacamole_dbhost,
+                             user=objetxmpp.config.guacamole_dbuser,
+                             passwd=objetxmpp.config.guacamole_dbpasswd,
+                             db=objetxmpp.config.guacamole_dbname)
     except Exception as e:
         dataerreur['data']['msg'] = "MySQL Error: %s" % str(e)
         traceback.print_exc(file=sys.stdout)
         raise
-    cursor=db.cursor()
+    cursor = db.cursor()
     result['data']['uuid'] = data['uuid']
     result['data']['connection'] = {}
 
     if hasattr(objetxmpp.config, 'guacamole_protocols'):
         protos = objetxmpp.config.guacamole_protocols.split()
     else:
-        protos = ['rdp','ssh','vnc']
+        protos = ['rdp', 'ssh', 'vnc']
 
     try:
         #delete connection
@@ -103,4 +103,3 @@ def action( objetxmpp, action, sessionid, data, message, dataerreur,result):
         db.close()
         raise
     db.close()
-
