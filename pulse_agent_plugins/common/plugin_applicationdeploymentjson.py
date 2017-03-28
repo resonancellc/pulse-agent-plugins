@@ -21,12 +21,13 @@
 import json
 import sys, os
 from lib.managepackage import managepackage
+
 from lib.grafcetdeploy import grafcet
 import traceback
 import pprint
 import logging
 import pycurl
-
+import platform
 from lib.utils import shellcommandtimeout
 
 
@@ -50,7 +51,7 @@ Plugins for deploiment application
 
 
 def cleandescriptor(datasend):
-    
+
     sequence= {}
     if sys.platform.startswith('linux'):
         typeos="Linux"
@@ -99,7 +100,7 @@ def cleandescriptor(datasend):
             #del datasend['descriptor']['Macos']['sequence']
             del datasend['descriptor']['Macos']
         except:
-            False
+            return False
     datasend['typeos']=sys.platform
     return True
 
@@ -222,8 +223,7 @@ def recuperefile(datasend, objectxmpp):
 
 def action( objectxmpp, action, sessionid, data, message, dataerreur):
     logging.getLogger().debug("RECV data message")
-    #if not 'stepcurrent' in data:
-        #logging.getLogger().debug("%s"% json.dumps(data, indent=4, sort_keys=True))
+
     #define message template
     datasend = {
                     'action': action,
@@ -269,7 +269,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                             'data' : data,
                             'ret' : 0,
                             'base64' : False
-                        }
+            }
         datasend['data']['pathpackageonmachine'] = os.path.join( managepackage.packagedir(),data['path'].split('/')[-1])
         if data['methodetransfert'] == "curl" and data['transfert'] :
             recuperefile(datasend, objectxmpp )
@@ -280,7 +280,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         grafcet(objectxmpp, datasend)
     else:
         objectxmpp.session.sessionsetdata(sessionid, datasend) #save data in session
-        grafcet(objectxmpp, datasend)#grapcet va utiliser la session pour travaillé.
+        grafcet(objectxmpp, datasend)#Grafcet needs session to work.
 
 
 
