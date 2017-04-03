@@ -25,12 +25,10 @@ import os
 from lib.managepackage import managepackage
 
 from lib.grafcetdeploy import grafcet
-import pprint
 import logging
 import pycurl
 
 import platform
-from lib.utils import shellcommandtimeout
 
 logger = logging.getLogger()
 
