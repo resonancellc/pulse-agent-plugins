@@ -31,8 +31,8 @@ def insertprotocole(protocole, hostname):
 def deleteprotocole(protocole, hostname):
     return """DELETE FROM `guacamole_connection` WHERE connection_name = '%s_%s';"""%(protocole.upper(), hostname)
 
-def insertparameter(id, parameter, value):
-    return """INSERT INTO guacamole_connection_parameter (connection_id, parameter_name, parameter_value) VALUES (%s, '%s', '%s');"""%(id, parameter, value)
+def insertparameter(index, parameter, value):
+    return """INSERT INTO guacamole_connection_parameter (connection_id, parameter_name, parameter_value) VALUES (%s, '%s', '%s');"""%(index, parameter, value)
 
 @pluginprocess
 def action(objetxmpp, action, sessionid, data, message, dataerreur, result):
