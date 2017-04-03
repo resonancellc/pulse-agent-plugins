@@ -196,10 +196,8 @@ def checkosindescriptor(descriptor):
         osinstall = 'win'
     elif sys.platform.startswith('darwin'):
         osinstall = 'Macos'
-    if osinstall in descriptor and 'sequence' in descriptor[osinstall]:
-        return True
-    else:
-        return False
+
+    return bool(osinstall in descriptor and 'sequence' in descriptor[osinstall])
 
 
 def curlgetdownloadfile(destfile, urlfile, insecure=True):
