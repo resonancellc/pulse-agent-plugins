@@ -1,0 +1,52 @@
+#!/usr/bin/make -f
+
+DESTDIR = $(CURDIR)/debian/
+
+build:
+	rm -frv usr var
+	mkdir -p usr var
+	mkdir -p usr/lib/python2.7/dist-packages/pulse_xmpp_agent/pluginsrelay
+	mkdir -p usr/lib/python2.7/dist-packages/pulse_xmpp_agent/pluginsmachine
+	mkdir -p var/lib/pulse2/xmpp_baseplugin
+	cp -frv pulse_agent_plugins/common/* var/lib/pulse2/xmpp_baseplugin
+	cp -frv pulse_agent_plugins/machine/* var/lib/pulse2/xmpp_baseplugin
+	cp -frv pulse_agent_plugins/relay/* var/lib/pulse2/xmpp_baseplugin
+	cp -fv pulse_agent_plugins/common/* usr/lib/python2.7/dist-packages/pulse_xmpp_agent/pluginsrelay
+	cp -fv pulse_agent_plugins/common/* usr/lib/python2.7/dist-packages/pulse_xmpp_agent/pluginsmachine
+	cp -fv pulse_agent_plugins/machine/* usr/lib/python2.7/dist-packages/pulse_xmpp_agent/pluginsmachine
+	cp -frv pulse_agent_plugins/relay/* usr/lib/python2.7/dist-packages/pulse_xmpp_agent/pluginsrelay
+	mkdir -p var/lib/pulse2/clients/config
+	cp pulse_agent_plugins/config/guacamoleconf.ini.in var/lib/pulse2/clients/config 
+	cp pulse_agent_plugins/config/inventory.ini var/lib/pulse2/clients/config
+clean:
+	dh_testdir
+	dh_testroot
+	-$(MAKE) clean
+	dh_clean
+
+install: build
+	dh_testdir
+	dh_testroot
+	dh_clean -k
+	dh_installdirs
+
+binary-indep: build install
+binary-arch: build install
+	dh_testdir
+	dh_testroot
+	dh_install
+	dh_fixperms
+	dh_installchangelogs
+	dh_installdocs
+	dh_installinit
+	# Some postinstall tools are known to fails after being stripped
+	#dh_strip
+	dh_link
+	dh_compress
+	dh_installdeb
+	dh_gencontrol
+	dh_md5sums
+	dh_builddeb
+
+binary: binary-indep binary-arch
+.PHONY: build clean binary-indep binary-arch binary install

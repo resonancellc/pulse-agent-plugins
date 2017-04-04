@@ -249,7 +249,6 @@ def getFile(datasend, objectxmpp):
     #curl -O -k  https://192.168.56.2:9990/mirror1_files/0be145fa-973c-11e4-8dc5-0800275891ef/7z920.exe
     for filepackage in datasend['data']['packagefile']:
         if datasend['data']['methodetransfert'] == "curl":
-            #src = os.path.join(datasend['data']['path'], filepackage)
             dest = os.path.join(datasend['data']['pathpackageonmachine'], filepackage)
             urlfile = curlurlbase + filepackage
             print "curl file dest %s  url  %s"%(dest, urlfile)
