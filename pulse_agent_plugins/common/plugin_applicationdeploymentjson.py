@@ -50,9 +50,6 @@ def cleandescriptor(datasend):
 
     """
 
-
-    sequence = {}
-
     if sys.platform.startswith('linux'):
         typeos = "Linux"
         try:
