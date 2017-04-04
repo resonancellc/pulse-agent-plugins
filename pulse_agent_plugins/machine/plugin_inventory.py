@@ -39,8 +39,8 @@ def action(xmppobject, action, sessionid, data, message, dataerreur, result):
     print "plugin_inventory"
     if sys.platform.startswith('linux'):
         try:
-            obj = simplecommand("fusioninventory-agent  --stdout > /tmp/inventory.txt")
-            Fichier = open("/tmp/inventory.txt", 'r')
+            simplecommand("fusioninventory-agent  --stdout > /tmp/inventory.txt")
+            Fichier = open(os.path.join("tmp","inventory.txt"), 'r')
             result['data']['inventory'] = Fichier.read()
             Fichier.close()
             result['data']['inventory'] = base64.b64encode(zlib.compress(result['data']['inventory'], 9))
