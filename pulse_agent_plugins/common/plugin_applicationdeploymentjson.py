@@ -62,7 +62,8 @@ def cleandescriptor(datasend):
         try:
             datasend['descriptor']['sequence'] = datasend['descriptor']['linux']['sequence']
             del datasend['descriptor']['linux']
-        except:
+        except Exception, e:
+            logging.getLogger().debug("%s"%str(e))
             return False
 
     elif sys.platform.startswith('win'):
@@ -77,7 +78,8 @@ def cleandescriptor(datasend):
         try:
             datasend['descriptor']['sequence'] = datasend['descriptor']['win']['sequence']
             del datasend['descriptor']['win']
-        except:
+        except Exception, e:
+            logging.getLogger().debug("%s"%str(e))
             return False
     elif sys.platform.startswith('darwin'):
         try:
@@ -91,7 +93,8 @@ def cleandescriptor(datasend):
         try:
             datasend['descriptor']['sequence'] = datasend['descriptor']['Macos']['sequence']
             del datasend['descriptor']['Macos']
-        except:
+        except Exception, e:
+            logging.getLogger().debug("%s"%str(e))
             return False
 
     datasend['typeos'] = sys.platform
@@ -246,7 +249,7 @@ def getFile(datasend, objectxmpp):
     #curl -O -k  https://192.168.56.2:9990/mirror1_files/0be145fa-973c-11e4-8dc5-0800275891ef/7z920.exe
     for filepackage in datasend['data']['packagefile']:
         if datasend['data']['methodetransfert'] == "curl":
-            src = os.path.join(datasend['data']['path'], filepackage)
+            #src = os.path.join(datasend['data']['path'], filepackage)
             dest = os.path.join(datasend['data']['pathpackageonmachine'], filepackage)
             urlfile = curlurlbase + filepackage
             print "curl file dest %s  url  %s"%(dest, urlfile)

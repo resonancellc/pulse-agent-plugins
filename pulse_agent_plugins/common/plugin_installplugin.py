@@ -19,6 +19,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA 02110-1301, USA.
 import os
+import logging
+
 
 plugin={"VERSION": "1.1", "NAME" : "installplugin", "TYPE" : "all"}
 
@@ -31,8 +33,8 @@ def action( objetxmpp, action, sessionid, data, message, dataerreur ):
                 fileplugin = open(namefile, "w")
                 fileplugin.write(str(data['datafile']))
                 fileplugin.close()
-            except :
-                print "Error: cannor write on file"
+            except Exception, e:
+                logging.getLogger().debug("error : %s"%str(e))
                 return
             msg = "install plugin %s on %s"%(data['pluginname'],message['to'].user)
             objetxmpp.loginformation(msg)
