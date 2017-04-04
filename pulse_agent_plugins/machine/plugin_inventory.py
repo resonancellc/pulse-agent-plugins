@@ -78,7 +78,7 @@ def action(xmppobject, action, sessionid, data, message, dataerreur, result):
                     print "path: %s" % path
                     reg_constants = constantregisterwindows()
                     key = _winreg.OpenKey(reg_constants.getkey(hive), path)
-                    (key_value, key_type) = _winreg.QueryValueEx(key, sub_key)
+                    key_value = _winreg.QueryValueEx(key, sub_key)
                     result['data']['reginventory'][reg_key_num]['value'] = str(key_value)
                     _winreg.CloseKey(key)
                 # generate the json and encode
