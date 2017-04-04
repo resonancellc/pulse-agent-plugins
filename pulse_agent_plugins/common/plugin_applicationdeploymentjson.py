@@ -51,7 +51,6 @@ def cleandescriptor(datasend):
     """
 
     if sys.platform.startswith('linux'):
-        typeos = "Linux"
         try:
             del datasend['descriptor']['win']
         except KeyError:
@@ -67,7 +66,6 @@ def cleandescriptor(datasend):
             return False
 
     elif sys.platform.startswith('win'):
-        typeos = "Win"
         try:
             del datasend['descriptor']['linux']
         except KeyError:
@@ -82,7 +80,6 @@ def cleandescriptor(datasend):
         except:
             return False
     elif sys.platform.startswith('darwin'):
-        typeos = "Macos"
         try:
             del datasend['descriptor']['linux']
         except KeyError:
