@@ -1,0 +1,143 @@
+pulse-agent-plugins (1.0-12) unstable; urgency=medium
+
+ * shell command encodage window. ( 0ccd3e3336f9f9a1cf115723100b6706e1ab8910 )
+
+ -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net>  Sat, 18 Feb 2017 17:27:04 +0100
+
+pulse-agent-plugins (1.0-10) unstable; urgency=medium
+
+ * Package missing inventory.ini file
+
+ -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net>  Sat, 18 Feb 2017 17:27:04 +0100
+
+pulse-agent-plugins (1.0-9) unstable; urgency=medium
+
+ * Add missing inventory.ini file
+
+ -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net>  Sat, 18 Feb 2017 17:27:04 +0100
+
+pulse-agent-plugins (1.0-8) unstable; urgency=medium
+
+ * Inventory of Windows registry keys ( 4db19e1395c0f6c80680e791df4a20d4344ab5fe )
+
+ -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net>  Sat, 18 Feb 2017 17:27:04 +0100
+
+pulse-agent-plugins (1.0-7) unstable; urgency=medium
+
+ * supp dep to class python module ( 13c9f8c50ad0e637708ac4ad7bb85258e77d8a62 )
+
+ -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net>  Sat, 18 Feb 2017 17:27:04 +0100
+
+pulse-agent-plugins (1.0-6) unstable; urgency=medium
+
+ * Setting to choose the protocols to be used via Guacamole ( 15822c500401fdac69c28f47b740e0c7bedad72a )
+
+ -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net>  Sat, 18 Feb 2017 17:27:04 +0100
+
+pulse-agent-plugins (1.0-5) unstable; urgency=medium
+
+ * chang plugin deloy ( 43416734c508aac6c93913be338bc74c1af4dae2 )
+
+ -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net>  Mon, 08 Jan 2017 17:27:04 +0100
+
+pulse-agent-plugins (1.0-4) unstable; urgency=medium
+
+ * Fix install path
+
+ -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net>  Mon, 08 Jan 2017 17:27:04 +0100
+
+pulse-agent-plugins (1.0-3) unstable; urgency=medium
+
+ * Fix version ( b5f67d38130c5eb11c97d0944b9fd231edc6b4a0 )
+
+ -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net>  Mon, 08 Jan 2017 17:27:04 +0100
+
+pulse-agent-plugins (1.0-2) unstable; urgency=medium
+
+ * fix erreur deploy windows ( 0338064d3287b98d5533e052e6200effebdafb4c )
+
+ -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net>  Mon, 08 Jan 2017 17:27:04 +0100
+
+pulse-agent-plugins (0.1-14) unstable; urgency=medium
+
+ * Fix file list ( f3a4d5fc5835aa4c74132efc34027cd8b6ef4e4d )
+
+ -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net>  Thu, 04 Aug 2016 17:27:04 +0100
+
+pulse-agent-plugins (0.1-13) unstable; urgency=medium
+
+ * install new deploy commit ( 92d1eab85a1d5cd488c85b174d970a6146e7bfd0 )
+
+ -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net>  Thu, 04 Aug 2016 17:27:04 +0100
+
+pulse-agent-plugins (0.1-12) unstable; urgency=medium
+
+ * Fix typo in function decorator ( 74ea36870a33a8a6b0d2dd747f57d99ec6539a62 )
+
+ -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net>  Thu, 04 Aug 2016 17:27:04 +0100
+
+pulse-agent-plugins (0.1-11) unstable; urgency=medium
+
+ * Port to pulse-xmpp-plugins  API changes ( 257bdd5dfcc8a9142279566c7cab3bea81e4fc36 )
+
+ -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net>  Thu, 04 Aug 2016 17:27:04 +0100
+
+pulse-agent-plugins (0.1-10) unstable; urgency=medium
+
+ * Translation fixes ( 3cb5136bf7c8a3bfc6ef2f82b70ec8e3dff29a76 )
+
+ -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net>  Thu, 04 Aug 2016 17:27:04 +0100
+
+pulse-agent-plugins (0.1-9) unstable; urgency=medium
+
+ * Fix launching of inventory on windows ( 6cca4abf24bccaac91c1d685802e913f2a30c79f )
+
+ -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net>  Thu, 04 Aug 2016 17:27:04 +0100
+
+pulse-agent-plugins (0.1-8) unstable; urgency=medium
+
+ * plugin guacamole write guacamole configuration on relay server ( 5e102d49034da14885444d87dc679536e3d719e7 )
+
+ -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net>  Thu, 04 Aug 2016 17:27:04 +0100
+
+pulse-agent-plugins (0.1-7) unstable; urgency=medium
+
+ * add templte plugin inventory ( 91550d43d068f95054142357c5b60ef5d06dd146 )
+
+ -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net>  Thu, 04 Aug 2016 17:27:04 +0100
+
+pulse-agent-plugins (0.1-6) unstable; urgency=medium
+
+ * Add setup.py
+
+ -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net>  Thu, 04 Aug 2016 17:27:04 +0100
+
+pulse-agent-plugins (0.1-5) unstable; urgency=medium
+
+ * Install config file
+
+ -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net>  Thu, 04 Aug 2016 17:27:04 +0100
+
+pulse-agent-plugins (0.1-4) unstable; urgency=medium
+
+ * Add wake on lan plugin
+
+ -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net>  Thu, 04 Aug 2016 17:27:04 +0100
+
+pulse-agent-plugins (0.1-3) unstable; urgency=medium
+
+ * Fix typo
+
+ -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net>  Thu, 04 Aug 2016 17:27:04 +0100
+
+pulse-agent-plugins (0.1-2) unstable; urgency=medium
+
+ * Fix files location
+
+ -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net>  Thu, 04 Aug 2016 17:27:04 +0100
+
+pulse-agent-plugins (0.1-1) unstable; urgency=medium
+
+ * First package
+
+ -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net>  Thu, 04 Aug 2016 17:27:04 +0100

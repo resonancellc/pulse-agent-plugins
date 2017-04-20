@@ -1,0 +1,33 @@
+Source: pulse-agent-plugins
+Section: python
+Architecture: all
+Priority: optional
+Maintainer: Nicolas Lécureuil <nicolas.lecureuil@siveo.net>
+Uploaders: Nicolas Lécureuil <nicolas.lecureuil@siveo.net>
+Build-Depends: debhelper (>= 9),
+               dh-python,
+               python-all-dev (>= 2.6.6-3~),
+Standards-Version: 3.9.8
+Homepage: http://www.siveo.net/
+Vcs-Git: https://github.com/pulse-project/pulse-agent-plugins.git
+Vcs-Browser: https://github.com/pulse-project/pulse-agent-plugins.git
+X-Python-Version: >= 2.7
+
+Package: pulse-xmppmaster-agentplugins
+Architecture: all
+Provides: ${python:Provides}
+Depends: ${misc:Depends}, ${python:Depends}, ${shlibs:Depends}
+Description: plugins for pulse xmppmaster
+
+Package: pulseagent-plugins-relay
+Architecture: all
+Provides: ${python:Provides}
+Depends: ${misc:Depends}, ${python:Depends}, ${shlibs:Depends}
+Description: plugins for pulse xmppmaster
+
+Package: pulseagent-plugins-machine
+Architecture: all
+Provides: ${python:Provides}
+Depends: ${misc:Depends}, ${python:Depends}, ${shlibs:Depends}
+Description: plugins for pulse xmppmaster
+
