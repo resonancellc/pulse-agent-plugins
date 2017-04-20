@@ -252,11 +252,6 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         #clean if not session
         cleanbacktodeploy(objectxmpp)
         return
-    #try:
-                #self.datasend['data']['environ'] = str(os.environ)
-            #except:
-                #pass
-
 
     if len(data) == 0:
         if 'msgstate' in message['body'] and 'msg' in message['body']['msgstate']  and message['body']['msgstate']['msg'].startswith("end error"):

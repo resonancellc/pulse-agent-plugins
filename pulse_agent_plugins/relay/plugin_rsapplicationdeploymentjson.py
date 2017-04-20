@@ -35,9 +35,6 @@ from lib.utils import shellcommandtimeout
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
 plugin = {"VERSION" : "1.0", "NAME" : "rsapplicationdeploymentjson", "TYPE" : "relayserver"}
-
-
-
 def action(objectxmpp, action, sessionid, data, message, dataerreur):
     #logging.getLogger().debug("RECV data message %s\n###############\n"%json.dumps(data, indent=4))
     logging.log(DEBUGPULSEPLUGIN,"plugin %s on %s %s from %s"% (plugin, objectxmpp.config.agenttype, message['to'], message['from']))
@@ -52,13 +49,8 @@ def action(objectxmpp, action, sessionid, data, message, dataerreur):
     logging.getLogger().debug("#################RELAY SERVER#####################")
     logging.getLogger().debug("##############demande pacquage %s ##############"%(data['deploy']))
     logging.getLogger().debug("#############################################")
-
     #envoy descripteur
-
-
-
     descriptor =  managepackage.getdescripteurpathpackageuuid(data['deploy'])
-
     if descriptor is not None:
         datasend['action'] = "applicationdeploymentjson"
         datasend['data'] = { "descriptor" : descriptor}
@@ -68,9 +60,9 @@ def action(objectxmpp, action, sessionid, data, message, dataerreur):
         datasend['data'] ['Devent'] = "STARDEPLOY"
         datasend['data'] ['name'] = managepackage.getNamepathpackageuuid(data['deploy'])
         print json.dumps(datasend, indent=4)
-        objectxmpp.send_message(   mto=message['from'],
-                                            mbody=json.dumps(datasend),
-                                            mtype='chat')
+        objectxmpp.send_message(mto=message['from'],
+                                mbody=json.dumps(datasend),
+                                mtype='chat')
     else:
         datasend['action'] = "applicationdeploymentjson"
         datasend['data'] = { "descriptor" : "error package missing"}
