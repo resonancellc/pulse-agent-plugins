@@ -27,25 +27,26 @@ import zlib
 import base64
 import traceback
 import json
+import logging
 if sys.platform.startswith('win'):
     from lib.registerwindows import constantregisterwindows
     import _winreg
 
+DEBUGPULSEPLUGIN = 25
 plugin = {"VERSION": "1.1", "NAME" :"inventory", "TYPE":"machine"}
-
 
 @pluginprocess
 def action(xmppobject, action, sessionid, data, message, dataerreur, result):
-    print "plugin_inventory"
+    logging.log(DEBUGPULSEPLUGIN,"plugin %s"% (plugin))
     if sys.platform.startswith('linux'):
         try:
-            simplecommand("fusioninventory-agent  --stdout > /tmp/inventory.txt")
-            Fichier = open(os.path.join("tmp","inventory.txt"), 'r')
+            finv = os.path.join("/","tmp","inventory.txt")
+            simplecommand("fusioninventory-agent  --stdout > %s"%finv)
+            Fichier = open(finv, 'r')
             result['data']['inventory'] = Fichier.read()
             Fichier.close()
             result['data']['inventory'] = base64.b64encode(zlib.compress(result['data']['inventory'], 9))
-        except Exception, e:
-            print "Error: %s" % str(e)
+        except Exception as e:
             traceback.print_exc(file=sys.stdout)
             raise
     elif sys.platform.startswith('win'):
@@ -82,7 +83,7 @@ def action(xmppobject, action, sessionid, data, message, dataerreur, result):
                     result['data']['reginventory'][reg_key_num]['value'] = str(key_value)
                     _winreg.CloseKey(key)
                 # generate the json and encode
-                result['data']['reginventory'] = base64.b64encode(json.dumps(result['data']['reginventory'], sort_keys=True, indent=4, separators=(',', ': ')))
+                result['data']['reginventory'] = base64.b64encode(json.dumps(result['data']['reginventory'],  indent=4, separators=(',', ': ')))
         except Exception, e:
             print "Error: %s" % str(e)
             traceback.print_exc(file=sys.stdout)

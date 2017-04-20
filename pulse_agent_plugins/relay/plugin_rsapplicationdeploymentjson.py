@@ -33,14 +33,14 @@ import platform
 from lib.utils import shellcommandtimeout
 
 logger = logging.getLogger()
-
+DEBUGPULSEPLUGIN = 25
 plugin = {"VERSION" : "1.0", "NAME" : "rsapplicationdeploymentjson", "TYPE" : "relayserver"}
 
 
 
 def action(objectxmpp, action, sessionid, data, message, dataerreur):
-    logging.getLogger().debug("RECV data message %s\n###############\n"%json.dumps(data, indent=4))
-
+    #logging.getLogger().debug("RECV data message %s\n###############\n"%json.dumps(data, indent=4))
+    logging.log(DEBUGPULSEPLUGIN,"plugin %s on %s %s from %s"% (plugin, objectxmpp.config.agenttype, message['to'], message['from']))
     datasend = {
                     'action': action,
                     'sessionid': sessionid,
@@ -54,6 +54,8 @@ def action(objectxmpp, action, sessionid, data, message, dataerreur):
     logging.getLogger().debug("#############################################")
 
     #envoy descripteur
+
+
 
     descriptor =  managepackage.getdescripteurpathpackageuuid(data['deploy'])
 
@@ -69,3 +71,11 @@ def action(objectxmpp, action, sessionid, data, message, dataerreur):
         objectxmpp.send_message(   mto=message['from'],
                                             mbody=json.dumps(datasend),
                                             mtype='chat')
+    else:
+        datasend['action'] = "applicationdeploymentjson"
+        datasend['data'] = { "descriptor" : "error package missing"}
+        datasend['data']['deploy']=data['deploy']
+        datasend['ret'] = 45
+        objectxmpp.send_message( mto=message['from'],
+                                 mbody=json.dumps(datasend),
+                                 mtype='chat')

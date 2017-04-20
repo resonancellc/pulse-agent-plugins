@@ -28,11 +28,11 @@ import pprint
 import logging
 import pycurl
 import platform
-from lib.utils import shellcommandtimeout, save_back_to_deploy, load_back_to_deploy
+from lib.utils import shellcommandtimeout, save_back_to_deploy, load_back_to_deploy, listback_to_deploy, cleanbacktodeploy
 import copy
 
 logger = logging.getLogger()
-
+DEBUGPULSEPLUGIN = 25
 plugin = { "VERSION" : "1.2", "NAME" : "applicationdeploymentjson", "TYPE" : "machine" }
 
 
@@ -196,7 +196,7 @@ def curlgetdownloadfile( destfile, urlfile, insecure = True):
         c.setopt(c.WRITEDATA, f)
         if insecure :
             # option equivalent a friser de --insecure
-            c.setopt(pycurl.SSL_VERIFYPEER, 0)   
+            c.setopt(pycurl.SSL_VERIFYPEER, 0)
             c.setopt(pycurl.SSL_VERIFYHOST, 0)
         c.perform()
         c.close()
@@ -220,21 +220,48 @@ def recuperefile(datasend, objectxmpp):
                                        priority = -1,
                                        who = objectxmpp.boundjid.bare)
 
-def cleanbacktodeploy(objectxmpp):
-    delsession = [session for session in objectxmpp.back_to_deploy  if not objectxmpp.session.isexist(session)]
-    for session in delsession:
-        del (objectxmpp.back_to_deploy[session])
-    if len(delsession) != 0:
-        save_back_to_deploy(objectxmpp.back_to_deploy)
-
 def action( objectxmpp, action, sessionid, data, message, dataerreur):
-    #logging.getLogger().debug("#################MACHINE#####################")
-    #logging.getLogger().debug("##############deploy %s##############"%(json.dumps(data, indent=4)))
-    #logging.getLogger().debug("#############################################")
+    logging.log(DEBUGPULSEPLUGIN,"plugin %s on %s %s from %s"% (plugin,objectxmpp.config.agenttype, message['to'], message['from']))
+    #logging.getLogger().debug("data plugin %s"%(json.dumps(data, indent=4)))
+    #print json.dumps(data, indent=4)
+    ##objectxmpp.session.afficheid()
+    ##listback_to_deploy(objectxmpp)
+
+    #Si une dépendance n'existe pas, relay serveur le signale.
+    if 'descriptor' in data and data['descriptor'] == "error package missing":
+        #package data['deploy'] is missing
+        #il faut termined le deploy
+        objectxmpp.logtopulse('<span style="font-weight: bold;color : red;">STOP DEPLOY ON ERROR : DEPENDENCY MISSING [%s]</span>'%data['deploy'], 
+                                  type='deploy',
+                                  sessionname = sessionid ,
+                                  priority = -1,
+                                  who=objectxmpp.boundjid.bare)
+        if sessionid in objectxmpp.back_to_deploy:
+            objectxmpp.logtopulse('<span style="font-weight: bold;color : red;">List of abandoned dependencies %s</span>'%objectxmpp.back_to_deploy[sessionid]['Dependency'],
+                            type='deploy',
+                            sessionname = sessionid ,
+                            priority = -1,
+                            who=objectxmpp.boundjid.bare)
+        objectxmpp.logtopulse('DEPLOYMENT TERMINATE', 
+                            type='deploy',
+                            sessionname = sessionid ,
+                            priority = -1,
+                            who=objectxmpp.boundjid.bare)
+        #clean session
+        objectxmpp.session.clearnoevent(sessionid)
+        #clean if not session
+        cleanbacktodeploy(objectxmpp)
+        return
+    #try:
+                #self.datasend['data']['environ'] = str(os.environ)
+            #except:
+                #pass
+
+
     if len(data) == 0:
         if 'msgstate' in message['body'] and 'msg' in message['body']['msgstate']  and message['body']['msgstate']['msg'].startswith("end error"):
             if message['body']['msgstate']['quitonerror']:
-                #print "Quit session %s on error "%sessionid
+                print "Quit session %s on error "%sessionid
                 objectxmpp.logtopulse('<span style="font-weight: bold;color : red;">STOP DEPLOY ON ERROR</span>', 
                                   type='deploy',
                                   sessionname = sessionid ,
@@ -257,7 +284,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
 
         if sessionid not in objectxmpp.back_to_deploy:
             # deployement terminer ici.
-            #print "termine la session %s"%sessionid
+            print "termine la session %s"%sessionid
             objectxmpp.logtopulse('DEPLOYMENT TERMINATE', 
                                   type='deploy',
                                   sessionname = sessionid ,
@@ -285,8 +312,8 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                 if len(objectxmpp.back_to_deploy[sessionid]['Dependency']) == 0:
                     del(objectxmpp.back_to_deploy[sessionid])
                 save_back_to_deploy(objectxmpp.back_to_deploy)
-                #objectxmpp.session.sessionsetdata(sessionid, data)
-                objectxmpp.session.clearnoevent(sessionid)
+                objectxmpp.session.sessionsetdata(sessionid, data)
+                #objectxmpp.session.clearnoevent(sessionid)
 
     if 'Dependency' in data['descriptor']['info'] and  len (data['descriptor']['info'] ['Dependency']) != 0:
         #on deploy pas imediatement
@@ -464,11 +491,11 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             logging.getLogger().debug("creation session %s"%sessionid)
             objectxmpp.session.createsessiondatainfo(sessionid,  datasession = datasend['data'], timevalid = 10)
             logging.getLogger().debug("update object backtodeploy")
-            cleanbacktodeploy(objectxmpp)
+            #cleanbacktodeploy(objectxmpp)
         logging.getLogger().debug("start call gracet")
         grafcet(objectxmpp, datasend)
         logging.getLogger().debug("outing graphcet phase1")
     else:
         objectxmpp.session.sessionsetdata(sessionid, datasend) #save data in session
-        grafcet(objectxmpp, datasend)#grapcet va utiliser la session pour travaillé.
+        grafcet(objectxmpp, datasend)#grapcet va utiliser la session pour travailler.
         logging.getLogger().debug("outing graphcet phase1")
