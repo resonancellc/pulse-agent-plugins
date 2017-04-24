@@ -42,7 +42,7 @@ setup(
     packages=[],
     test_suite='',
     package_data={},
-    data_files=[(path + '/pulse_xmpp_agent/pluginsrelay', ['pulse_agent_plugins/relay/plugin_guacamoleconf.py', 'pulse_agent_plugins/relay/plugin_wakeonlan.py']), (path + '/pulse_xmpp_agent/pluginsmachine',['pulse_agent_plugins/machine/plugin_inventory.py']), (path + '/pulse_xmpp_agent/pluginsmachine', ['pulse_agent_plugins/common/plugin_installplugin.py', 'pulse_agent_plugins/common/plugin_restartbot.py', 'pulse_agent_plugins/common/plugin_shellcommand.py']), (path + '/pulse_xmpp_agent/pluginsrelay', ['pulse_agent_plugins/common/plugin_applicationdeploymentjson.py', 'pulse_agent_plugins/common/plugin_installplugin.py','pulse_agent_plugins/common/plugin_restartbot.py', 'pulse_agent_plugins/common/plugin_shellcommand.py']) ],
+    data_files=[(path + '/pulse_xmpp_agent/pluginsrelay', ['pulse_agent_plugins/relay/plugin_guacamoleconf.py', 'pulse_agent_plugins/relay/plugin_wakeonlan.py']), (path + '/pulse_xmpp_agent/pluginsmachine',['pulse_agent_plugins/machine/plugin_inventory.py']), (path + '/pulse_xmpp_agent/pluginsmachine', ['pulse_agent_plugins/common/plugin_installplugin.py', 'pulse_agent_plugins/common/plugin_restartbot.py', 'pulse_agent_plugins/common/plugin_shellcommand.py']), (path + '/pulse_xmpp_agent/pluginsrelay', ['pulse_agent_plugins/common/plugin_installplugin.py','pulse_agent_plugins/common/plugin_restartbot.py', 'pulse_agent_plugins/common/plugin_shellcommand.py']) ],
     entry_points={},
     extras_require={},
     install_requires=[],
