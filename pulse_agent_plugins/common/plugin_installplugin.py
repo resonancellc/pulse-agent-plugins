@@ -37,4 +37,4 @@ def action( objetxmpp, action, sessionid, data, message, dataerreur ):
                 logging.getLogger().debug("error : %s"%str(e))
                 return
             msg = "install plugin %s on %s"%(data['pluginname'],message['to'].user)
-            objetxmpp.loginformation(msg)
+            objetxmpp.loginfotomaster(msg)

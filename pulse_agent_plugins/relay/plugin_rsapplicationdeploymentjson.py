@@ -50,7 +50,10 @@ def action(objectxmpp, action, sessionid, data, message, dataerreur):
     logging.getLogger().debug("##############demande pacquage %s ##############"%(data['deploy']))
     logging.getLogger().debug("#############################################")
     #envoy descripteur
-    descriptor =  managepackage.getdescripteurpathpackageuuid(data['deploy'])
+    try:
+        descriptor =  managepackage.getdescripteurpathpackageuuid(data['deploy'])
+    except Exception:
+        descriptor = None
     if descriptor is not None:
         datasend['action'] = "applicationdeploymentjson"
         datasend['data'] = { "descriptor" : descriptor}
