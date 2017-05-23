@@ -26,7 +26,7 @@ from lib.grafcetdeploy import grafcet
 import logging
 import pycurl
 import platform
-from lib.utils import shellcommandtimeout, save_back_to_deploy, load_back_to_deploy, listback_to_deploy, cleanbacktodeploy
+from lib.utils import save_back_to_deploy, cleanbacktodeploy
 import copy
 
 logger = logging.getLogger()
