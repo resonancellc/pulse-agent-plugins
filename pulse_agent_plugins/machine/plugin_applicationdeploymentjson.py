@@ -33,22 +33,18 @@ import copy
 
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
-plugin = { "VERSION" : "1.2", "NAME" : "applicationdeploymentjson", "TYPE" : "machine" }
+plugin = { "VERSION" : "1.3", "NAME" : "applicationdeploymentjson", "TYPE" : "machine" }
 
 
 """
 Plugins for deploiment application 
 """
 
-
-
 #TQ type message query
 #TR type message Reponse
 #TE type message Error
 #TED type message END deploy
 #TEVENT remote event
-
-
 
 def cleandescriptor(datasend):
 
@@ -149,7 +145,6 @@ def updatedescriptor(result,descriptor,Devent,Daction):
             for z in result:
                 t[z] = result[z]
 
-
 def transfert_package(destinataire, datacontinue, objectxmpp):
     logging.getLogger().debug("%s"% json.dumps(datacontinue, indent=4, sort_keys=True))
     if datacontinue['data']['methodetransfert'] == 'rsync':
@@ -170,7 +165,7 @@ def transfert_package(destinataire, datacontinue, objectxmpp):
         logging.getLogger().debug("cmd %s"% cmd)
         logging.getLogger().debug("datacontinue %s"% json.dumps(datacontinue, indent=4, sort_keys=True))
         logging.getLogger().debug("destinataire %s"% destinataire)
-        objectxmpp.process_on_end_send_message_xmpp.add_processcommand( cmd ,datacontinue, destinataire, destinataire,   50)
+        objectxmpp.process_on_end_send_message_xmpp.add_processcommand( cmd ,datacontinue, destinataire, destinataire, 50)
     else:
         pass
 
@@ -186,7 +181,6 @@ def checkosindescriptor(descriptor):
     else:
         return False
 
-
 def curlgetdownloadfile( destfile, urlfile, insecure = True):
     # As long as the file is opened in binary mode, both Python 2 and Python 3
     # can write response body to it without decoding.
@@ -201,24 +195,36 @@ def curlgetdownloadfile( destfile, urlfile, insecure = True):
         c.perform()
         c.close()
 
-def recuperefile(datasend, objectxmpp):
+def recuperefile(datasend, objectxmpp, ippackage, portpackage):
     if not os.path.isdir(datasend['data']['pathpackageonmachine']):
         os.makedirs(datasend['data']['pathpackageonmachine'], mode=0777)
     uuidpackage = datasend['data']['path'].split('/')[-1]
-    curlurlbase = "https://%s:9990/mirror1_files/%s/"%(datasend['data']['iprelay'], uuidpackage )
-    #curl -O -k  https://192.168.56.2:9990/mirror1_files/0be145fa-973c-11e4-8dc5-0800275891ef/7z920.exe
+    curlurlbase = "https://%s:%s/mirror1_files/%s/"%(ippackage, portpackage, uuidpackage )
     for filepackage in datasend['data']['packagefile']:
         if datasend['data']['methodetransfert'] == "curl":
             src  = os.path.join(datasend['data']['path'], filepackage)
             dest = os.path.join(datasend['data']['pathpackageonmachine'], filepackage)
             urlfile= curlurlbase + filepackage
-            #print "curl file dest %s  url  %s"%(dest,urlfile)
-            curlgetdownloadfile( dest, urlfile )
-            objectxmpp.logtopulse('download from %s file : %s'%( datasend['data']['jidrelay'], filepackage ) ,
+            try:
+                objectxmpp.logtopulse('download from %s file : %s'%(curlgetdownloadfile, filepackage ) ,
                                        type='deploy',
                                        sessionname = datasend['sessionid'] ,
                                        priority = -1,
                                        who = objectxmpp.boundjid.bare)
+                curlgetdownloadfile( dest, urlfile)
+            except Exception:
+                objectxmpp.logtopulse('<span style="font-weight: bold;color : red;">STOP DEPLOY ON ERROR : download curl [%s]</span>'%curlurlbase, 
+                                  type='deploy',
+                                  sessionname = datasend['sessionid'],
+                                  priority = -1,
+                                  who=objectxmpp.boundjid.bare)
+                objectxmpp.logtopulse('DEPLOYMENT TERMINATE', 
+                            type='deploy',
+                            sessionname = datasend['sessionid'] ,
+                            priority = -1,
+                            who=objectxmpp.boundjid.bare)
+                return False
+    return True
 
 def action( objectxmpp, action, sessionid, data, message, dataerreur):
     logging.log(DEBUGPULSEPLUGIN,"plugin %s on %s %s from %s"% (plugin,objectxmpp.config.agenttype, message['to'], message['from']))
@@ -477,10 +483,23 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                             'base64' : False
             }
         datasend['data']['pathpackageonmachine'] = os.path.join( managepackage.packagedir(),data['path'].split('/')[-1])
-
-
         if data['methodetransfert'] == "curl" and data['transfert'] :
-            recuperefile(datasend, objectxmpp )
+            if not recuperefile(datasend, objectxmpp,  data['ippackageserver'], data['portpackageserver']):
+                logging.getLogger().debug("Error curl")
+                datasend = {
+                            'action':  "result" + action,
+                            'sessionid': sessionid,
+                            'data' : data,
+                            'ret' : -1,
+                            'base64' : False
+                }
+                objectxmpp.send_message(   mto='log@pulse',
+                                                mbody=json.dumps(datasend),
+                                                mtype='chat')
+                objectxmpp.send_message(   mto=data['jidmaster'],
+                                                mbody=json.dumps(datasend),
+                                                mtype='chat')
+                return
         datasend['data']['stepcurrent'] = 0 #step initial
         if not objectxmpp.session.isexist(sessionid):
             logging.getLogger().debug("creation session %s"%sessionid)
