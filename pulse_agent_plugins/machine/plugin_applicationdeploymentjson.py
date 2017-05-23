@@ -204,12 +204,12 @@ def recuperefile(datasend, objectxmpp, ippackage, portpackage):
                                        who = objectxmpp.boundjid.bare)
                 curlgetdownloadfile( dest, urlfile)
             except Exception:
-                objectxmpp.logtopulse('<span style="font-weight: bold;color : red;">STOP DEPLOY ON ERROR : download curl [%s]</span>'%curlurlbase, 
+                objectxmpp.logtopulse('<span style="font-weight: bold;color : red;">STOP DEPLOY ON ERROR : download curl [%s]</span>'%curlurlbase,
                                   type='deploy',
                                   sessionname = datasend['sessionid'],
                                   priority = -1,
                                   who=objectxmpp.boundjid.bare)
-                objectxmpp.logtopulse('DEPLOYMENT TERMINATE', 
+                objectxmpp.logtopulse('DEPLOYMENT TERMINATE',
                             type='deploy',
                             sessionname = datasend['sessionid'] ,
                             priority = -1,
@@ -228,7 +228,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
     if 'descriptor' in data and data['descriptor'] == "error package missing":
         #package data['deploy'] is missing
         #il faut termined le deploy
-        objectxmpp.logtopulse('<span style="font-weight: bold;color : red;">STOP DEPLOY ON ERROR : DEPENDENCY MISSING [%s]</span>'%data['deploy'], 
+        objectxmpp.logtopulse('<span style="font-weight: bold;color : red;">STOP DEPLOY ON ERROR : DEPENDENCY MISSING [%s]</span>'%data['deploy'],
                                   type='deploy',
                                   sessionname = sessionid ,
                                   priority = -1,
@@ -254,7 +254,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         if 'msgstate' in message['body'] and 'msg' in message['body']['msgstate']  and message['body']['msgstate']['msg'].startswith("end error"):
             if message['body']['msgstate']['quitonerror']:
                 print "Quit session %s on error "%sessionid
-                objectxmpp.logtopulse('<span style="font-weight: bold;color : red;">STOP DEPLOY ON ERROR</span>', 
+                objectxmpp.logtopulse('<span style="font-weight: bold;color : red;">STOP DEPLOY ON ERROR</span>',
                                   type='deploy',
                                   sessionname = sessionid ,
                                   priority = -1,
@@ -342,8 +342,8 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             data['ipmachine'] = objectxmpp.back_to_deploy[sessionid]['ipmachine']
             data['ipmaster'] = objectxmpp.back_to_deploy[sessionid]['ipmaster']
             data['iprelay'] = objectxmpp.back_to_deploy[sessionid]['iprelay']
-            data['jidmachine'] = objectxmpp.back_to_deploy[sessionid]['jidmachine'] 
-            data['jidmaster'] = objectxmpp.back_to_deploy[sessionid]['jidmaster'] 
+            data['jidmachine'] = objectxmpp.back_to_deploy[sessionid]['jidmachine']
+            data['jidmaster'] = objectxmpp.back_to_deploy[sessionid]['jidmaster']
             data['login'] = objectxmpp.back_to_deploy[sessionid]['login']
             data['methodetransfert'] = objectxmpp.back_to_deploy[sessionid]['methodetransfert']
             data['transfert'] = objectxmpp.back_to_deploy[sessionid]['transfert']
@@ -361,7 +361,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         # Then we look in the list of descriptors if these data of each dependence are present
         for dependency in objectxmpp.back_to_deploy[sessionid]['Dependency']:
             if not dependency in objectxmpp.back_to_deploy[sessionid]['packagelist']:
-                #on demande a (rs pakage server) de nous envoyé le descripteurs de ce package 
+                #on demande a (rs pakage server) de nous envoyé le descripteurs de ce package
                 datasend = {
                     'action': "rsapplicationdeploymentjson",
                     'sessionid': sessionid,
@@ -380,7 +380,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                     save_back_to_deploy(objectxmpp.back_to_deploy)
                 return
         else:
-            # All dependencies are taken into account. 
+            # All dependencies are taken into account.
             # You must deploy the descriptors of the dependency list starting with the end (pop)
             objectxmpp.back_to_deploy[sessionid]['Dependency']
             logging.getLogger().debug("Start Multi-dependency deployment.")
