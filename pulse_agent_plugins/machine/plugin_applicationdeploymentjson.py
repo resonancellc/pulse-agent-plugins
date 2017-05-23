@@ -48,7 +48,6 @@ Plugins for deploiment application
 
 def cleandescriptor(datasend):
 
-    sequence= {}
     if sys.platform.startswith('linux'):
         typeos="Linux"
         try:
@@ -82,7 +81,6 @@ def cleandescriptor(datasend):
         except:
             return False
     elif sys.platform.startswith('darwin'):
-        typeos="Macos"
         try:
             del datasend['descriptor']['linux']
         except KeyError:
@@ -152,7 +150,6 @@ def transfert_package(destinataire, datacontinue, objectxmpp):
 
             datacontinue['data']['pathpackageonmachine'] = datacontinue['data']['pathpackageonmachine'].replace("\\","/")
             tab=datacontinue['data']['pathpackageonmachine'].split('/')[3:]
-            #os.path.join
             datacontinue['data']['pathpackageonmachine'] = '/'.join(tab)
             cmd = "rsync --delete -e \"ssh -o IdentityFile=/root/.ssh/id_rsa -o StrictHostKeyChecking=no -o Batchmode=yes -o PasswordAuthentication=no -o ServerAliveInterval=10 -o CheckHostIP=no -o ConnectTimeout=10\" -av %s/ pulse@%s:\"%s/\""%(datacontinue['data']['path'],
                                         datacontinue['data']['ipmachine'],
@@ -161,7 +158,6 @@ def transfert_package(destinataire, datacontinue, objectxmpp):
             cmd = "rsync --delete -e \"ssh -o IdentityFile=/root/.ssh/id_rsa -o StrictHostKeyChecking=no -o Batchmode=yes -o PasswordAuthentication=no -o ServerAliveInterval=10 -o CheckHostIP=no -o ConnectTimeout=10\"   -av %s/ %s:\"%s/\""%(datacontinue['data']['path'],
                                         datacontinue['data']['ipmachine'],
                                         datacontinue['data']['pathpackageonmachine'])
-        #print datacontinue['data']['pathpackageonmachine']
         logging.getLogger().debug("cmd %s"% cmd)
         logging.getLogger().debug("datacontinue %s"% json.dumps(datacontinue, indent=4, sort_keys=True))
         logging.getLogger().debug("destinataire %s"% destinataire)
@@ -202,7 +198,6 @@ def recuperefile(datasend, objectxmpp, ippackage, portpackage):
     curlurlbase = "https://%s:%s/mirror1_files/%s/"%(ippackage, portpackage, uuidpackage )
     for filepackage in datasend['data']['packagefile']:
         if datasend['data']['methodetransfert'] == "curl":
-            src  = os.path.join(datasend['data']['path'], filepackage)
             dest = os.path.join(datasend['data']['pathpackageonmachine'], filepackage)
             urlfile= curlurlbase + filepackage
             try:
@@ -296,7 +291,6 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             return
 
         if sessionid in objectxmpp.back_to_deploy and 'Dependency' in objectxmpp.back_to_deploy[sessionid]:
-            #print "back_to_deploy existe et Dependency definie"
             if len(objectxmpp.back_to_deploy[sessionid]['Dependency']) > 0:
                 loaddependency = objectxmpp.back_to_deploy[sessionid]['Dependency'].pop()
                 data = copy.deepcopy(objectxmpp.back_to_deploy[sessionid]['packagelist'][loaddependency])
@@ -326,8 +320,6 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             objectxmpp.back_to_deploy[sessionid]['packagelist'] = {}
         data['deploy'] = data['path'].split("/")[-1]
 
-        #objectxmpp.back_to_deploy[sessionid][data['deploy']] = []
-        #
         data['descriptor']['info']['Dependency'].insert(0,data['deploy'] )
         objectxmpp.back_to_deploy[sessionid]['Dependency'] = objectxmpp.back_to_deploy[sessionid]['Dependency'] + data['descriptor']['info']['Dependency']
         del data['descriptor']['info']['Dependency']
@@ -360,7 +352,6 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             data['methodetransfert'] = objectxmpp.back_to_deploy[sessionid]['methodetransfert']
             data['transfert'] = objectxmpp.back_to_deploy[sessionid]['transfert']
             data['uuid'] = objectxmpp.back_to_deploy[sessionid]['uuid']
-            #data['packagefile'] = objectxmpp.back_to_deploy[sessionid]['packagefile']
             data['jidrelay'] = objectxmpp.back_to_deploy[sessionid]['jidrelay']
 
         # Verify that for each Dependency one has its descriptor
@@ -420,7 +411,6 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                 pass
             del(objectxmpp.back_to_deploy[sessionid]['packagelist'][firstinstall])
             save_back_to_deploy(objectxmpp.back_to_deploy)
-            #objectxmpp.session.clearnoevent(sessionid)
     #########################################################
     if sessionid in objectxmpp.back_to_deploy:
         # on ajoute les datas nécaisaire.
@@ -436,7 +426,6 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             data['methodetransfert'] = objectxmpp.back_to_deploy[sessionid]['methodetransfert']
             data['transfert'] = objectxmpp.back_to_deploy[sessionid]['transfert']
             data['uuid'] = objectxmpp.back_to_deploy[sessionid]['uuid']
-            #data['packagefile'] = objectxmpp.back_to_deploy[sessionid]['packagefile']
             data['jidrelay'] = objectxmpp.back_to_deploy[sessionid]['jidrelay']
         objectxmpp.session.sessionsetdata(sessionid, data)
 
@@ -505,7 +494,6 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             logging.getLogger().debug("creation session %s"%sessionid)
             objectxmpp.session.createsessiondatainfo(sessionid,  datasession = datasend['data'], timevalid = 10)
             logging.getLogger().debug("update object backtodeploy")
-            #cleanbacktodeploy(objectxmpp)
         logging.getLogger().debug("start call gracet")
         grafcet(objectxmpp, datasend)
         logging.getLogger().debug("outing graphcet phase1")
