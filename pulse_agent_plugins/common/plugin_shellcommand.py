@@ -47,7 +47,6 @@ def action(objectxmpp, action, sessionid, data, message, dataerreur):
                                        mtype='chat')
         else:
             dataerreur['ret'] = obj['code']
-            dataerreur['data']['msg'] = "Erreur commande\n %s"%a
             objectxmpp.send_message(mto=message['from'],
                                             mbody=json.dumps(dataerreur),
                                             mtype='chat')
