@@ -239,7 +239,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                             sessionname = sessionid ,
                             priority = -1,
                             who=objectxmpp.boundjid.bare)
-        objectxmpp.logtopulse('DEPLOYMENT TERMINATE', 
+        objectxmpp.logtopulse('DEPLOYMENT TERMINATE',
                             type='deploy',
                             sessionname = sessionid ,
                             priority = -1,
@@ -416,8 +416,8 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             data['ipmachine'] = objectxmpp.back_to_deploy[sessionid]['ipmachine']
             data['ipmaster'] = objectxmpp.back_to_deploy[sessionid]['ipmaster']
             data['iprelay'] = objectxmpp.back_to_deploy[sessionid]['iprelay']
-            data['jidmachine'] = objectxmpp.back_to_deploy[sessionid]['jidmachine'] 
-            data['jidmaster'] = objectxmpp.back_to_deploy[sessionid]['jidmaster'] 
+            data['jidmachine'] = objectxmpp.back_to_deploy[sessionid]['jidmachine']
+            data['jidmaster'] = objectxmpp.back_to_deploy[sessionid]['jidmaster']
             data['login'] = objectxmpp.back_to_deploy[sessionid]['login']
             data['methodetransfert'] = objectxmpp.back_to_deploy[sessionid]['methodetransfert']
             data['transfert'] = objectxmpp.back_to_deploy[sessionid]['transfert']
