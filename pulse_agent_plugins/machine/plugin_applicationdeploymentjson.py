@@ -23,8 +23,6 @@ import sys, os
 from lib.managepackage import managepackage
 
 from lib.grafcetdeploy import grafcet
-import traceback
-import pprint
 import logging
 import pycurl
 import platform
@@ -37,7 +35,7 @@ plugin = { "VERSION" : "1.3", "NAME" : "applicationdeploymentjson", "TYPE" : "ma
 
 
 """
-Plugins for deploiment application 
+Plugins for deploiment application
 """
 
 #TQ type message query
@@ -49,7 +47,6 @@ Plugins for deploiment application
 def cleandescriptor(datasend):
 
     if sys.platform.startswith('linux'):
-        typeos="Linux"
         try:
             del datasend['descriptor']['win']
         except KeyError:
@@ -65,7 +62,6 @@ def cleandescriptor(datasend):
             return False
 
     elif sys.platform.startswith('win'):
-        typeos="Win"
         try:
             del datasend['descriptor']['linux']
         except KeyError:
