@@ -19,16 +19,13 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA 02110-1301, USA.
 
-#from  lib.utils import pluginprocess
 import sys, os
 from subprocess import Popen
 import shlex
-##from os import spawnvpe
 import json
-from  sleekxmpp import jid
 import subprocess
 from lib.utils import file_get_contents, file_put_contents
-import time
+
 def checkresult(result):
     if result['codereturn'] != 0:
         if len (result['result']) == 0:
