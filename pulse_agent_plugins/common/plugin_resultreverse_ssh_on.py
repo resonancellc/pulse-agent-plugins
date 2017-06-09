@@ -25,6 +25,7 @@ import shlex
 import json
 import subprocess
 from lib.utils import file_get_contents, file_put_contents
+import logging
 
 def checkresult(result):
     if result['codereturn'] != 0:
