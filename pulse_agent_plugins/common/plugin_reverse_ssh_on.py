@@ -23,12 +23,12 @@
 import sys, os
 from subprocess import Popen
 import shlex
-##from os import spawnvpe
 import json
-from  sleekxmpp import jid
 import subprocess
 from lib.utils import file_get_contents, file_put_contents
-import time
+
+import logging
+
 def checkresult(result):
     if result['codereturn'] != 0:
         if len (result['result']) == 0:
