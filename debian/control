@@ -23,7 +23,7 @@ Description: plugins for pulse xmppmaster
 Package: pulseagent-plugins-relay
 Architecture: all
 Provides: ${python:Provides}
-Depends: ${misc:Depends}, ${python:Depends}, ${shlibs:Depends}
+Depends: ${misc:Depends}, ${python:Depends}, ${shlibs:Depends}, python-wakeonlan
 Description: plugins for pulse xmppmaster
 
 Package: pulseagent-plugins-machine
