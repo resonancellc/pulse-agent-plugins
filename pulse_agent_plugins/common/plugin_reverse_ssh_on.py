@@ -108,7 +108,7 @@ def action( objetxmpp, action, sessionid, data, message, dataerreur ):
     returnmessage = dataerreur
     returnmessage['ret'] = 0
     if objetxmpp.config.agenttype in ['relayserver']:
-        #verify key exist 
+        #verify key exist
         if not os.path.isfile(os.path.join("/","var","lib","pulse2","clients","reversessh",".ssh","id_rsa")) or not \
             os.path.isfile(os.path.join("/","var","lib","pulse2","clients","reversessh",".ssh","id_rsa.pub")):
             genratekeyforARSBackuppc()
@@ -137,8 +137,8 @@ def action( objetxmpp, action, sessionid, data, message, dataerreur ):
                 del returnmessage['data']['request']
                 print "Send master this data"
                 print json.dumps(returnmessage, indent = 4)
-                objetxmpp.send_message_agent( "master@pulse/MASTER", 
-                                             returnmessage, 
+                objetxmpp.send_message_agent( "master@pulse/MASTER",
+                                             returnmessage,
                                              mtype = 'chat')
                 #objetxmpp.send_message(mto = jid.JID("master@pulse"),
                                     #mbody = json.dumps(returnmessage),
@@ -198,10 +198,10 @@ def action( objetxmpp, action, sessionid, data, message, dataerreur ):
         returnmessage['ret'] = 0
 
         print "RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR"
-        print json.dumps(returnmessage, indent = 4) 
+        print json.dumps(returnmessage, indent = 4)
         print "RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR"
         print "################################################################################"
-        
+
         
         ##objetxmpp.send_message_agent("console", returnmessage)
         

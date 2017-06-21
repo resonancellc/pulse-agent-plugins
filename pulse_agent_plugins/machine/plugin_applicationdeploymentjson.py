@@ -265,7 +265,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     sessionname = sessionid ,
                                     priority = -1,
                                     who=objectxmpp.boundjid.bare)
-                objectxmpp.logtopulse('DEPLOYMENT TERMINATE', 
+                objectxmpp.logtopulse('DEPLOYMENT TERMINATE',
                                   type='deploy',
                                   sessionname = sessionid ,
                                   priority = -1,
