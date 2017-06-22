@@ -20,8 +20,17 @@
 
 from setuptools import setup
 from distutils.sysconfig import get_python_lib
+import sys
+import os
 
 path = get_python_lib() ;
+
+if sys.platform.startswith('linux'):
+    confpath = os.path.join("/", "etc", "pulse-xmpp-agent")
+elif sys.platform.startswith('win'):
+    confpath = os.path.join(os.environ["ProgramFiles"], "Pulse", "etc")
+elif sys.platform.startswith('darwin'):
+    confpath = os.path.join("/", "Library", "Application Support", "Pulse", "etc")
 
 setup(
     classifiers=[
@@ -42,7 +51,7 @@ setup(
     packages=[],
     test_suite='',
     package_data={},
-    data_files=[(path + '/pulse_xmpp_agent/pluginsrelay', ['pulse_agent_plugins/relay/plugin_guacamoleconf.py', 'pulse_agent_plugins/relay/plugin_wakeonlan.py','pulse_agent_plugins/relay/plugin_rsapplicationdeploymentjson.py']),(path + '/pulse_xmpp_agent/pluginsmachine',['pulse_agent_plugins/machine/plugin_inventory.py','pulse_agent_plugins/machine/plugin_applicationdeploymentjson.py',]),(path + '/pulse_xmpp_agent/pluginsmachine', ['pulse_agent_plugins/machine/plugin_applicationdeploymentjson.py', 'pulse_agent_plugins/common/plugin_installplugin.py', 'pulse_agent_plugins/common/plugin_restartbot.py', 'pulse_agent_plugins/common/plugin_shellcommand.py']),(path + '/pulse_xmpp_agent/pluginsrelay', ['pulse_agent_plugins/machine/plugin_applicationdeploymentjson.py', 'pulse_agent_plugins/common/plugin_installplugin.py','pulse_agent_plugins/common/plugin_restartbot.py', 'pulse_agent_plugins/common/plugin_shellcommand.py', 'pulse_agent_plugins/common/plugin_reverse_ssh_on.py']) ],
+    data_files=[(path + '/pulse_xmpp_agent/pluginsrelay', ['pulse_agent_plugins/relay/plugin_guacamoleconf.py', 'pulse_agent_plugins/relay/plugin_wakeonlan.py','pulse_agent_plugins/relay/plugin_rsapplicationdeploymentjson.py']),(path + '/pulse_xmpp_agent/pluginsmachine',['pulse_agent_plugins/machine/plugin_inventory.py','pulse_agent_plugins/machine/plugin_applicationdeploymentjson.py',]),(path + '/pulse_xmpp_agent/pluginsmachine', ['pulse_agent_plugins/machine/plugin_applicationdeploymentjson.py', 'pulse_agent_plugins/common/plugin_installplugin.py', 'pulse_agent_plugins/common/plugin_restartbot.py', 'pulse_agent_plugins/common/plugin_shellcommand.py']),(path + '/pulse_xmpp_agent/pluginsrelay', ['pulse_agent_plugins/machine/plugin_applicationdeploymentjson.py', 'pulse_agent_plugins/common/plugin_installplugin.py','pulse_agent_plugins/common/plugin_restartbot.py', 'pulse_agent_plugins/common/plugin_shellcommand.py', 'pulse_agent_plugins/common/plugin_reverse_ssh_on.py']),(confpath, ['pulse_agent_plugins/config/inventory.ini' ])],
     entry_points={},
     extras_require={},
     install_requires=[],
