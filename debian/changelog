@@ -1,3 +1,9 @@
+pulse-agent-plugins (1.2-2) unstable; urgency=medium
+
+ *  New git snashot of 1.2, install config file
+
+ -- Nicolas Lécureuil <nicolas.lecureuil@siveo.net>  Thu, 11 Mai 2017 17:27:04 +0100
+
 pulse-agent-plugins (1.2-1) unstable; urgency=medium
 
  *  New version 1.2
