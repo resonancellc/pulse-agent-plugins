@@ -23,13 +23,11 @@
 # This plugin needs to call back the plugin that made the request to return the result
 
 import json
-import sys, os
+import sys
 from lib.managepackage import managepackage
 
 import logging
-import platform
-from lib.utils import save_back_to_deploy, cleanbacktodeploy
-import copy
+
 
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25

@@ -22,16 +22,12 @@
 
 
 
-import json
-import sys, os
+
 from lib.managepackage import managepackage, search_list_of_deployment_packages
 
-from lib.grafcetdeploy import grafcet
 import logging
-import pycurl
-import platform
-from lib.utils import save_back_to_deploy, cleanbacktodeploy
-import copy
+
+
 
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
