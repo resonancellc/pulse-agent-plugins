@@ -20,11 +20,6 @@
 # MA 02110-1301, USA.
 
 
-
-
-
-from lib.managepackage import managepackage, search_list_of_deployment_packages
-
 import logging
 
 
