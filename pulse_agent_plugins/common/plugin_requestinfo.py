@@ -20,7 +20,7 @@
 # MA 02110-1301, USA.
 
 
- # This plugin needs to call back the plugin that made the request to return the result
+#This plugin needs to call back the plugin that made the request to return the result
  
 import json
 import sys, os

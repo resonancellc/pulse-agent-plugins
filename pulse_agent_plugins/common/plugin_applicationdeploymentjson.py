@@ -636,7 +636,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                             logging.getLogger().debug("SEND COMMANDE")
                             logging.getLogger().debug("TRANSFERT PACKAGE from %s"%pathin)
                             cmd = "rsync --delete -e \"ssh -o IdentityFile=/root/.ssh/id_rsa -o StrictHostKeyChecking=no -o Batchmode=yes -o PasswordAuthentication=no -o ServerAliveInterval=10 -o CheckHostIP=no -o ConnectTimeout=10\"   -av %s/ %s@%s:\"%s/\""%(pathin, "pulse", data_in_session['ipmachine'], pathout)
-                            logging.getLogger().debug("tranfert cmd :\n"%cmd)
+                            logging.getLogger().debug("tranfert cmd :\n %s"%cmd)
                             obcmd = simplecommandstr(cmd)
                             objectxmpp.logtopulse("push transfert package :%s to %s"%(uuidpackages,data_in_session['jidmachine'] ),
                                                     type='deploy',
