@@ -18,8 +18,6 @@
 # along with Pulse 2; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA 02110-1301, USA.
-
-
 import json
 import sys, os
 from lib.managepackage import managepackage, search_list_of_deployment_packages
@@ -28,7 +26,7 @@ from lib.grafcetdeploy import grafcet
 import logging
 import pycurl
 import platform
-from lib.utils import save_back_to_deploy, cleanbacktodeploy, simplecommandstr
+from lib.utils import save_back_to_deploy, cleanbacktodeploy, simplecommandstr, get_keypub_ssh
 import copy
 
 logger = logging.getLogger()
@@ -130,30 +128,6 @@ def keyssh(name="id_rsa.pub"):
     dede = source.read().strip(" \n\t")
     source.close()
     return dede
-
-def installkeyssh(keystr):
-    if sys.platform.startswith('linux'):
-        authorized_keys=os.path.join('/','root','.ssh','authorized_keys')
-    elif sys.platform.startswith('win'):
-        authorized_keys=os.path.join('C',os.environ["ProgramFiles"],'Pulse','.ssh','authorized_keys')
-    elif sys.platform.startswith('darwin'):
-        authorized_keys=os.path.join('var','root','.ssh','authorized_keys')
-    else:
-        pass
-    #print authorized_keys
-    #recherche si clef in authorized_keys
-    addkey = True
-    source = open(authorized_keys, "r")
-    for ligne in source:
-        if keystr in ligne:
-            addkey = False
-            break
-    source.close()
-    if addkey:
-        source = open(authorized_keys, "a")
-        source.write('\n')
-        source.write(keystr)
-        source.close()
 
 def updatedescriptor(result,descriptor,Devent,Daction):
     if sys.platform.startswith('linux'):
@@ -357,7 +331,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                 objectxmpp.back_to_deploy[sessionid] = {}
                 objectxmpp.back_to_deploy[sessionid]['Dependency'] = []
                 objectxmpp.back_to_deploy[sessionid]['packagelist'] = {}
-            
+
             data['deploy'] = data['path'].split("/")[-1]
 
             data['descriptor']['info']['Dependency'].insert(0,data['deploy'] )
@@ -543,12 +517,14 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             grafcet(objectxmpp, datasend)#grapcet va utiliser la session pour travailler.
             logging.getLogger().debug("outing graphcet phase1")
     else:
+        logging.getLogger().debug("###################################################")
         logging.getLogger().debug("##############AGENT RELAY SERVER###################")
+        logging.getLogger().debug("###################################################")
         if 'transfert' in data \
             and data['transfert'] == True\
                 and 'methodetransfert' in data\
                     and data['methodetransfert'] == "curl":
-                        #mode pull gerer by machine
+                        #mode pull AM to ARS
                         ### send direct a machine le message de deploy.
             transfertdeploy = {
                                 'action': action,
@@ -560,33 +536,63 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     mbody = json.dumps(transfertdeploy),
                                     mtype = 'chat')
         else:
+            # mode push ARS to AM
             # UPLOAD FILE PACKAGE to MACHINE, all dependency
             # We are in the case where it is necessary to install all the packages for the deployment, dependency included
             if not objectxmpp.session.isexist(sessionid):
                 logging.getLogger().debug("creation session %s"%sessionid)
-                objectxmpp.session.createsessiondatainfo(sessionid,  datasession = data, timevalid = 10000)
+                objectxmpp.session.createsessiondatainfo(sessionid,  datasession = data, timevalid = 950)
                 ## In push method you must know or install the packages on machine agent
                 ## In push mode, the packets are sent to a location depending on reception
                 ## one must make a request to AM to know or sent the files.
                 ## request message pacquage location
                 ## create a message with the deploy sessionid.
                 ## action will be a call to a plugin info request here the folder_packages
-
                 askinfo( data['jidmachine'],
                         sessionid,
                         objectxmpp,
                         informationasking = ['folders_packages'],
                         replyaction = action)
+
+                #on installe la clef si elle est pas installee sur machine pour le deploiment
+                ####if not 'keyinstall' in data_in_session or data_in_session['keyinstall'] == False:
+                ##install keypublic on machine
+                keypublic = get_keypub_ssh()
+                installkeypub = {
+                                'action': "setkeypubliconauthorizedkeys",
+                                'sessionid': sessionid,
+                                'data' : {'keypub' : keypublic,
+                                          'install' : True,
+                                          'actionasker' : action },
+                                'ret' : 0,
+                                'base64' : False }
+                print "######################## SEND keyinstall##########################"
+                objectxmpp.send_message(mto =  data['jidmachine'],
+                                        mbody = json.dumps(installkeypub),
+                                        mtype = 'chat')
             else:
-                #session exist
+                #la session existe
+                print "LA SESSION EXISTE"
                 objsession = objectxmpp.session.sessionfromsessiondata(sessionid)
                 data_in_session = objsession.getdatasession()
+                print "LA SESSION EXISTE"
                 if 'step' not in data:
-                    if 'actiontype' in data and 'folders_packages' in data and data['actiontype'] == 'requestinfo' :
-                        data_in_session['folders_packages'] = data['folders_packages']
+                    print "STEP NOT"
+                    if 'keyinstall' in data and data['keyinstall'] == True:
+                        #on gere le message
+                        print "keyinstall in true"
+                        data_in_session['keyinstall'] = True
+                        objsession.setdatasession(data_in_session)
 
-                    #on verify that you have all the information for the deployment
-                    if data_in_session['folders_packages'] == "":
+
+                    if 'actiontype' in data and 'folders_packages' in data and data['actiontype'] == 'requestinfo' :
+                        print "folders_packages"
+                        data_in_session['folders_packages'] = data['folders_packages']
+                        objsession.setdatasession(data_in_session)
+
+
+                    #on verify que l'on dispose de toutes les informations pour le deployement
+                    if 'folders_packages' in data_in_session and data_in_session['folders_packages'] == "":
                         # termine deploy on error
                         # on ne connait pas le folders_packages
                         logging.getLogger().debug("SORRY DEPLOY TERMINATE FOLDERS_PACKAGE MISSING")
@@ -595,28 +601,34 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                             sessionname = sessionid ,
                                             priority =0,
                                             who=objectxmpp.boundjid.bare)
-                    else:
-                        # We have all the information we continue deploy
-                        # You have to prepare the transfer of packages.
-                        # You must have a list of all the packages to install.
-                        # Because pakages can have dependencies
+                        return
 
-                        list_of_deployment_packages = search_list_of_deployment_packages(data_in_session['path'].split('/')[-1]).search()
-                        #We install packages
-                        logging.getLogger().debug("#################LIST PACKAGE DEPLOY SESSION #######################")
-                        logging.getLogger().debug(list_of_deployment_packages)
-                        # saves the list of packages to be transferred in the session.
-                        data_in_session['transferfiles'] = [x for x in list(list_of_deployment_packages) if x != ""]
-                        objsession.setdatasession(data_in_session)
-                        ### this plugin will call itself itself is transfer each time a package from the list of packages to transfer.
+                    if not 'folders_packages' in data_in_session or not 'keyinstall' in data_in_session:
+                        # si les 2 condition reuni on quitte.
+                        print "not folders_packages et not install"
+                        return
+
+                    # We have all the information we continue deploy
+                    # You have to prepare the transfer of packages.
+                    # You must have a list of all the packages to install.
+                    # Because pakages can have dependencies
+
+                    list_of_deployment_packages = search_list_of_deployment_packages(data_in_session['path'].split('/')[-1]).search()
+                    #on install les packages
+                    logging.getLogger().debug("#################LIST PACKAGE DEPLOY SESSION #######################")
+                    logging.getLogger().debug(list_of_deployment_packages)
+                    # saves the list of packages to be transferred in the session.
+                    data_in_session['transferfiles'] = [x for x in list(list_of_deployment_packages) if x != ""]
+                    objsession.setdatasession(data_in_session)
+                    ### this plugin will call itself itself is transfer each time a package from the list of packages to transfer.
                          ### to make this call we prepare a message with the current session.
                          ### on the message ['step'] of the message or resume processing.
                          ### here data ['step'] = "transferfiles"
-                        logging.getLogger().debug("APPEL POUR PHASE DE TRANSFERTS" )
-                        msg_self_call = create_message_self_for_transfertfile(sessionid)
-                        objectxmpp.send_message(mto = objectxmpp.boundjid.bare,
-                                                mbody = json.dumps(msg_self_call),
-                                                mtype = 'chat')
+                    logging.getLogger().debug("APPEL POUR PHASE DE TRANSFERTS" )
+                    msg_self_call = create_message_self_for_transfertfile(sessionid)
+                    objectxmpp.send_message(mto = objectxmpp.boundjid.bare,
+                                            mbody = json.dumps(msg_self_call),
+                                            mtype = 'chat')
                 else:
                     ########## session transfer file ##########
                     #analysis of the resume variable (step)
@@ -635,7 +647,19 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                             objsession.setdatasession(data_in_session)
                             logging.getLogger().debug("SEND COMMANDE")
                             logging.getLogger().debug("TRANSFERT PACKAGE from %s"%pathin)
-                            cmd = "rsync --delete -e \"ssh -o IdentityFile=/root/.ssh/id_rsa -o StrictHostKeyChecking=no -o Batchmode=yes -o PasswordAuthentication=no -o ServerAliveInterval=10 -o CheckHostIP=no -o ConnectTimeout=10\"   -av %s/ %s@%s:\"%s/\""%(pathin, "pulse", data_in_session['ipmachine'], pathout)
+                            #cmd = "rsync --delete -e \"ssh -o IdentityFile=/root/.ssh/id_rsa -o StrictHostKeyChecking=no -o Batchmode=yes -o PasswordAuthentication=no -o ServerAliveInterval=10 -o CheckHostIP=no -o ConnectTimeout=10\"   -av %s/ %s@%s:\"%s/\""%(pathin, "pulse", data_in_session['ipmachine'], pathout)
+                            cmd = "scp -r -o IdentityFile=/root/.ssh/id_rsa "\
+                                    "-o StrictHostKeyChecking=no "\
+                                    "-o Batchmode=yes "\
+                                    "-o PasswordAuthentication=no "\
+                                    "-o ServerAliveInterval=10 "\
+                                    "-o CheckHostIP=no "\
+                                    "-o ConnectTimeout=10 "\
+                                        "%s %s@%s:\"%s\""%( pathin,
+                                                        "pulse",
+                                                        data_in_session['ipmachine'],
+                                                        data_in_session['folders_packages'])
+
                             logging.getLogger().debug("tranfert cmd :\n %s"%cmd)
                             obcmd = simplecommandstr(cmd)
                             objectxmpp.logtopulse("push transfert package :%s to %s"%(uuidpackages,data_in_session['jidmachine'] ),
@@ -655,6 +679,16 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                                 mbody = json.dumps(create_message_self_for_transfertfile(sessionid)),
                                                 mtype = 'chat')
                         else:
+                            ##undinstall keypublic on machine after transfert package
+                            undinstallkeypub = {
+                                                'action': "setkeypubliconauthorizedkeys",
+                                                'sessionid': sessionid,
+                                                'data' : {'keypub' : keypublic, 'install' : False},
+                                                'ret' : 0,
+                                                'base64' : False }
+                            objectxmpp.send_message(mto = data_in_session['jidmachine'],
+                                                mbody = json.dumps(undinstallkeypub),
+                                                mtype = 'chat')
                             # creation du message de depoy vers machine
                             logging.getLogger().debug("APPEL PLUGIN FOR DEPLOY ON MACHINE")
                             transfertdeploy = {
