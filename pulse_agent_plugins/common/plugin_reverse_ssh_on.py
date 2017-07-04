@@ -45,8 +45,8 @@ def genratekeyforARSBackuppc():
         os.system("ssh-keygen -b 2048 -t rsa -f /var/lib/pulse2/clients/reversessh/.ssh/id_rsa -q -N \"\"")
         shutil.copyfile("/var/lib/pulse2/clients/reversessh/.ssh/id_rsa.pub", "/var/lib/pulse2/clients/reversessh/.ssh/authorized_keys")
         os.system("chown -R reversessh: /var/lib/pulse2/clients/reversessh/")
-        os.system("chmod 700 /var/lib/pulse2/clients/reversessh/.ssh")
-        os.system("chmod 600 /var/lib/pulse2/clients/reversessh/.ssh/authorized_keys")
+        os.chmod("/var/lib/pulse2/clients/reversessh/.ssh", 0o700)
+        os.chmod("/var/lib/pulse2/clients/reversessh/.ssh/authorized_keys", 0o600)
 
 def load_key_ssh_relayserver():
     filekey = os.path.join("/","var","lib","pulse2","clients","reversessh",".ssh","id_rsa")
