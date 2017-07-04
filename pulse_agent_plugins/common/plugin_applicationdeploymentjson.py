@@ -680,6 +680,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                                 mtype = 'chat')
                         else:
                             ##undinstall keypublic on machine after transfert package
+                            keypublic = get_keypub_ssh()
                             undinstallkeypub = {
                                                 'action': "setkeypubliconauthorizedkeys",
                                                 'sessionid': sessionid,
