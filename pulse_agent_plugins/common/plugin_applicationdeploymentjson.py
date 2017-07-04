@@ -123,61 +123,6 @@ def askinfo( to, sessionid, objectxmpp, informationasking = [], replyaction = No
                              mbody = json.dumps(ask),
                              mtype = 'chat')
 
-def keyssh(name = "id_rsa.pub"):
-    source = open(os.path.join('/','root','.ssh',name), "r")
-    dede = source.read().strip(" \n\t")
-    source.close()
-    return dede
-
-def updatedescriptor(result, descriptor, Devent, Daction):
-    if sys.platform.startswith('linux'):
-        dataupdate = descriptor['linux']['sequence']
-    elif sys.platform.startswith('win'):
-        dataupdate = descriptor['win']['sequence']
-    elif sys.platform.startswith('darwin'):
-        dataupdate = descriptor['Macos']['sequence']
-    else:
-        return
-    for t in dataupdate:
-        if t['event'] == Devent and t['action'] == Daction:
-            t['codeerror'] = result['codeerror']
-            for z in result:
-                t[z] = result[z]
-
-def transfert_package(destinataire, datacontinue, objectxmpp):
-    logging.getLogger().debug("%s"% json.dumps(datacontinue, indent = 4, sort_keys = True))
-    if datacontinue['data']['methodetransfert'] == 'rsync':
-        if 'Pulse' in datacontinue['data']['pathpackageonmachine'] and 'tmp' in datacontinue['data']['pathpackageonmachine']:
-
-            datacontinue['data']['pathpackageonmachine'] = datacontinue['data']['pathpackageonmachine'].replace("\\","/")
-            tab = datacontinue['data']['pathpackageonmachine'].split('/')[3:]
-            datacontinue['data']['pathpackageonmachine'] = '/'.join(tab)
-            cmd = "rsync --delete -e \"ssh -o IdentityFile=/root/.ssh/id_rsa -o StrictHostKeyChecking=no -o Batchmode=yes -o PasswordAuthentication=no -o ServerAliveInterval=10 -o CheckHostIP=no -o ConnectTimeout=10\" -av %s/ pulse@%s:\"%s/\""%(datacontinue['data']['path'],
-                                        datacontinue['data']['ipmachine'],
-                                        datacontinue['data']['pathpackageonmachine'])
-        else:
-            cmd = "rsync --delete -e \"ssh -o IdentityFile=/root/.ssh/id_rsa -o StrictHostKeyChecking=no -o Batchmode=yes -o PasswordAuthentication=no -o ServerAliveInterval=10 -o CheckHostIP=no -o ConnectTimeout=10\"   -av %s/ %s:\"%s/\""%(datacontinue['data']['path'],
-                                        datacontinue['data']['ipmachine'],
-                                        datacontinue['data']['pathpackageonmachine'])
-        logging.getLogger().debug("cmd %s"% cmd)
-        logging.getLogger().debug("datacontinue %s"% json.dumps(datacontinue, indent = 4, sort_keys = True))
-        logging.getLogger().debug("destinataire %s"% destinataire)
-        objectxmpp.process_on_end_send_message_xmpp.add_processcommand( cmd ,datacontinue, destinataire, destinataire, 50)
-    else:
-        pass
-
-def checkosindescriptor(descriptor):
-    if sys.platform.startswith('linux'):
-        osinstall = 'linux'
-    elif sys.platform.startswith('win'):
-        osinstall = 'win'
-    elif sys.platform.startswith('darwin'):
-        osinstall = 'Macos'
-    if osinstall in descriptor and 'sequence' in descriptor[osinstall]:
-        return True
-    else:
-        return False
-
 def curlgetdownloadfile( destfile, urlfile, insecure = True):
     # As long as the file is opened in binary mode, both Python 2 and Python 3
     # can write response body to it without decoding.
