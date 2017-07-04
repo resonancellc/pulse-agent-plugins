@@ -65,7 +65,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
     print "message to %s"%message['from']
     print "result \n%s"%json.dumps(result, indent=4)
 
-    #message 
+    #message
     objectxmpp.send_message( mto=message['from'],
                              mbody=json.dumps(result),
                              mtype='chat')
