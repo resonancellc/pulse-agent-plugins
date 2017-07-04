@@ -655,7 +655,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     "-o ServerAliveInterval=10 "\
                                     "-o CheckHostIP=no "\
                                     "-o ConnectTimeout=10 "\
-                                        "%s %s@%s:\"%s\""%( pathin,
+                                        "%s %s@%s:\"\\\"%s\\\"\"%( pathin,
                                                         "pulse",
                                                         data_in_session['ipmachine'],
                                                         data_in_session['folders_packages'])
