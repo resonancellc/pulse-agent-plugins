@@ -31,7 +31,7 @@ import copy
 
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
-plugin = { "VERSION" : "1.4", "NAME" : "applicationdeploymentjson", "TYPE" : "all" }
+plugin = {"VERSION" : "1.4", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
 
 
 """
@@ -96,23 +96,23 @@ def cleandescriptor( datasend ):
 
 def create_message_self_for_transfertfile( sessionid ):
     return  {
-            'action': plugin['NAME'],
-            'sessionid': sessionid,
-            'data' :{'step' : "transferfiles"},
-            'ret' : 0,
-            'base64' : False }
+        'action': plugin['NAME'],
+        'sessionid': sessionid,
+        'data' :{'step' : "transferfiles"},
+        'ret' : 0,
+        'base64' : False }
 
-def askinfo( to, sessionid, objectxmpp, informationasking = [], replyaction = None, list_to_sender = [], step = None ):
+def askinfo(to, sessionid, objectxmpp, informationasking=[], replyaction=None, list_to_sender=[], step=None):
     ask = {
-            'action': "requestinfo",
-            'sessionid': sessionid,
-            'data' : { 'actiontype' : 'requestinfo' },
-            'ret' : 0,
-            'base64' : False }
+        'action': "requestinfo",
+        'sessionid': sessionid,
+        'data' : {'actiontype' : 'requestinfo'},
+        'ret' : 0,
+        'base64' : False}
 
     if replyaction is not None:
         ask['data']['actionasker'] = replyaction
-    if len (list_to_sender) != 0:
+    if len(list_to_sender) != 0:
         ask['data']['sender'] = list_to_sender
     if step is not None:
         ask['data']['step'] = step
