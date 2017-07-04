@@ -19,11 +19,10 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA 02110-1301, USA.
 
-import sys
-import os
+
 from  lib.utils import pluginprocess, install_or_undinstall_keypub_authorized_keys
 
-import traceback
+
 import logging
     
 DEBUGPULSEPLUGIN = 25
