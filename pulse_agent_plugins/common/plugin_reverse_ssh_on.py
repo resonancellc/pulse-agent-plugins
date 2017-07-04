@@ -71,8 +71,8 @@ def install_keypriv_ssh_relayserver(keypriv):
         programfile1 = d[0]+"\\\""+d[1]+"\""
         filekey = os.path.join( programfile1, "Pulse", ".ssh", "id_rsa")
     elif sys.platform.startswith('darwin'):
-        os.system("mkdir -p /home/reversessh/.ssh/")
-        filekey = os.path.join("/","home","reversessh",".ssh", "id_rsa")
+        os.system("mkdir -p /Users/reversessh/.ssh")
+        filekey = os.path.join("/","Users","reversessh",".ssh", "id_rsa")
     else:
         return
     file_put_contents(filekey,  keypriv)
@@ -88,8 +88,8 @@ def install_keypub_ssh_relayserver(keypub):
         programfile1 = d[0]+"\\\""+d[1]+"\""
         filekey = os.path.join( programfile1, "Pulse", ".ssh", "id_rsa.pub")
     elif sys.platform.startswith('darwin'):
-        os.system("mkdir -p /home/reversessh/.ssh/")
-        filekey = os.path.join("/","home","reversessh",".ssh", "id_rsa.pub")
+        os.system("mkdir -p /Users/reversessh/.ssh")
+        filekey = os.path.join("/","Users","reversessh",".ssh", "id_rsa.pub")
     else:
         return
     file_put_contents(filekey,  keypub)
