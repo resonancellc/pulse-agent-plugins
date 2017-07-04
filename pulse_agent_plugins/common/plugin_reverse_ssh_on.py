@@ -26,7 +26,7 @@ import shlex
 import json
 import subprocess
 from lib.utils import file_get_contents, file_put_contents
-
+import shutil
 import logging
 
 def checkresult(result):
@@ -43,8 +43,7 @@ def genratekeyforARSBackuppc():
         os.system("useradd reversessh -md /var/lib/pulse2/clients/reversessh -s /bin/rbash")
         os.makedirs("/var/lib/pulse2/clients/reversessh/.ssh/")
         os.system("ssh-keygen -b 2048 -t rsa -f /var/lib/pulse2/clients/reversessh/.ssh/id_rsa -q -N \"\"")
-        os.system("cp /var/lib/pulse2/clients/reversessh/.ssh/id_rsa.pub "\
-                                            "/var/lib/pulse2/clients/reversessh/.ssh/authorized_keys")
+        shutil.copyfile("/var/lib/pulse2/clients/reversessh/.ssh/id_rsa.pub", "/var/lib/pulse2/clients/reversessh/.ssh/authorized_keys")
         os.system("chown -R reversessh: /var/lib/pulse2/clients/reversessh/")
         os.system("chmod 700 /var/lib/pulse2/clients/reversessh/.ssh")
         os.system("chmod 600 /var/lib/pulse2/clients/reversessh/.ssh/authorized_keys")
