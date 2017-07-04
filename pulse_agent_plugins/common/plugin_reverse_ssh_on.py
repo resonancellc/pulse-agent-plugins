@@ -40,7 +40,7 @@ def genratekeyforARSBackuppc():
     if not os.path.isfile(os.path.join("/","var","lib","pulse2","clients","reversessh",".ssh","id_rsa")) or not \
         os.path.isfile(os.path.join("/","var","lib","pulse2","clients","reversessh",".ssh","id_rsa.pub")):
         os.system("useradd reversessh -md /var/lib/pulse2/clients/reversessh -s /bin/rbash")
-        os.system("mkdir -p /var/lib/pulse2/clients/reversessh/.ssh/")
+        os.makedirs("/var/lib/pulse2/clients/reversessh/.ssh/")
         os.system("ssh-keygen -b 2048 -t rsa -f /var/lib/pulse2/clients/reversessh/.ssh/id_rsa -q -N \"\"")
         os.system("cp /var/lib/pulse2/clients/reversessh/.ssh/id_rsa.pub "\
                                             "/var/lib/pulse2/clients/reversessh/.ssh/authorized_keys")
@@ -63,8 +63,8 @@ def runProcess(cmd , shell= False, envoption = os.environ):
 
 def install_keypriv_ssh_relayserver(keypriv):
     if sys.platform.startswith('linux'):
-        if not os.path.isdir("/home/reversessh/.ssh/"):
-            os.makedirs("/home/reversessh/.ssh/")
+        if not os.path.isdir(os.path.join(os.path.expanduser('~reversessh'), ".ssh/"):
+            os.makedirs(os.path.join(os.path.expanduser('~reversessh'), ".ssh/"))
         filekey = os.path.join("/","home","reversessh",".ssh", "id_rsa")
     elif sys.platform.startswith('win'):
         programfile = os.environ['PROGRAMFILES']
