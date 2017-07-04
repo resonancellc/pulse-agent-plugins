@@ -19,7 +19,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA 02110-1301, USA.
 
-import sys, os
+import sys
+import os
 from subprocess import Popen
 import shlex
 import json
