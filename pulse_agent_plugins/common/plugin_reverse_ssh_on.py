@@ -63,7 +63,7 @@ def runProcess(cmd , shell= False, envoption = os.environ):
 
 def install_keypriv_ssh_relayserver(keypriv):
     if sys.platform.startswith('linux'):
-        if not os.path.isdir(os.path.join(os.path.expanduser('~reversessh'), ".ssh/"):
+        if not os.path.isdir(os.path.join(os.path.expanduser('~reversessh'), ".ssh/")):
             os.makedirs(os.path.join(os.path.expanduser('~reversessh'), ".ssh/"))
         filekey = os.path.join("/","home","reversessh",".ssh", "id_rsa")
     elif sys.platform.startswith('win'):
