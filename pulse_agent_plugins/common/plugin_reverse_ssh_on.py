@@ -50,8 +50,7 @@ def genratekeyforARSBackuppc():
 
 def load_key_ssh_relayserver():
     filekey = os.path.join("/","var","lib","pulse2","clients","reversessh",".ssh","id_rsa")
-    privatekey = file_get_contents(filekey)
-    return privatekey
+    return file_get_contents(filekey)
 
 def load_keypub_ssh_relayserver():
     filekey = os.path.join("/","var","lib","pulse2","clients","reversessh",".ssh","id_rsa.pub")
