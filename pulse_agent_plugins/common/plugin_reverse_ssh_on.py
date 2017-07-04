@@ -63,7 +63,8 @@ def runProcess(cmd , shell= False, envoption = os.environ):
 
 def install_keypriv_ssh_relayserver(keypriv):
     if sys.platform.startswith('linux'):
-        os.system("mkdir -p /home/reversessh/.ssh/")
+        if not os.path.isdir("/home/reversessh/.ssh/"):
+            os.makedirs("/home/reversessh/.ssh/")
         filekey = os.path.join("/","home","reversessh",".ssh", "id_rsa")
     elif sys.platform.startswith('win'):
         programfile = os.environ['PROGRAMFILES']
@@ -80,7 +81,8 @@ def install_keypriv_ssh_relayserver(keypriv):
 
 def install_keypub_ssh_relayserver(keypub):
     if sys.platform.startswith('linux'):
-        os.system("mkdir -p /home/reversessh/.ssh/")
+        if not os.path.isdir("/home/reversessh/.ssh/"):
+            os.makedirs("/home/reversessh/.ssh/")
         filekey = os.path.join("/","home","reversessh",".ssh", "id_rsa.pub")
     elif sys.platform.startswith('win'):
         programfile = os.environ['PROGRAMFILES']
