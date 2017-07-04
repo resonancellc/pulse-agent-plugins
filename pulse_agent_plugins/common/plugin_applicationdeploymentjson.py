@@ -339,7 +339,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                         return
                     # If it lacks a dependency descriptor it is requested to relay server
                     objectxmpp.send_message(   mto = data['jidrelay'],
-                                                mbody =j son.dumps(datasend),
+                                                mbody = json.dumps(datasend),
                                                 mtype = 'chat')
                     if sessionid in objectxmpp.back_to_deploy:
                         save_back_to_deploy(objectxmpp.back_to_deploy)
