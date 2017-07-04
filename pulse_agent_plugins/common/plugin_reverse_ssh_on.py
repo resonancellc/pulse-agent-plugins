@@ -77,7 +77,7 @@ def install_keypriv_ssh_relayserver(keypriv):
     else:
         return
     file_put_contents(filekey,  keypriv)
-    os.system("chmod 600 %s"%filekey)
+    os.chmod(filekey, 0o600)
 
 def install_keypub_ssh_relayserver(keypub):
     if sys.platform.startswith('linux'):
@@ -95,7 +95,7 @@ def install_keypub_ssh_relayserver(keypub):
     else:
         return
     file_put_contents(filekey,  keypub)
-    os.system("chmod 644 %s"%filekey)
+    os.chmod(filekey, 0o644)
 
 plugin = {"VERSION" : "1.0", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
 
