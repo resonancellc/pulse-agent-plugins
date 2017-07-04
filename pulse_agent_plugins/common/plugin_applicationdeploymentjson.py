@@ -123,8 +123,8 @@ def askinfo(to, sessionid, objectxmpp, informationasking=[], replyaction=None, l
                              mbody = json.dumps(ask),
                              mtype = 'chat')
 
-def keyssh(name = "id_rsa.pub"):
-    source = open(os.path.join('/','root','.ssh',name), "r")
+def keyssh(name="id_rsa.pub"):
+    source = open(os.path.join('/', 'root', '.ssh', name), "r")
     dede = source.read().strip(" \n\t")
     source.close()
     return dede
