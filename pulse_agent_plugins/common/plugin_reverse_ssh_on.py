@@ -54,8 +54,7 @@ def load_key_ssh_relayserver():
 
 def load_keypub_ssh_relayserver():
     filekey = os.path.join("/","var","lib","pulse2","clients","reversessh",".ssh","id_rsa.pub")
-    keypub = file_get_contents(filekey)
-    return keypub
+    return file_get_contents(filekey)
 
 def runProcess(cmd , shell= False, envoption = os.environ):
     print "LANCE COMMANDE %s"%cmd
