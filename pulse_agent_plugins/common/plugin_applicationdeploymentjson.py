@@ -144,7 +144,7 @@ def recuperefile(datasend, objectxmpp, ippackage, portpackage):
     uuidpackage = datasend['data']['path'].split('/')[-1]
     curlurlbase = "https://%s:%s/mirror1_files/%s/"%(ippackage, portpackage, uuidpackage )
     for filepackage in datasend['data']['packagefile']:
-        if datasend['data']['methodetransfert'] == "curl":
+        if datasend['data']['methodetransfert'] == "pullcurl":
             dest = os.path.join(datasend['data']['pathpackageonmachine'], filepackage)
             urlfile = curlurlbase + filepackage
             try:
@@ -433,7 +433,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                 'base64' : False
                 }
             datasend['data']['pathpackageonmachine'] = os.path.join( managepackage.packagedir(),data['path'].split('/')[-1])
-            if data['methodetransfert'] == "curl" and data['transfert'] :
+            if data['methodetransfert'] == "pullcurl" and data['transfert'] :
                 if not recuperefile(datasend, objectxmpp,  data['ippackageserver'], data['portpackageserver']):
                     logging.getLogger().debug("Error curl")
                     datasend = {
@@ -469,7 +469,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         if 'transfert' in data \
             and data['transfert'] == True\
                 and 'methodetransfert' in data\
-                    and data['methodetransfert'] == "curl":
+                    and data['methodetransfert'] == "pullcurl":
                         #mode pull AM to ARS
                         ### send direct a machine le message de deploy.
             transfertdeploy = {
