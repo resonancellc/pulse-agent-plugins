@@ -29,7 +29,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
     logging.getLogger().debug("call %s from %s"%(plugin,message['from']))
     logging.getLogger().debug("###################################################")
 
-    objectxmpp.ban_deploy_sessionid_list.append(sessionid)
+    objectxmpp.ban_deploy_sessionid_list.add(sessionid)
     # in 900 secondes on call  remove_sessionid_in_ban_deploy_sessionid_list function
     objectxmpp.schedule('removeban',
                         objectxmpp.lapstimebansessionid,
