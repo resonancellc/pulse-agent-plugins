@@ -560,7 +560,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                         ### - Key public ARS installed on AM,
                         ### - And return the path or install the packages.
                         ### We leave and await message of the missing condition.
-                        ##return
+                        return
 
                     # We have all the information we continue deploy
                     # You have to prepare the transfer of packages.
