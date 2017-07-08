@@ -503,19 +503,19 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                 #on installe la clef si elle est pas installee sur machine pour le deploiment
                 ####if not 'keyinstall' in data_in_session or data_in_session['keyinstall'] == False:
                 ##install keypublic on machine
-                #keypublic = get_keypub_ssh()
-                #installkeypub = {
-                                #'action': "setkeypubliconauthorizedkeys",
-                                #'sessionid': sessionid,
-                                #'data' : {'keypub' : keypublic,
-                                          #'install' : True,
-                                          #'actionasker' : action },
-                                #'ret' : 0,
-                                #'base64' : False }
-                #print "######################## SEND keyinstall##########################"
-                #objectxmpp.send_message(mto =  data['jidmachine'],
-                                        #mbody = json.dumps(installkeypub),
-                                        #mtype = 'chat')
+                keypublic = get_keypub_ssh()
+                installkeypub = {
+                                'action': "setkeypubliconauthorizedkeys",
+                                'sessionid': sessionid,
+                                'data' : {'keypub' : keypublic,
+                                'install' : True,
+                                'actionasker' : action },
+                                'ret' : 0,
+                                'base64' : False }
+                print "######################## SEND keyinstall##########################"
+                objectxmpp.send_message(mto =  data['jidmachine'],
+                                        mbody = json.dumps(installkeypub),
+                                        mtype = 'chat')
             else:
                 # The session exists
                 print "LA SESSION EXISTE"
@@ -549,17 +549,11 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                             who = objectxmpp.boundjid.bare)
                         return
 
-                    ##if not 'folders_packages' in data_in_session or not 'keyinstall' in data_in_session:
-                        ### If the 2 conditions are not yet satisfied:
-                        ### - Key public ARS installed on AM,
-                        ### - And return the path or install the packages.
-                        ### We leave and await message of the missing condition.
-                        ##return
-                    if not 'folders_packages' in data_in_session:
-                        ### If the 2 conditions are not yet satisfied:
-                        ### - Key public ARS installed on AM,
-                        ### - And return the path or install the packages.
-                        ### We leave and await message of the missing condition.
+                    if not 'folders_packages' in data_in_session or not 'keyinstall' in data_in_session:
+                        # If the 2 conditions are not yet satisfied:
+                        # - Key public ARS installed on AM,
+                        # - And return the path or install the packages.
+                        # We leave and await message of the missing condition.
                         return
 
                     # We have all the information we continue deploy
@@ -634,16 +628,16 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                                 mtype = 'chat')
                         else:
                             ##undinstall keypublic on machine after transfert package
-                            #keypublic = get_keypub_ssh()
-                            #undinstallkeypub = {
-                                                #'action': "setkeypubliconauthorizedkeys",
-                                                #'sessionid': sessionid,
-                                                #'data' : {'keypub' : keypublic, 'install' : False},
-                                                #'ret' : 0,
-                                                #'base64' : False }
-                            #objectxmpp.send_message(mto = data_in_session['jidmachine'],
-                                                #mbody = json.dumps(undinstallkeypub),
-                                                #mtype = 'chat')
+                            keypublic = get_keypub_ssh()
+                            undinstallkeypub = {
+                                                'action': "setkeypubliconauthorizedkeys",
+                                                'sessionid': sessionid,
+                                                'data' : {'keypub' : keypublic, 'install' : False},
+                                                'ret' : 0,
+                                                'base64' : False }
+                            objectxmpp.send_message(mto = data_in_session['jidmachine'],
+                                                mbody = json.dumps(undinstallkeypub),
+                                                mtype = 'chat')
                             # Creation of the message from depoy to machine
                             logging.getLogger().debug("APPEL PLUGIN FOR DEPLOY ON MACHINE")
                             transfertdeploy = {
