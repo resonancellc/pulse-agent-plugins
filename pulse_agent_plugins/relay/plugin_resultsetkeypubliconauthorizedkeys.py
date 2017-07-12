@@ -19,14 +19,15 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA 02110-1301, USA.
 
-from  lib.utils import pluginprocess
+
 import logging
 
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
-plugin = { "VERSION" : "1.0", "NAME" : "resultsetkeypubliconauthorizedkeys", "TYPE" : "relayserver" }
+plugin = { "VERSION" : "1.1", "NAME" : "resultsetkeypubliconauthorizedkeys", "TYPE" : "relayserver" }
 
 
-@pluginprocess
-def action( objectxmpp, action, sessionid, data, message, dataerreur ):
-    pass
+def action( objectxmpp, action, sessionid, data, message, dataerreur):
+    logging.getLogger().debug("###################################################")
+    logging.getLogger().debug("call %s from %s"%(plugin,message['from']))
+    logging.getLogger().debug("###################################################")
