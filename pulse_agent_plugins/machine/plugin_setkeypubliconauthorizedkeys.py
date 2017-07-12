@@ -36,21 +36,28 @@ def action(xmppobject, action, sessionid, data, message, dataerreur, result):
     logging.getLogger().debug("###################################################")
     logging.getLogger().debug("call %s from %s"%(plugin,message['from']))
     logging.getLogger().debug("###################################################")
-
+    resultkeyinstall = True
+    resultkeyundinstall = True
     if 'actionasker' in data and data['actionasker'] != "":
         result['action'] = data['actionasker']
-
 
     if 'install' in data and data['install']:
         print "install"
         #install keypub in authorized_keys
         logging.getLogger().debug("install keypub in authorized_keys")
-        install_or_undinstall_keypub_authorized_keys(install = True, keypub = data['keypub'])
+        resultkeyinstall = install_or_undinstall_keypub_authorized_keys(install = True, keypub = data['keypub'])
         result['data'] = {}
         result['data']['keyinstall'] = True
     else :
         #uninstall keppub in authorized_keys
         logging.getLogger().debug("uninstall keppub in authorized_keys")
-        install_or_undinstall_keypub_authorized_keys(install = False,  keypub = data['keypub'])
+        resultkeyundinstall = install_or_undinstall_keypub_authorized_keys(install = False,  keypub = data['keypub'])
 
-    
+    if not resultkeyinstall:
+       logging.getLogger().debug("###################################################")
+       logging.getLogger().debug("ERREUR PLUGIN setkeypubliconauthorizedkeys addition key pub")
+       raise
+    if not resultkeyundinstall:
+       logging.getLogger().debug("###################################################")
+       logging.getLogger().debug("ERREUR PLUGIN setkeypubliconauthorizedkeys remove key pub")
+       raise
