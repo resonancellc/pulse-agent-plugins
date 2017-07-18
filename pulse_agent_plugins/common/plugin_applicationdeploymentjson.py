@@ -31,7 +31,7 @@ import copy
 
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
-plugin = {"VERSION" : "1.4", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
+plugin = {"VERSION" : "1.5", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
 
 
 """
