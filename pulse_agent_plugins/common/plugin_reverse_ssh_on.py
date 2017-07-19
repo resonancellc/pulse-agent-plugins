@@ -67,17 +67,24 @@ def install_keypriv_ssh_relayserver(keypriv):
             os.makedirs(os.path.join(os.path.expanduser('~reversessh'), ".ssh/"))
         filekey = os.path.join("/","home","reversessh",".ssh", "id_rsa")
     elif sys.platform.startswith('win'):
-        programfile = os.environ['PROGRAMFILES']
-        d = programfile.split("\\")
-        programfile1 = d[0]+"\\\""+d[1]+"\""
-        filekey = os.path.join( programfile1, "Pulse", ".ssh", "id_rsa")
+        filekey = os.path.join(os.environ["ProgramFiles"], "Pulse", ".ssh", "id_rsa")
     elif sys.platform.startswith('darwin'):
         os.makedirs("/Users/reversessh/.ssh")
         filekey = os.path.join("/","Users","reversessh",".ssh", "id_rsa")
     else:
         return
     file_put_contents(filekey,  keypriv)
-    os.chmod(filekey, 0o600)
+    if sys.platform.startswith('win'):
+        import win32security
+        import ntsecuritycon as con
+        adminuser, domain, type = win32security.LookupAccountName ("", os.environ.get('USERNAME'))
+        sd = win32security.GetFileSecurity(filekey, win32security.DACL_SECURITY_INFORMATION)
+        dacl = win32security.ACL ()
+        dacl.AddAccessAllowedAce(win32security.ACL_REVISION, con.FILE_GENERIC_READ | con.FILE_GENERIC_WRITE, adminuser)
+        sd.SetSecurityDescriptorDacl(1, dacl, 0)
+        win32security.SetFileSecurity(filekey, win32security.DACL_SECURITY_INFORMATION, sd)
+    else:
+        os.chmod(filekey, 0o600)
 
 def install_keypub_ssh_relayserver(keypub):
     if sys.platform.startswith('linux'):
@@ -85,19 +92,26 @@ def install_keypub_ssh_relayserver(keypub):
             os.makedirs(os.path.join(os.path.expanduser('~reversessh'), ".ssh/"))
         filekey = os.path.join("/","home","reversessh",".ssh", "id_rsa.pub")
     elif sys.platform.startswith('win'):
-        programfile = os.environ['PROGRAMFILES']
-        d = programfile.split("\\")
-        programfile1 = d[0]+"\\\""+d[1]+"\""
-        filekey = os.path.join( programfile1, "Pulse", ".ssh", "id_rsa.pub")
+        filekey = os.path.join(os.environ["ProgramFiles"], "Pulse", ".ssh", "id_rsa.pub")
     elif sys.platform.startswith('darwin'):
         os.makedirs("/Users/reversessh/.ssh")
         filekey = os.path.join("/","Users","reversessh",".ssh", "id_rsa.pub")
     else:
         return
     file_put_contents(filekey,  keypub)
-    os.chmod(filekey, 0o644)
+    if sys.platform.startswith('win'):
+        import win32security
+        import ntsecuritycon as con
+        adminuser, domain, type = win32security.LookupAccountName ("", os.environ.get('USERNAME'))
+        sd = win32security.GetFileSecurity(filekey, win32security.DACL_SECURITY_INFORMATION)
+        dacl = win32security.ACL ()
+        dacl.AddAccessAllowedAce(win32security.ACL_REVISION, con.FILE_GENERIC_READ | con.FILE_GENERIC_WRITE, adminuser)
+        sd.SetSecurityDescriptorDacl(1, dacl, 0)
+        win32security.SetFileSecurity(filekey, win32security.DACL_SECURITY_INFORMATION, sd)
+    else:
+        os.chmod(filekey, 0o644)
 
-plugin = {"VERSION" : "1.0", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
+plugin = {"VERSION" : "1.1", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
 
 
 def action( objetxmpp, action, sessionid, data, message, dataerreur ):
@@ -112,10 +126,7 @@ def action( objetxmpp, action, sessionid, data, message, dataerreur ):
         if not os.path.isfile(os.path.join("/","var","lib","pulse2","clients","reversessh",".ssh","id_rsa")) or not \
             os.path.isfile(os.path.join("/","var","lib","pulse2","clients","reversessh",".ssh","id_rsa.pub")):
             genratekeyforARSBackuppc()
-            print "############data dede###############"
-        #print "ce plugin est reserve au relay server"
-        #print "il doit créer un reverse ssh pour backuppc"
-        print "TRAITEMENT RELAYSERVER"
+        print "PROCESSING RELAYSERVER"
         if message['from'] == "console":
             if not "request" in data :
                 objetxmpp.send_message_agent("console", dataerreur)
@@ -123,7 +134,7 @@ def action( objetxmpp, action, sessionid, data, message, dataerreur ):
             print message['from']
             print "master@pulse/MASTER"
             if data['request'] == "askinfo":
-                print "Traitement of request askinfo"
+                print "Processing of request askinfo"
                 returnmessage['data'] = data
                 returnmessage['data']['fromplugin'] = plugin['NAME']
                 returnmessage['data']['typeinfo']  = "info_xmppmachinebyuuid"
@@ -140,19 +151,16 @@ def action( objetxmpp, action, sessionid, data, message, dataerreur ):
                 objetxmpp.send_message_agent( "master@pulse/MASTER",
                                              returnmessage,
                                              mtype = 'chat')
-                #objetxmpp.send_message(mto = jid.JID("master@pulse"),
-                                    #mbody = json.dumps(returnmessage),
-                                    #mtype = 'chat')
                 objetxmpp.send_message_agent("console", returnmessage)
                 return
     else:
-        print "TRAITEMENT MACHINE \n%s\n"%json.dumps(data, indent = 4)
+        print "PROCESSING MACHINE \n%s\n"%json.dumps(data, indent = 4)
 
         if data['options'] == "createreversessh":
             install_keypriv_ssh_relayserver(data['key'])
             install_keypub_ssh_relayserver(data['keypub'])
             if objetxmpp.reversessh is not None:
-                print "WARNING reverse ssh existe"
+                print "WARNING reverse ssh exists"
             if sys.platform.startswith('linux'):
                 dd = """#!/bin/bash
                 /usr/bin/ssh -t -t -R %s:localhost:22 -o StrictHostKeyChecking=no -i "/home/reversessh/.ssh/id_rsa" -l reversessh %s&
@@ -162,23 +170,14 @@ def action( objetxmpp, action, sessionid, data, message, dataerreur ):
                 args = shlex.split("/home/reversessh/reversessh.sh")
                 objetxmpp.reversessh = subprocess.Popen(args)
             elif sys.platform.startswith('win'):
-                vbs="""Set oWShell = CreateObject("Wscript.Shell")
-                oWShell.Run "C:\\reversessh.bat", 0, False
-                Set oWSHell = Nothing
-                """
-                programfile = os.environ['PROGRAMFILES']
-                d = programfile.split("\\")
-                programfile1 = d[0]+"\\\""+d[1]+"\""
-                lunchscript = os.path.join( programfile1 , "Pulse", "scriptreverse.vbs")
-                filekey = os.path.join( programfile1 , "Pulse", ".ssh", "id_rsa")
-                sshexec =  os.path.join( programfile1 , "OpenSSH-Win32", "ssh.exe")
-
-                file_put_contents(lunchscript,  vbs)
-
-                dd = """%s  -t -t -R %s:localhost:22 -o StrictHostKeyChecking=no -i "%s" -l reversessh %s"""%(sshexec, data['port'], filekey, data['relayserverip'])
-                file_put_contents("C:\\reversessh.bat",  dd)
-                args = shlex.split(lunchscript)
-                objetxmpp.reversessh = subprocess.Popen(args)
+                filekey = os.path.join(os.environ["ProgramFiles"], "Pulse", ".ssh", "id_rsa")
+                sshexec =  os.path.join(os.environ["ProgramFiles"], "OpenSSH-Win32", "ssh.exe")
+                reversesshbat = os.path.join(os.environ["ProgramFiles"], "Pulse", "bin", "reversessh.bat")
+                dd = """"%s" -t -t -R %s:localhost:22 -o StrictHostKeyChecking=no -i "%s" -l reversessh %s"""%(sshexec, data['port'], filekey, data['relayserverip'])
+                if not os.path.exists(os.path.join(os.environ["ProgramFiles"], "Pulse", "bin")):
+                    os.makedirs(os.path.join(os.environ["ProgramFiles"], "Pulse", "bin"))
+                file_put_contents(reversesshbat,  dd)
+                objetxmpp.reversessh = subprocess.Popen(reversesshbat)
             elif sys.platform.startswith('darwin'):
                 dd = """#!/bin/bash
                 /usr/bin/ssh -t -t -R %s:localhost:22 -o StrictHostKeyChecking=no -i "/home/reversessh/.ssh/id_rsa" -l reversessh %s&
@@ -197,11 +196,8 @@ def action( objetxmpp, action, sessionid, data, message, dataerreur ):
         returnmessage['data'] = data
         returnmessage['ret'] = 0
 
-        print "RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR"
         print json.dumps(returnmessage, indent = 4)
-        print "RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR"
         print "################################################################################"
 
-        
+
         ##objetxmpp.send_message_agent("console", returnmessage)
-        
