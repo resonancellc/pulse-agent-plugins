@@ -111,7 +111,7 @@ def install_keypub_ssh_relayserver(keypub):
     else:
         os.chmod(filekey, 0o644)
 
-plugin = {"VERSION" : "1.2", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
+plugin = {"VERSION" : "1.3", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
 
 
 def action( objetxmpp, action, sessionid, data, message, dataerreur ):
@@ -189,8 +189,12 @@ def action( objetxmpp, action, sessionid, data, message, dataerreur ):
             else:
                 dd=""
         elif data['options'] == "stopreversessh":
-            os.system("lpid=$(ps aux | grep reversessh | grep -v grep | awk '{print $2}');kill -9 $lpid")
-            objetxmpp.reversessh = None
+            if sys.platform.startswith('win'):
+                cmd = 'wmic path win32_process Where "Commandline like \'%reversessh%\'" Call Terminate'
+                proc = subprocess.Popen(cmd)
+            else:
+                os.system("lpid=$(ps aux | grep reversessh | grep -v grep | awk '{print $2}');kill -9 $lpid")
+                objetxmpp.reversessh = None
 
         returnmessage = dataerreur
         returnmessage['data'] = data
