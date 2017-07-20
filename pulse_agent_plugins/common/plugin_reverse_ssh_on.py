@@ -76,11 +76,11 @@ def install_keypriv_ssh_relayserver(keypriv):
     file_put_contents(filekey,  keypriv)
     if sys.platform.startswith('win'):
         import win32security
-        import ntsecuritycon as con
-        adminuser, domain, type = win32security.LookupAccountName ("", os.environ.get('USERNAME'))
+        import ntsecuritycon
+        user, domain, type = win32security.LookupAccountName ("", "System")
         sd = win32security.GetFileSecurity(filekey, win32security.DACL_SECURITY_INFORMATION)
         dacl = win32security.ACL ()
-        dacl.AddAccessAllowedAce(win32security.ACL_REVISION, con.FILE_GENERIC_READ | con.FILE_GENERIC_WRITE, adminuser)
+        dacl.AddAccessAllowedAce(win32security.ACL_REVISION, ntsecuritycon.FILE_GENERIC_READ | ntsecuritycon.FILE_GENERIC_WRITE, user)
         sd.SetSecurityDescriptorDacl(1, dacl, 0)
         win32security.SetFileSecurity(filekey, win32security.DACL_SECURITY_INFORMATION, sd)
     else:
@@ -101,17 +101,17 @@ def install_keypub_ssh_relayserver(keypub):
     file_put_contents(filekey,  keypub)
     if sys.platform.startswith('win'):
         import win32security
-        import ntsecuritycon as con
-        adminuser, domain, type = win32security.LookupAccountName ("", os.environ.get('USERNAME'))
+        import ntsecuritycon
+        user, domain, type = win32security.LookupAccountName ("", "System")
         sd = win32security.GetFileSecurity(filekey, win32security.DACL_SECURITY_INFORMATION)
         dacl = win32security.ACL ()
-        dacl.AddAccessAllowedAce(win32security.ACL_REVISION, con.FILE_GENERIC_READ | con.FILE_GENERIC_WRITE, adminuser)
+        dacl.AddAccessAllowedAce(win32security.ACL_REVISION, ntsecuritycon.FILE_GENERIC_READ | ntsecuritycon.FILE_GENERIC_WRITE, user)
         sd.SetSecurityDescriptorDacl(1, dacl, 0)
         win32security.SetFileSecurity(filekey, win32security.DACL_SECURITY_INFORMATION, sd)
     else:
         os.chmod(filekey, 0o644)
 
-plugin = {"VERSION" : "1.1", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
+plugin = {"VERSION" : "1.2", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
 
 
 def action( objetxmpp, action, sessionid, data, message, dataerreur ):
