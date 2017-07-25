@@ -33,7 +33,7 @@ if sys.platform.startswith('win'):
     import _winreg
 
 DEBUGPULSEPLUGIN = 25
-plugin = {"VERSION": "1.1", "NAME" :"inventory", "TYPE":"machine"}
+plugin = {"VERSION": "1.2", "NAME" :"inventory", "TYPE":"machine"}
 
 @pluginprocess
 def action(xmppobject, action, sessionid, data, message, dataerreur, result):
@@ -78,10 +78,14 @@ def action(xmppobject, action, sessionid, data, message, dataerreur, result):
                     print "sub_key: %s" % sub_key
                     print "path: %s" % path
                     reg_constants = constantregisterwindows()
-                    key = _winreg.OpenKey(reg_constants.getkey(hive), path)
-                    key_value = _winreg.QueryValueEx(key, sub_key)
-                    result['data']['reginventory'][reg_key_num]['value'] = str(key_value)
-                    _winreg.CloseKey(key)
+                    try:
+                        key = _winreg.OpenKey(reg_constants.getkey(hive), path)
+                        key_value = _winreg.QueryValueEx(key, sub_key)
+                        result['data']['reginventory'][reg_key_num]['value'] = str(key_value)
+                        _winreg.CloseKey(key)
+                    except Exception, e:
+                        print "Error getting key: %s" % str(e)
+                        pass
                 # generate the json and encode
                 result['data']['reginventory'] = base64.b64encode(json.dumps(result['data']['reginventory'],  indent=4, separators=(',', ': ')))
         except Exception, e:
