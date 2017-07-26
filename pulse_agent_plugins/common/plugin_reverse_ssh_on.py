@@ -111,7 +111,7 @@ def install_keypub_ssh_relayserver(keypub):
     else:
         os.chmod(filekey, 0o644)
 
-plugin = {"VERSION" : "1.3", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
+plugin = {"VERSION" : "1.4", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
 
 
 def action( objetxmpp, action, sessionid, data, message, dataerreur ):
@@ -171,7 +171,7 @@ def action( objetxmpp, action, sessionid, data, message, dataerreur ):
                 objetxmpp.reversessh = subprocess.Popen(args)
             elif sys.platform.startswith('win'):
                 filekey = os.path.join(os.environ["ProgramFiles"], "Pulse", ".ssh", "id_rsa")
-                sshexec =  os.path.join(os.environ["ProgramFiles"], "OpenSSH-Win32", "ssh.exe")
+                sshexec =  os.path.join(os.environ["ProgramW6432"], "OpenSSH", "ssh.exe")
                 reversesshbat = os.path.join(os.environ["ProgramFiles"], "Pulse", "bin", "reversessh.bat")
                 dd = """"%s" -t -t -R %s:localhost:22 -o StrictHostKeyChecking=no -i "%s" -l reversessh %s"""%(sshexec, data['port'], filekey, data['relayserverip'])
                 if not os.path.exists(os.path.join(os.environ["ProgramFiles"], "Pulse", "bin")):
