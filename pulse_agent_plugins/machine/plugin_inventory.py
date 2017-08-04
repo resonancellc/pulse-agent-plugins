@@ -33,7 +33,7 @@ if sys.platform.startswith('win'):
     import _winreg
 
 DEBUGPULSEPLUGIN = 25
-plugin = {"VERSION": "1.2", "NAME" :"inventory", "TYPE":"machine"}
+plugin = {"VERSION": "1.3", "NAME" :"inventory", "TYPE":"machine"}
 
 @pluginprocess
 def action(xmppobject, action, sessionid, data, message, dataerreur, result):
@@ -75,19 +75,24 @@ def action(xmppobject, action, sessionid, data, message, dataerreur, result):
                     sub_key = registry_key.split('\\')[-1].strip('"')
                     path = registry_key.replace(hive+'\\', '').replace('\\'+sub_key, '').strip('"')
                     print "hive: %s" % hive
-                    print "sub_key: %s" % sub_key
                     print "path: %s" % path
+                    print "sub_key: %s" % sub_key
                     reg_constants = constantregisterwindows()
                     try:
                         key = _winreg.OpenKey(reg_constants.getkey(hive), path)
                         key_value = _winreg.QueryValueEx(key, sub_key)
-                        result['data']['reginventory'][reg_key_num]['value'] = str(key_value)
+                        print "key_value: %s" % str(key_value[0])
+                        result['data']['reginventory'][reg_key_num]['value'] = str(key_value[0])
                         _winreg.CloseKey(key)
                     except Exception, e:
                         print "Error getting key: %s" % str(e)
+                        result['data']['reginventory'][reg_key_num]['value'] = ""
                         pass
                 # generate the json and encode
-                result['data']['reginventory'] = base64.b64encode(json.dumps(result['data']['reginventory'],  indent=4, separators=(',', ': ')))
+                print "---------- Registry inventory Data ----------"
+                print json.dumps(result['data']['reginventory'], indent=4, separators=(',', ': '))
+                print "---------- End Registry inventory Data ----------"
+                result['data']['reginventory'] = base64.b64encode(json.dumps(result['data']['reginventory'], indent=4, separators=(',', ': ')))
         except Exception, e:
             print "Error: %s" % str(e)
             traceback.print_exc(file=sys.stdout)
