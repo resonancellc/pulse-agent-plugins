@@ -23,7 +23,7 @@ import sys
 from  lib.utils import pluginprocess
 import MySQLdb
 import traceback
-plugin = {"VERSION": "1.1", "NAME" :"guacamoleconf", "TYPE":"relayserver"}
+plugin = {"VERSION": "1.2", "NAME" :"guacamoleconf", "TYPE":"relayserver"}
 
 def insertprotocole(protocole, hostname):
     return """INSERT INTO guacamole_connection (connection_name, protocol) VALUES ( '%s_%s', '%s');"""%(protocole.upper(), hostname, protocole.lower())
@@ -49,10 +49,11 @@ def action(objetxmpp, action, sessionid, data, message, dataerreur, result):
     result['data']['uuid'] = data['uuid']
     result['data']['connection'] = {}
 
+    # Add only detected protocols
     if hasattr(objetxmpp.config, 'guacamole_protocols'):
-        protos = objetxmpp.config.guacamole_protocols.split()
+        protos = list(set(objetxmpp.config.guacamole_protocols.split()) & set(data['remoteservice'].keys()))
     else:
-        protos = ['rdp', 'ssh', 'vnc']
+        protos = data['remoteservice'].keys()
 
     try:
         #delete connection
