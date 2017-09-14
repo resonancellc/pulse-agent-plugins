@@ -23,7 +23,7 @@ import sys
 from  lib.utils import pluginprocess
 import MySQLdb
 import traceback
-plugin = {"VERSION": "1.2", "NAME" :"guacamoleconf", "TYPE":"relayserver"}
+plugin = {"VERSION": "1.3", "NAME" :"guacamoleconf", "TYPE":"relayserver"}
 
 def insertprotocole(protocole, hostname):
     return """INSERT INTO guacamole_connection (connection_name, protocol) VALUES ( '%s_%s', '%s');"""%(protocole.upper(), hostname, protocole.lower())
@@ -82,11 +82,11 @@ def action(objetxmpp, action, sessionid, data, message, dataerreur, result):
     try:
         for proto in protos:
             if proto == 'rdp':
-                port = '3389'
+                port = data['remoteservice']['rdp']
             elif proto == 'ssh':
-                port = '22'
-            else:
-                port = '5901'
+                port = data['remoteservice']['ssh']
+            elif proto == 'vnc':
+                port = data['remoteservice']['vnc']
             cursor.execute(insertparameter(result['data']['connection'][proto.upper()], 'hostname', data['machine_ip']))
             db.commit()
             cursor.execute(insertparameter(result['data']['connection'][proto.upper()], 'port', port))
