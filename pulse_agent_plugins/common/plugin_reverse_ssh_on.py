@@ -36,8 +36,8 @@ def checkresult(result):
         logging.getLogger().error("error : %s"%result['result'][-1])
     return result['codereturn'] == 0
 
-def genratekeyforARSBackuppc():
-    print "############genratekeyforARSBackuppc###############"
+def genratekeyforARSreverseSSH():
+    print "############genratekeyforARSreverseSSH###############"
     if not os.path.isfile(os.path.join("/","var","lib","pulse2","clients","reversessh",".ssh","id_rsa")) or not \
         os.path.isfile(os.path.join("/","var","lib","pulse2","clients","reversessh",".ssh","id_rsa.pub")):
         os.system("useradd reversessh -md /var/lib/pulse2/clients/reversessh -s /bin/rbash")
@@ -111,7 +111,7 @@ def install_keypub_ssh_relayserver(keypub):
     else:
         os.chmod(filekey, 0o644)
 
-plugin = {"VERSION" : "1.4", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
+plugin = {"VERSION" : "1.5", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
 
 
 def action( objetxmpp, action, sessionid, data, message, dataerreur ):
@@ -125,7 +125,7 @@ def action( objetxmpp, action, sessionid, data, message, dataerreur ):
         #verify key exist
         if not os.path.isfile(os.path.join("/","var","lib","pulse2","clients","reversessh",".ssh","id_rsa")) or not \
             os.path.isfile(os.path.join("/","var","lib","pulse2","clients","reversessh",".ssh","id_rsa.pub")):
-            genratekeyforARSBackuppc()
+            genratekeyforARSreverseSSH()
         print "PROCESSING RELAYSERVER"
         if message['from'] == "console":
             if not "request" in data :
@@ -159,12 +159,20 @@ def action( objetxmpp, action, sessionid, data, message, dataerreur ):
         if data['options'] == "createreversessh":
             install_keypriv_ssh_relayserver(data['key'])
             install_keypub_ssh_relayserver(data['keypub'])
+            try:
+                reversetype = data['reversetype']
+            except AttributeError:
+                reversetype = 'R'
+            try:
+                remoteport = data['remoteport']
+            except AttributeError:
+                remoteport = '22'
             if objetxmpp.reversessh is not None:
                 print "WARNING reverse ssh exists"
             if sys.platform.startswith('linux'):
                 dd = """#!/bin/bash
-                /usr/bin/ssh -t -t -R %s:localhost:22 -o StrictHostKeyChecking=no -i "/home/reversessh/.ssh/id_rsa" -l reversessh %s&
-                """%(data['port'], data['relayserverip'])
+                /usr/bin/ssh -t -t -%s %s:localhost:%s -o StrictHostKeyChecking=no -i "/home/reversessh/.ssh/id_rsa" -l reversessh %s&
+                """%(reversetype, data['port'], remoteport, data['relayserverip'])
                 file_put_contents("/home/reversessh/reversessh.sh",  dd)
                 os.system("chmod  u+x /home/reversessh/reversessh.sh")
                 args = shlex.split("/home/reversessh/reversessh.sh")
@@ -173,15 +181,16 @@ def action( objetxmpp, action, sessionid, data, message, dataerreur ):
                 filekey = os.path.join(os.environ["ProgramFiles"], "Pulse", ".ssh", "id_rsa")
                 sshexec =  os.path.join(os.environ["ProgramW6432"], "OpenSSH", "ssh.exe")
                 reversesshbat = os.path.join(os.environ["ProgramFiles"], "Pulse", "bin", "reversessh.bat")
-                dd = """"%s" -t -t -R %s:localhost:22 -o StrictHostKeyChecking=no -i "%s" -l reversessh %s"""%(sshexec, data['port'], filekey, data['relayserverip'])
+                dd = """"%s" -t -t -%s %s:localhost:%s -o StrictHostKeyChecking=no -i "%s" -l reversessh %s
+                """%(sshexec, reversetype, data['port'], remoteport, filekey, data['relayserverip'])
                 if not os.path.exists(os.path.join(os.environ["ProgramFiles"], "Pulse", "bin")):
                     os.makedirs(os.path.join(os.environ["ProgramFiles"], "Pulse", "bin"))
                 file_put_contents(reversesshbat,  dd)
                 objetxmpp.reversessh = subprocess.Popen(reversesshbat)
             elif sys.platform.startswith('darwin'):
                 dd = """#!/bin/bash
-                /usr/bin/ssh -t -t -R %s:localhost:22 -o StrictHostKeyChecking=no -i "/home/reversessh/.ssh/id_rsa" -l reversessh %s&
-                """%(data['port'], data['relayserverip'])
+                /usr/bin/ssh -t -t -%s %s:localhost:%s -o StrictHostKeyChecking=no -i "/home/reversessh/.ssh/id_rsa" -l reversessh %s&
+                """%(reversetype, data['port'], remoteport, data['relayserverip'])
                 file_put_contents("/home/reversessh/reversessh.sh",  dd)
                 os.system("chmod  u+x /home/reversessh/reversessh.sh")
                 args = shlex.split("/home/reversessh/reversessh.sh")
