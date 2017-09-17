@@ -200,7 +200,7 @@ def action( objetxmpp, action, sessionid, data, message, dataerreur ):
         elif data['options'] == "stopreversessh":
             if sys.platform.startswith('win'):
                 cmd = 'wmic path win32_process Where "Commandline like \'%reversessh%\'" Call Terminate'
-                proc = subprocess.Popen(cmd)
+                subprocess.Popen(cmd)
             else:
                 os.system("lpid=$(ps aux | grep reversessh | grep -v grep | awk '{print $2}');kill -9 $lpid")
                 objetxmpp.reversessh = None
