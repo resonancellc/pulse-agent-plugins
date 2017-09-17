@@ -570,9 +570,9 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                     data_in_session['transferfiles'] = [x for x in list(list_of_deployment_packages) if x != ""]
                     objsession.setdatasession(data_in_session)
                     ### this plugin will call itself itself is transfer each time a package from the list of packages to transfer.
-                         ### to make this call we prepare a message with the current session.
-                         ### on the message ['step'] of the message or resume processing.
-                         ### here data ['step'] = "transferfiles"
+                    ### to make this call we prepare a message with the current session.
+                    ### on the message ['step'] of the message or resume processing.
+                    ### here data ['step'] = "transferfiles"
                     logging.getLogger().debug("APPEL POUR PHASE DE TRANSFERTS" )
                     msg_self_call = create_message_self_for_transfertfile(sessionid)
                     objectxmpp.send_message(mto = objectxmpp.boundjid.bare,
