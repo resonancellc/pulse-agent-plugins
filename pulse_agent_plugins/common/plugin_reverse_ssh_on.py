@@ -57,7 +57,7 @@ def load_keypub_ssh_relayserver():
     return file_get_contents(filekey)
 
 def runProcess(cmd , shell= False, envoption = os.environ):
-    print "LANCE COMMANDE %s"%cmd
+    print "START COMMAND %s"%cmd
     args = shlex.split(cmd)
     return Popen(args, env=envoption, shell=shell).pid
 
