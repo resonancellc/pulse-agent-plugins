@@ -111,7 +111,7 @@ def install_keypub_ssh_relayserver(keypub):
     else:
         os.chmod(filekey, 0o644)
 
-plugin = {"VERSION" : "1.5", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
+plugin = {"VERSION" : "1.6", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
 
 
 def action( objetxmpp, action, sessionid, data, message, dataerreur ):
@@ -161,11 +161,11 @@ def action( objetxmpp, action, sessionid, data, message, dataerreur ):
             install_keypub_ssh_relayserver(data['keypub'])
             try:
                 reversetype = data['reversetype']
-            except AttributeError:
+            except Exception:
                 reversetype = 'R'
             try:
                 remoteport = data['remoteport']
-            except AttributeError:
+            except Exception:
                 remoteport = '22'
             if objetxmpp.reversessh is not None:
                 print "WARNING reverse ssh exists"
