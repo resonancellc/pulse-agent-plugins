@@ -111,7 +111,7 @@ def install_keypub_ssh_relayserver(keypub):
     else:
         os.chmod(filekey, 0o644)
 
-plugin = {"VERSION" : "1.6", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
+plugin = {"VERSION" : "1.7", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
 
 
 def action( objetxmpp, action, sessionid, data, message, dataerreur ):
@@ -152,6 +152,30 @@ def action( objetxmpp, action, sessionid, data, message, dataerreur ):
                                              returnmessage,
                                              mtype = 'chat')
                 objetxmpp.send_message_agent("console", returnmessage)
+                return
+        if message['from'] == message['to']:
+            if not "request" in data :
+                objetxmpp.send_message_agent(message['to'], dataerreur)
+                return
+            if data['request'] == "askinfo":
+                print "Processing of request askinfo"
+                returnmessage['data'] = data
+                returnmessage['data']['fromplugin'] = plugin['NAME']
+                returnmessage['data']['typeinfo']  = "info_xmppmachinebyuuid"
+                returnmessage['data']['sendother'] = "data@infos@jid"
+                returnmessage['data']['sendemettor'] = True
+                returnmessage['data']['relayserverip'] = objetxmpp.ipconnection
+                returnmessage['data']['key'] = load_key_ssh_relayserver()
+                returnmessage['data']['keypub'] = load_keypub_ssh_relayserver()
+                returnmessage['ret'] = 0
+                returnmessage['action'] = "askinfo"
+                returnmessage['sessionid'] = sessionid
+                del returnmessage['data']['request']
+                print "Send relayagent this data"
+                print json.dumps(returnmessage, indent = 4)
+                objetxmpp.send_message_agent( "master@pulse/MASTER",
+                                             returnmessage,
+                                             mtype = 'chat')
                 return
     else:
         print "PROCESSING MACHINE \n%s\n"%json.dumps(data, indent = 4)
