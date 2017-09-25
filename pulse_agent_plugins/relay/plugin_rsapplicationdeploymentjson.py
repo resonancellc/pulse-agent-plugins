@@ -53,7 +53,7 @@ def action(objectxmpp, action, sessionid, data, message, dataerreur):
         datasend['data'] ['path'] = os.path.join(managepackage.packagedir(), data['deploy'])
         datasend['data'] ['packagefile'] = os.listdir(datasend['data']['path'])
         datasend['data'] ['Dtypequery'] =  "TQ"
-        datasend['data'] ['Devent'] = "STARDEPLOY"
+        datasend['data'] ['Devent'] = "DEPLOYMENT START"
         datasend['data'] ['name'] = managepackage.getNamepathpackageuuid(data['deploy'])
         print json.dumps(datasend, indent=4)
         objectxmpp.send_message(mto=message['from'],
