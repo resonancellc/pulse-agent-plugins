@@ -31,7 +31,7 @@ import copy
 
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
-plugin = {"VERSION" : "1.5", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
+plugin = {"VERSION" : "1.6", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
 
 
 """
@@ -599,6 +599,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                             #cmd = "rsync --delete -e \"ssh -o IdentityFile=/root/.ssh/id_rsa -o StrictHostKeyChecking=no -o Batchmode=yes -o PasswordAuthentication=no -o ServerAliveInterval=10 -o CheckHostIP=no -o ConnectTimeout=10\"   -av %s/ %s@%s:\"%s/\""%(pathin, "pulse", data_in_session['ipmachine'], pathout)
                             cmd = "scp -r -o IdentityFile=/root/.ssh/id_rsa "\
                                     "-o StrictHostKeyChecking=no "\
+                                    "-o UserKnownHostsFile=/dev/null "\
                                     "-o Batchmode=yes "\
                                     "-o PasswordAuthentication=no "\
                                     "-o ServerAliveInterval=10 "\
