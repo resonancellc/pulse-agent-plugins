@@ -302,7 +302,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             if sessionid not in objectxmpp.back_to_deploy:
                 # Deployment to finish here.
                 print "termine la session %s"%sessionid
-                oobjectxmpp.xmpplog('DEPLOYMENT TERMINATE',
+                objectxmpp.xmpplog('DEPLOYMENT TERMINATE',
                                     type = 'deploy',
                                     sessionname = sessionid,
                                     priority = -1,
