@@ -159,7 +159,7 @@ def recuperefile(datasend, objectxmpp, ippackage, portpackage):
                                     why = "",
                                     module = "Deployment | Download | Transfert",
                                     date = None ,
-                                    fromuser = "MASTER",
+                                    fromuser = datasend['data']['name'],
                                     touser = "")
                 curlgetdownloadfile( dest, urlfile)
             except Exception:
@@ -173,7 +173,7 @@ def recuperefile(datasend, objectxmpp, ippackage, portpackage):
                                     why = "",
                                     module = "Deployment | Download | Transfert",
                                     date = None ,
-                                    fromuser = "MASTER",
+                                    fromuser = datasend['data']['name'],
                                     touser = "")
                 objectxmpp.xmpplog('DEPLOYMENT TERMINATE',
                                     type = 'deploy',
@@ -185,12 +185,10 @@ def recuperefile(datasend, objectxmpp, ippackage, portpackage):
                                     why = "",
                                     module = "Deployment | Error | End",
                                     date = None ,
-                                    fromuser = "MASTER",
+                                    fromuser = datasend['data']['name'],
                                     touser = "")
                 return False
     return True
-
-
 
 def action( objectxmpp, action, sessionid, data, message, dataerreur):
 
@@ -209,17 +207,17 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             #package data['deploy'] is missing
             #termined le deploy
             objectxmpp.xmpplog('<span style="font-weight: bold;color : red;">STOP DEPLOY ON ERROR : DEPENDENCY MISSING [%s]</span>'%data['deploy'],
-                                    type = 'deploy',
-                                    sessionname = sessionid,
-                                    priority = -1,
-                                    action = "",
-                                    who = objectxmpp.boundjid.bare,
-                                    how = "",
-                                    why = "",
-                                    module = "Deployment | Error | Dependencies | Transfert",
-                                    date = None ,
-                                    fromuser = "MASTER",
-                                    touser = "")
+                                type = 'deploy',
+                                sessionname = sessionid,
+                                priority = -1,
+                                action = "",
+                                who = objectxmpp.boundjid.bare,
+                                how = "",
+                                why = "",
+                                module = "Deployment | Error | Dependencies | Transfert",
+                                date = None ,
+                                fromuser = data['name'],
+                                touser = "")
             if sessionid in objectxmpp.back_to_deploy:
                 objectxmpp.xmpplog('<span style="font-weight: bold;color : red;">List of abandoned dependencies %s</span>'%objectxmpp.back_to_deploy[sessionid]['Dependency'],
                                     type = 'deploy',
@@ -231,7 +229,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     why = "",
                                     module = "Deployment | Dependencies | Transfert",
                                     date = None ,
-                                    fromuser = "MASTER",
+                                    fromuser = data['name'],
                                     touser = "")
             objectxmpp.xmpplog( 'DEPLOYMENT TERMINATE',
                                 type = 'deploy',
@@ -243,7 +241,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                 why = "",
                                 module = "Deployment | End",
                                 date = None ,
-                                fromuser = "MASTER",
+                                fromuser = data['name'],
                                 touser = "")
             #clean session
             objectxmpp.session.clearnoevent(sessionid)
@@ -267,7 +265,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     why = "",
                                     module = "Deployment | Error",
                                     date = None ,
-                                    fromuser = "MASTER",
+                                    fromuser = "AM %s"% objectxmpp.boundjid.bare,
                                     touser = "")
                     if sessionid in objectxmpp.back_to_deploy:
                         objectxmpp.xmpplog('<span style="font-weight: bold;color : red;">List of abandoned dependencies %s</span>'%objectxmpp.back_to_deploy[sessionid]['Dependency'],
@@ -280,7 +278,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     why = "",
                                     module = "Deployment | Dependencies | Transfert",
                                     date = None ,
-                                    fromuser = "MASTER",
+                                    fromuser = "AM %s"% objectxmpp.boundjid.bare,
                                     touser = "")
                     objectxmpp.xmpplog('DEPLOYMENT TERMINATE',
                                     type = 'deploy',
@@ -292,7 +290,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     why = "",
                                     module = "Deployment | End",
                                     date = None ,
-                                    fromuser = "MASTER",
+                                    fromuser = "AM %s"% objectxmpp.boundjid.bare,
                                     touser = "")
                     objectxmpp.session.clearnoevent(sessionid)
                     cleanbacktodeploy(objectxmpp)
@@ -312,7 +310,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     why = "",
                                     module = "Deployment",
                                     date = None ,
-                                    fromuser = "MASTER",
+                                    fromuser = "AM %s"% objectxmpp.boundjid.bare,
                                     touser = "")
                 objectxmpp.session.clearnoevent(sessionid)
                 cleanbacktodeploy(objectxmpp)
@@ -332,7 +330,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     why = "",
                                     module = "Deployment",
                                     date = None ,
-                                    fromuser = "MASTER",
+                                    fromuser = "AM %s"% objectxmpp.boundjid.bare,
                                     touser = "")
                     try:
                         objectxmpp.back_to_deploy[sessionid]['Dependency'].remove(loaddependency)
@@ -438,7 +436,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     why = "",
                                     module = "Deployment",
                                     date = None ,
-                                    fromuser = "MASTER",
+                                    fromuser = data['name'],
                                     touser = "")
 
                 firstinstall =  objectxmpp.back_to_deploy[sessionid]['Dependency'].pop()
@@ -455,7 +453,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     why = "",
                                     module = "Deployment",
                                     date = None ,
-                                    fromuser = "MASTER",
+                                    fromuser = data['name'],
                                     touser = "")
                 try:
                     # Removes all the occurrences of this package if it exists because it is installing
@@ -502,7 +500,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     why = "",
                                     module = "Deployment",
                                     date = None ,
-                                    fromuser = "MASTER",
+                                    fromuser = datasend['data']['name'],
                                     touser = "")
                 datasend = {
                                 'action':  "result" + action,
@@ -651,7 +649,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     why = "",
                                     module = "Deployment|Error",
                                     date = None ,
-                                    fromuser = "MASTER",
+                                    fromuser = data_in_session['name'],
                                     touser = "")
                         return
 
@@ -728,7 +726,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                                 why = "",
                                                 module = "Deployment|Error",
                                                 date = None ,
-                                                fromuser = "MASTER",
+                                                fromuser = data_in_session['name'],
                                                 touser = "")
                             if obcmd['code'] != 0:
                                 objectxmpp.xmpplog('<span style="color: red;";>[xxx]: Terminate deploy ERROR transfert %s </span>'%obcmd['result'],
@@ -741,7 +739,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                                 why = "",
                                                 module = "Deployment | Error",
                                                 date = None ,
-                                                fromuser = "MASTER",
+                                                fromuser = data_in_session['name'],
                                                 touser = "")
                             logging.getLogger().debug("CALL FOR NEXT PACKAGE")
 
