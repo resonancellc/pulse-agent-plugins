@@ -124,6 +124,19 @@ def askinfo(to, sessionid, objectxmpp, informationasking=[], replyaction=None, l
                              mbody = json.dumps(ask),
                              mtype = 'chat')
 
+#def initialisesequencescheduling(datasend, objectxmpp ):
+    #send 
+
+
+def initialisesequence(datasend, objectxmpp, sessionid ):
+    datasend['data']['stepcurrent'] = 0 #step initial
+    if not objectxmpp.session.isexist(sessionid):
+        logging.getLogger().debug("creation session %s"%sessionid)
+        objectxmpp.session.createsessiondatainfo(sessionid,  datasession = datasend['data'], timevalid = 10)
+        logging.getLogger().debug("update object backtodeploy")
+    logging.getLogger().debug("start call gracet")
+    grafcet(objectxmpp, datasend)
+    logging.getLogger().debug("outing graphcet phase1")
 
 def curlgetdownloadfile( destfile, urlfile, insecure = True):
     # As long as the file is opened in binary mode, both Python 2 and Python 3
@@ -199,7 +212,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         logging.getLogger().debug("call %s from %s"%(plugin,message['from']))
         logging.getLogger().debug("###################################################")
 
-        logging.getLogger().debug("data plugin %s"%(json.dumps(data, indent = 4)))
+        #logging.getLogger().debug("data plugin %s"%(json.dumps(data, indent = 4)))
 
         #when dependence require, AM asks ARS for this dependency
         #If a dependency does not exist, relay server reports it by sending "error package missing"
@@ -488,6 +501,8 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                         'base64' : False
                     }
 
+
+
         if not 'stepcurrent' in datasend['data']:
             if not cleandescriptor(data):
                 objectxmpp.xmpplog('<span style="color: red;";>[xxx]: Terminate deploy ERROR descriptor OS %s missing</span>'%sys.platform,
@@ -547,14 +562,41 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                                     mbody = json.dumps(datasend),
                                                     mtype = 'chat')
                     return
-            datasend['data']['stepcurrent'] = 0 #step initial
-            if not objectxmpp.session.isexist(sessionid):
-                logging.getLogger().debug("creation session %s"%sessionid)
-                objectxmpp.session.createsessiondatainfo(sessionid,  datasession = datasend['data'], timevalid = 10)
-                logging.getLogger().debug("update object backtodeploy")
-            logging.getLogger().debug("start call gracet")
-            grafcet(objectxmpp, datasend)
-            logging.getLogger().debug("outing graphcet phase1")
+                else:
+                    #print "=============tranfert terminer============================="
+                    #print "=============send message to master for updatenbdeploy============================="
+                    datasend = {
+                                'action':  "updatenbdeploy",
+                                'sessionid' : sessionid,
+                                'data' : data['advanced'],
+                                'ret' : 1,
+                                'base64' : False
+                    }
+                    #send message master sessionid avec cmdid les fichiers sont installées
+                    # update base has_login_command count_deploy_progress
+                    objectxmpp.send_message(mto=data['jidmaster'],
+                                            mbody = json.dumps(datasend),
+                                            mtype = 'chat')
+
+            #if not 'exec' in datasend['data']['advanced']: 
+                #datasend['data']['advanced']['exec'] = True
+            print datasend['data']['advanced']['exec']
+            if datasend['data']['advanced']['exec'] == True:
+                # "=================Execution deploy directement==========================="
+                #on deploy directement
+                datasend['data']['advanced']['scheduling'] = False
+                initialisesequence(datasend, objectxmpp, sessionid)
+            else:
+                #on schedule le deployement
+                ### execpackagescheduled
+                #
+                logging.getLogger().debug("data plugin %s"%(json.dumps(datasend, indent = 4)))
+
+                datasend['data']['advanced']['scheduling'] = True
+
+                #### on sauve la session dans scheduling session
+                ###objectxmpp.Deploybasesched['sessionid'] = json.
+                #### ask master si on peut deploye pour le sessionid
         else:
             objectxmpp.session.sessionsetdata(sessionid, datasend) #save data in session
             grafcet(objectxmpp, datasend)#grapcet va utiliser la session pour travailler.
@@ -770,5 +812,14 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                             objectxmpp.send_message(mto = data_in_session['jidmachine'],
                                     mbody = json.dumps(transfertdeploy),
                                     mtype = 'chat')
-
+                            datasend = {
+                                        'action':  "updatenbdeploy",
+                                        'sessionid' : sessionid,
+                                        'data' : data_in_session['advanced'],
+                                        'ret' : 1,
+                                        'base64' : False
+                                    }
+                            objectxmpp.send_message(mto=data_in_session['jidmaster'],
+                                                    mbody = json.dumps(datasend),
+                                                    mtype = 'chat')
 
