@@ -46,7 +46,7 @@ def action( xmppobject, action, sessionid, data, message, dataerreur ):
         elif data['cux_type'] == 'RDP':
             remoteport = 3389
         elif data['cux_type'] == 'VNC':
-            remoteport = 9201
+            remoteport = 5900
 
     except Exception as e:
         db.close()
