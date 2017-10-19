@@ -32,7 +32,7 @@ import copy
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
 
-plugin = {"VERSION" : "1.7", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
+plugin = {"VERSION" : "1.8", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
 
 
 """
@@ -131,6 +131,18 @@ def initialisesequence(datasend, objectxmpp, sessionid ):
         objectxmpp.session.createsessiondatainfo(sessionid,  datasession = datasend['data'], timevalid = 10)
         logging.getLogger().debug("update object backtodeploy")
     logging.getLogger().debug("start call gracet")
+    objectxmpp.xmpplog('START DEPLOY AFTER TRANSFERT FILES : %s'%datasend['data']['name'],
+                        type = 'deploy',
+                        sessionname = sessionid,
+                        priority = -1,
+                        action = "",
+                        who = objectxmpp.boundjid.bare,
+                        how = "",
+                        why = "",
+                        module = "Deployment | Run | Execution | Scheduled",
+                        date = None ,
+                        fromuser = datasend['data']['advanced']['login'],
+                        touser = "")
     grafcet(objectxmpp, datasend)
     logging.getLogger().debug("outing graphcet phase1")
 
@@ -158,7 +170,7 @@ def recuperefile(datasend, objectxmpp, ippackage, portpackage):
             dest = os.path.join(datasend['data']['pathpackageonmachine'], filepackage)
             urlfile = curlurlbase + filepackage
             try:
-                objectxmpp.xmpplog('download from %s file : %s'%(curlgetdownloadfile, filepackage ),
+                objectxmpp.xmpplog('download  file : %s Package : %s'%( filepackage, datasend['data']['name']),
                                     type = 'deploy',
                                     sessionname = datasend['sessionid'],
                                     priority = -1,
@@ -168,11 +180,11 @@ def recuperefile(datasend, objectxmpp, ippackage, portpackage):
                                     why = "",
                                     module = "Deployment | Download | Transfert",
                                     date = None ,
-                                    fromuser = datasend['data']['name'],
+                                    fromuser = datasend['data']['advanced']['login'],
                                     touser = "")
                 curlgetdownloadfile( dest, urlfile)
             except Exception:
-                objectxmpp.xmpplog('<span style="font-weight: bold;color : red;">STOP DEPLOY ON ERROR : download curl [%s]</span>'%curlurlbase,
+                objectxmpp.xmpplog('<span style="font-weight: bold;color : red;">STOP DEPLOY ON ERROR : download curl [%s] package : %s</span>'%(curlurlbase),
                                     type = 'deploy',
                                     sessionname = datasend['sessionid'],
                                     priority = -1,
@@ -206,17 +218,13 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         logging.getLogger().debug("###################################################")
         logging.getLogger().debug("call %s from %s"%(plugin,message['from']))
         logging.getLogger().debug("###################################################")
-
         # If actionscheduler is set, the message comes from master to specify what to do
         # between: run, abandonmentdeploy and pause
         if 'actionscheduler' in data:
             if data['actionscheduler'] == "run":
-                print "RUN DEPLOY"
                 sessioninfo  = objectxmpp.Deploybasesched.get_sesionscheduler(sessionid)
                 if sessioninfo == "":
-                    print "erreur"
-                    #envoyer un message a log pour terminer ce deploy
-                    objectxmpp.xmpplog('Start execution package',
+                    objectxmpp.xmpplog('<span style="font-weight: bold;color : red;">Erreur execution package after tranfert files Scheduling erreur session missing</span>',
                                     type = 'deploy',
                                     sessionname = sessionid,
                                     priority = -1,
@@ -224,7 +232,19 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     who = objectxmpp.boundjid.bare,
                                     how = "",
                                     why = "",
-                                    module = "Deployment | Execution",
+                                    module = "Deployment | Error | Scheduled",
+                                    date = None ,
+                                    fromuser = "AM %s"% objectxmpp.boundjid.bare,
+                                    touser = "")
+                    objectxmpp.xmpplog('DEPLOYMENT TERMINATE',
+                                    type = 'deploy',
+                                    sessionname = sessionid,
+                                    priority = -1,
+                                    action = "",
+                                    who = objectxmpp.boundjid.bare,
+                                    how = "",
+                                    why = "",
+                                    module = "Deployment | Terminate | Scheduled",
                                     date = None ,
                                     fromuser = "AM %s"% objectxmpp.boundjid.bare,
                                     touser = "")
@@ -239,10 +259,20 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                     initialisesequence(datasend, objectxmpp, sessionid)
                     return
             elif data['actionscheduler'] == "pause":
-                print "DEPLOY en pause"
                 return
             elif data['actionscheduler'] == "abandonmentdeploy":
-                print "DEPLOY abandonment"
+                objectxmpp.xmpplog('<span style="font-weight: bold;color : red;">DEPLOY SCHEDULED : ABANDONNED</span>',
+                                    type = 'deploy',
+                                    sessionname = sessionid,
+                                    priority = -1,
+                                    action = "",
+                                    who = objectxmpp.boundjid.bare,
+                                    how = "",
+                                    why = "",
+                                    module = "Deployment | Error | Scheduled",
+                                    date = None ,
+                                    fromuser = "AM %s"% objectxmpp.boundjid.bare,
+                                    touser = "")
                 objectxmpp.xmpplog('DEPLOYMENT TERMINATE',
                                     type = 'deploy',
                                     sessionname = sessionid,
@@ -251,7 +281,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     who = objectxmpp.boundjid.bare,
                                     how = "",
                                     why = "",
-                                    module = "Deployment",
+                                    module = "Deployment | Terminate |Scheduled",
                                     date = None ,
                                     fromuser = "AM %s"% objectxmpp.boundjid.bare,
                                     touser = "")
@@ -611,7 +641,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                 else:
                     # tranfert pull terminer"
                     # send message to master for updatenbdeploy"
-                    datasend = {
+                    datasend1 = {
                                 'action':  "updatenbdeploy",
                                 'sessionid' : sessionid,
                                 'data' : data['advanced'],
@@ -621,7 +651,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                     # send message master sessionid avec cmdid les fichiers sont installées
                     # update base has_login_command count_deploy_progress
                     objectxmpp.send_message(mto=data['jidmaster'],
-                                            mbody = json.dumps(datasend),
+                                            mbody = json.dumps(datasend1),
                                             mtype = 'chat')
             if datasend['data']['advanced']['exec'] == True:
                 #on deploy directement
@@ -629,6 +659,18 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                 initialisesequence(datasend, objectxmpp, sessionid)
             else:
                 #on schedule le deployement
+                objectxmpp.xmpplog('DEPLOY PACKAGE IN PAUSE : %s'%data['name'],
+                                    type = 'deploy',
+                                    sessionname = sessionid,
+                                    priority = -1,
+                                    action = "",
+                                    who = objectxmpp.boundjid.bare,
+                                    how = "",
+                                    why = "",
+                                    module = "Deployment",
+                                    date = None ,
+                                    fromuser = data['advanced']['login'],
+                                    touser = "")
                 datasend['data']['advanced']['scheduling'] = True
                 objectxmpp.Deploybasesched.set_sesionscheduler(sessionid,json.dumps(datasend))
         else:
@@ -639,6 +681,10 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         logging.getLogger().debug("###################################################")
         logging.getLogger().debug("##############AGENT RELAY SERVER###################")
         logging.getLogger().debug("###################################################")
+
+        if 'descriptor' in data and 'info' in data['descriptor'] and 'methodetransfert' in data['descriptor']['info']:
+            data['methodetransfert'] = data['descriptor']['info']['methodetransfert']
+
         if 'transfert' in data \
             and data['transfert'] == True\
                 and 'methodetransfert' in data\
@@ -651,7 +697,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                 'data' : data,
                                 'ret' : 0,
                                 'base64' : False }
-            objectxmpp.send_message(mto = objectxmpp.data['jidmachine'],
+            objectxmpp.send_message(mto = data['jidmachine'],
                                     mbody = json.dumps(transfertdeploy),
                                     mtype = 'chat')
         else:
@@ -792,7 +838,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
 
                             logging.getLogger().debug("tranfert cmd :\n %s"%cmd)
                             obcmd = simplecommandstr(cmd)
-                            objectxmpp.xmpplog("push transfert package :%s to %s"%(uuidpackages,data_in_session['jidmachine'] ),
+                            objectxmpp.xmpplog("push transfert package :%s to %s"%(data_in_session['name'],data_in_session['jidmachine'] ),
                                                 type = 'deploy',
                                                 sessionname = sessionid,
                                                 priority = -1,
@@ -800,9 +846,9 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                                 who = objectxmpp.boundjid.bare,
                                                 how = "",
                                                 why = "",
-                                                module = "Deployment|Error",
+                                                module = "Deployment | Error",
                                                 date = None ,
-                                                fromuser = data_in_session['name'],
+                                                fromuser = data_in_session['advanced']['login'],
                                                 touser = "")
                             if obcmd['code'] != 0:
                                 objectxmpp.xmpplog('<span style="color: red;";>[xxx]: Terminate deploy ERROR transfert %s </span>'%obcmd['result'],
@@ -815,7 +861,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                                 why = "",
                                                 module = "Deployment | Error",
                                                 date = None ,
-                                                fromuser = data_in_session['name'],
+                                                fromuser = data_in_session['advanced']['login'],
                                                 touser = "")
                             logging.getLogger().debug("CALL FOR NEXT PACKAGE")
 
@@ -846,6 +892,18 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                             objectxmpp.send_message(mto = data_in_session['jidmachine'],
                                     mbody = json.dumps(transfertdeploy),
                                     mtype = 'chat')
+                            objectxmpp.xmpplog('DEPLOY PACKAGE IN PAUSE %s'%data_in_session['name'],
+                                    type = 'deploy',
+                                    sessionname = sessionid,
+                                    priority = -1,
+                                    action = "",
+                                    who = objectxmpp.boundjid.bare,
+                                    how = "",
+                                    why = "",
+                                    module = "Deployment",
+                                    date = None ,
+                                    fromuser = data_in_session['advanced']['login'],
+                                    touser = "")
                             #transfert terminer update Has_login_command
                             datasend = {
                                         'action':  "updatenbdeploy",
