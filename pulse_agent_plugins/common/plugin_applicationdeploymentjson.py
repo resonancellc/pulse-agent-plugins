@@ -218,10 +218,12 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         logging.getLogger().debug("###################################################")
         logging.getLogger().debug("call %s from %s"%(plugin,message['from']))
         logging.getLogger().debug("###################################################")
+
         # If actionscheduler is set, the message comes from master to specify what to do
         # between: run, abandonmentdeploy and pause
         if 'actionscheduler' in data:
             if data['actionscheduler'] == "run":
+                print "RUN DEPLOY"
                 sessioninfo  = objectxmpp.Deploybasesched.get_sesionscheduler(sessionid)
                 if sessioninfo == "":
                     objectxmpp.xmpplog('<span style="font-weight: bold;color : red;">Erreur execution package after tranfert files Scheduling erreur session missing</span>',
@@ -259,6 +261,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                     initialisesequence(datasend, objectxmpp, sessionid)
                     return
             elif data['actionscheduler'] == "pause":
+             
                 return
             elif data['actionscheduler'] == "abandonmentdeploy":
                 objectxmpp.xmpplog('<span style="font-weight: bold;color : red;">DEPLOY SCHEDULED : ABANDONNED</span>',
@@ -639,8 +642,8 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                                     mtype = 'chat')
                     return
                 else:
-                    # tranfert pull terminer"
-                    # send message to master for updatenbdeploy"
+                    # Pull transfer complete
+                    # send message to master for updatenbdeploy
                     datasend1 = {
                                 'action':  "updatenbdeploy",
                                 'sessionid' : sessionid,
@@ -648,40 +651,27 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                 'ret' : 1,
                                 'base64' : False
                     }
-                    # send message master sessionid avec cmdid les fichiers sont installées
+                    # send sessionid message to master with cmdid files installed
                     # update base has_login_command count_deploy_progress
                     objectxmpp.send_message(mto=data['jidmaster'],
                                             mbody = json.dumps(datasend1),
                                             mtype = 'chat')
             if datasend['data']['advanced']['exec'] == True:
-                #on deploy directement
+                # deploy directly
                 datasend['data']['advanced']['scheduling'] = False
                 initialisesequence(datasend, objectxmpp, sessionid)
             else:
-                #on schedule le deployement
-                objectxmpp.xmpplog('DEPLOY PACKAGE IN PAUSE : %s'%data['name'],
-                                    type = 'deploy',
-                                    sessionname = sessionid,
-                                    priority = -1,
-                                    action = "",
-                                    who = objectxmpp.boundjid.bare,
-                                    how = "",
-                                    why = "",
-                                    module = "Deployment",
-                                    date = None ,
-                                    fromuser = data['advanced']['login'],
-                                    touser = "")
+                # schedule deployment
                 datasend['data']['advanced']['scheduling'] = True
                 objectxmpp.Deploybasesched.set_sesionscheduler(sessionid,json.dumps(datasend))
         else:
             objectxmpp.session.sessionsetdata(sessionid, datasend) #save data in session
-            grafcet(objectxmpp, datasend)#grapcet va utiliser la session pour travailler.
+            grafcet(objectxmpp, datasend) #grafcet will use the session
             logging.getLogger().debug("outing graphcet phase1")
     else:
         logging.getLogger().debug("###################################################")
         logging.getLogger().debug("##############AGENT RELAY SERVER###################")
         logging.getLogger().debug("###################################################")
-
         if 'descriptor' in data and 'info' in data['descriptor'] and 'methodetransfert' in data['descriptor']['info']:
             data['methodetransfert'] = data['descriptor']['info']['methodetransfert']
 
@@ -690,7 +680,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                 and 'methodetransfert' in data\
                     and data['methodetransfert'] == "pullcurl":
                         #mode pull AM to ARS
-                        ### send direct a machine le message de deploy.
+                        ### Send deployment message directly to machine
             transfertdeploy = {
                                 'action': action,
                                 'sessionid': sessionid,
