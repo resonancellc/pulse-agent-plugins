@@ -609,31 +609,31 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                                     mtype = 'chat')
                     return
                 else:
-                    # tranfert pull terminer"
-                    # send message to master for updatenbdeploy"
-                    datasend = {
+                    # Pull transfer complete
+                    # send message to master for updatenbdeploy
+                    datasend1 = {
                                 'action':  "updatenbdeploy",
                                 'sessionid' : sessionid,
                                 'data' : data['advanced'],
                                 'ret' : 1,
                                 'base64' : False
                     }
-                    # send message master sessionid avec cmdid les fichiers sont installées
+                    # send sessionid message to master with cmdid files installed
                     # update base has_login_command count_deploy_progress
                     objectxmpp.send_message(mto=data['jidmaster'],
-                                            mbody = json.dumps(datasend),
+                                            mbody = json.dumps(datasend1),
                                             mtype = 'chat')
             if datasend['data']['advanced']['exec'] == True:
-                #on deploy directement
+                # deploy directly
                 datasend['data']['advanced']['scheduling'] = False
                 initialisesequence(datasend, objectxmpp, sessionid)
             else:
-                #on schedule le deployement
+                # schedule deployment
                 datasend['data']['advanced']['scheduling'] = True
                 objectxmpp.Deploybasesched.set_sesionscheduler(sessionid,json.dumps(datasend))
         else:
             objectxmpp.session.sessionsetdata(sessionid, datasend) #save data in session
-            grafcet(objectxmpp, datasend)#grapcet va utiliser la session pour travailler.
+            grafcet(objectxmpp, datasend) #grafcet will use the session
             logging.getLogger().debug("outing graphcet phase1")
     else:
         logging.getLogger().debug("###################################################")
