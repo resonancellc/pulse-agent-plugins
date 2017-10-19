@@ -639,19 +639,22 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         logging.getLogger().debug("###################################################")
         logging.getLogger().debug("##############AGENT RELAY SERVER###################")
         logging.getLogger().debug("###################################################")
+        if 'descriptor' in data and 'info' in data['descriptor'] and 'methodetransfert' in data['descriptor']['info']:
+            data['methodetransfert'] = data['descriptor']['info']['methodetransfert']
+
         if 'transfert' in data \
             and data['transfert'] == True\
                 and 'methodetransfert' in data\
                     and data['methodetransfert'] == "pullcurl":
                         #mode pull AM to ARS
-                        ### send direct a machine le message de deploy.
+                        ### Send deployment message directly to machine
             transfertdeploy = {
                                 'action': action,
                                 'sessionid': sessionid,
                                 'data' : data,
                                 'ret' : 0,
                                 'base64' : False }
-            objectxmpp.send_message(mto = objectxmpp.data['jidmachine'],
+            objectxmpp.send_message(mto = data['jidmachine'],
                                     mbody = json.dumps(transfertdeploy),
                                     mtype = 'chat')
         else:
