@@ -124,10 +124,6 @@ def askinfo(to, sessionid, objectxmpp, informationasking=[], replyaction=None, l
                              mbody = json.dumps(ask),
                              mtype = 'chat')
 
-#def initialisesequencescheduling(datasend, objectxmpp ):
-    #send 
-
-
 def initialisesequence(datasend, objectxmpp, sessionid ):
     datasend['data']['stepcurrent'] = 0 #step initial
     if not objectxmpp.session.isexist(sessionid):
@@ -204,7 +200,6 @@ def recuperefile(datasend, objectxmpp, ippackage, portpackage):
     return True
 
 def action( objectxmpp, action, sessionid, data, message, dataerreur):
-
     if objectxmpp.config.agenttype in ['machine']:
         logging.getLogger().debug("###################################################")
         logging.getLogger().debug("#################AGENT MACHINE#####################")
@@ -212,7 +207,58 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         logging.getLogger().debug("call %s from %s"%(plugin,message['from']))
         logging.getLogger().debug("###################################################")
 
-        #logging.getLogger().debug("data plugin %s"%(json.dumps(data, indent = 4)))
+        # If actionscheduler is set, the message comes from master to specify what to do
+        # between: run, abandonmentdeploy and pause
+        if 'actionscheduler' in data:
+            if data['actionscheduler'] == "run":
+                print "RUN DEPLOY"
+                sessioninfo  = objectxmpp.Deploybasesched.get_sesionscheduler(sessionid)
+                if sessioninfo == "":
+                    print "erreur"
+                    #envoyer un message a log pour terminer ce deploy
+                    objectxmpp.xmpplog('Start execution package',
+                                    type = 'deploy',
+                                    sessionname = sessionid,
+                                    priority = -1,
+                                    action = "",
+                                    who = objectxmpp.boundjid.bare,
+                                    how = "",
+                                    why = "",
+                                    module = "Deployment | Execution",
+                                    date = None ,
+                                    fromuser = "AM %s"% objectxmpp.boundjid.bare,
+                                    touser = "")
+                    return
+                else:
+                    datajson =  json.loads(sessioninfo)
+                    #datasend = datajson['data']
+                    datasend = datajson
+                    print datasend
+                    print "Supprime dans base"
+                    objectxmpp.Deploybasesched.del_sesionscheduler(sessionid)
+                    initialisesequence(datasend, objectxmpp, sessionid)
+                    return
+            elif data['actionscheduler'] == "pause":
+                print "DEPLOY en pause"
+                return
+            elif data['actionscheduler'] == "abandonmentdeploy":
+                print "DEPLOY abandonment"
+                objectxmpp.xmpplog('DEPLOYMENT TERMINATE',
+                                    type = 'deploy',
+                                    sessionname = sessionid,
+                                    priority = -1,
+                                    action = "",
+                                    who = objectxmpp.boundjid.bare,
+                                    how = "",
+                                    why = "",
+                                    module = "Deployment",
+                                    date = None ,
+                                    fromuser = "AM %s"% objectxmpp.boundjid.bare,
+                                    touser = "")
+                #clear sessionscheduler
+                objectxmpp.Deploybasesched.del_sesionscheduler(sessionid)
+            return
+
 
         #when dependence require, AM asks ARS for this dependency
         #If a dependency does not exist, relay server reports it by sending "error package missing"
@@ -563,8 +609,8 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                                     mtype = 'chat')
                     return
                 else:
-                    #print "=============tranfert terminer============================="
-                    #print "=============send message to master for updatenbdeploy============================="
+                    # tranfert pull terminer"
+                    # send message to master for updatenbdeploy"
                     datasend = {
                                 'action':  "updatenbdeploy",
                                 'sessionid' : sessionid,
@@ -572,31 +618,19 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                 'ret' : 1,
                                 'base64' : False
                     }
-                    #send message master sessionid avec cmdid les fichiers sont installées
+                    # send message master sessionid avec cmdid les fichiers sont installées
                     # update base has_login_command count_deploy_progress
                     objectxmpp.send_message(mto=data['jidmaster'],
                                             mbody = json.dumps(datasend),
                                             mtype = 'chat')
-
-            #if not 'exec' in datasend['data']['advanced']: 
-                #datasend['data']['advanced']['exec'] = True
-            print datasend['data']['advanced']['exec']
             if datasend['data']['advanced']['exec'] == True:
-                # "=================Execution deploy directement==========================="
                 #on deploy directement
                 datasend['data']['advanced']['scheduling'] = False
                 initialisesequence(datasend, objectxmpp, sessionid)
             else:
                 #on schedule le deployement
-                ### execpackagescheduled
-                #
-                logging.getLogger().debug("data plugin %s"%(json.dumps(datasend, indent = 4)))
-
                 datasend['data']['advanced']['scheduling'] = True
-
-                #### on sauve la session dans scheduling session
-                ###objectxmpp.Deploybasesched['sessionid'] = json.
-                #### ask master si on peut deploye pour le sessionid
+                objectxmpp.Deploybasesched.set_sesionscheduler(sessionid,json.dumps(datasend))
         else:
             objectxmpp.session.sessionsetdata(sessionid, datasend) #save data in session
             grafcet(objectxmpp, datasend)#grapcet va utiliser la session pour travailler.
@@ -812,6 +846,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                             objectxmpp.send_message(mto = data_in_session['jidmachine'],
                                     mbody = json.dumps(transfertdeploy),
                                     mtype = 'chat')
+                            #transfert terminer update Has_login_command
                             datasend = {
                                         'action':  "updatenbdeploy",
                                         'sessionid' : sessionid,
