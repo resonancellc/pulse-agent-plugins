@@ -32,7 +32,7 @@ import copy
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
 
-plugin = {"VERSION" : "1.8", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
+plugin = {"VERSION" : "1.9", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
 
 
 """
@@ -221,8 +221,6 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
 
         # If actionscheduler is set, the message comes from master to specify what to do
         # between: run, abandonmentdeploy and pause
-        
-        print "KKKKKKKKKKKKKLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL",data,"LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL"
         if 'actionscheduler' in data:
             if data['actionscheduler'] == "run":
                 print "RUN DEPLOY"
@@ -664,6 +662,18 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                 initialisesequence(datasend, objectxmpp, sessionid)
             else:
                 # schedule deployment
+                objectxmpp.xmpplog('DEPLOY PACKAGE IN PAUSE : %s'%data['name'],
+                                    type = 'deploy',
+                                    sessionname = sessionid,
+                                    priority = -1,
+                                    action = "",
+                                    who = objectxmpp.boundjid.bare,
+                                    how = "",
+                                    why = "",
+                                    module = "Deployment",
+                                    date = None ,
+                                    fromuser = data['advanced']['login'],
+                                    touser = "")
                 datasend['data']['advanced']['scheduling'] = True
                 objectxmpp.Deploybasesched.set_sesionscheduler(sessionid,json.dumps(datasend))
         else:
@@ -676,6 +686,46 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         logging.getLogger().debug("###################################################")
         if 'descriptor' in data and 'info' in data['descriptor'] and 'methodetransfert' in data['descriptor']['info']:
             data['methodetransfert'] = data['descriptor']['info']['methodetransfert']
+        if 'transfert' in data:
+            if data['transfert'] == True:
+                objectxmpp.xmpplog('file transfert is enabled',
+                                    type = 'deploy',
+                                    sessionname = sessionid,
+                                    priority = -1,
+                                    action = "",
+                                    who = objectxmpp.boundjid.bare,
+                                    how = "",
+                                    why = "",
+                                    module = "Deployment | Transfert",
+                                    date = None ,
+                                    fromuser = data['advanced']['login'],
+                                    touser = "")
+                if 'methodetransfert' in data:
+                    objectxmpp.xmpplog('Transfert Method is %s'%data['methodetransfert'],
+                                    type = 'deploy',
+                                    sessionname = sessionid,
+                                    priority = -1,
+                                    action = "",
+                                    who = objectxmpp.boundjid.bare,
+                                    how = "",
+                                    why = "",
+                                    module = "Deployment | Transfert",
+                                    date = None ,
+                                    fromuser = data['advanced']['login'],
+                                    touser = "")
+            else:
+                objectxmpp.xmpplog('file transfer is disabled',
+                                    type = 'deploy',
+                                    sessionname = sessionid,
+                                    priority = -1,
+                                    action = "",
+                                    who = objectxmpp.boundjid.bare,
+                                    how = "",
+                                    why = "",
+                                    module = "Deployment | Transfert",
+                                    date = None ,
+                                    fromuser = data['advanced']['login'],
+                                    touser = "")
 
         if 'transfert' in data \
             and data['transfert'] == True\
@@ -884,18 +934,6 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                             objectxmpp.send_message(mto = data_in_session['jidmachine'],
                                     mbody = json.dumps(transfertdeploy),
                                     mtype = 'chat')
-                            objectxmpp.xmpplog('DEPLOY PACKAGE IN PAUSE %s'%data_in_session['name'],
-                                    type = 'deploy',
-                                    sessionname = sessionid,
-                                    priority = -1,
-                                    action = "",
-                                    who = objectxmpp.boundjid.bare,
-                                    how = "",
-                                    why = "",
-                                    module = "Deployment",
-                                    date = None ,
-                                    fromuser = data_in_session['advanced']['login'],
-                                    touser = "")
                             #transfert terminer update Has_login_command
                             datasend = {
                                         'action':  "updatenbdeploy",
