@@ -221,6 +221,8 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
 
         # If actionscheduler is set, the message comes from master to specify what to do
         # between: run, abandonmentdeploy and pause
+        
+        print "KKKKKKKKKKKKKLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL",data,"LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL"
         if 'actionscheduler' in data:
             if data['actionscheduler'] == "run":
                 print "RUN DEPLOY"
