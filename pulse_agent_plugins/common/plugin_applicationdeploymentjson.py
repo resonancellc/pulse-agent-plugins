@@ -139,7 +139,7 @@ def initialisesequence(datasend, objectxmpp, sessionid ):
                         who = objectxmpp.boundjid.bare,
                         how = "",
                         why = "",
-                        module = "Deployment | Run | Execution | Scheduled",
+                        module = "Deployment| Notify | Execution | Scheduled",
                         date = None ,
                         fromuser = datasend['data']['advanced']['login'],
                         touser = "")
@@ -192,7 +192,7 @@ def recuperefile(datasend, objectxmpp, ippackage, portpackage):
                                     who = objectxmpp.boundjid.bare,
                                     how = "",
                                     why = "",
-                                    module = "Deployment | Download | Transfert",
+                                    module = "Deployment | Download | Transfert | Notify | Error",
                                     date = None ,
                                     fromuser = datasend['data']['name'],
                                     touser = "")
@@ -204,7 +204,7 @@ def recuperefile(datasend, objectxmpp, ippackage, portpackage):
                                     who = objectxmpp.boundjid.bare,
                                     how = "",
                                     why = "",
-                                    module = "Deployment | Error | End",
+                                    module = "Deployment | Error | Terminate | Notify",
                                     date = None ,
                                     fromuser = datasend['data']['name'],
                                     touser = "")
@@ -234,7 +234,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     who = objectxmpp.boundjid.bare,
                                     how = "",
                                     why = "",
-                                    module = "Deployment | Error | Scheduled",
+                                    module = "Deployment | Error  | Notify | Execution",
                                     date = None ,
                                     fromuser = "AM %s"% objectxmpp.boundjid.bare,
                                     touser = "")
@@ -246,7 +246,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     who = objectxmpp.boundjid.bare,
                                     how = "",
                                     why = "",
-                                    module = "Deployment | Terminate | Scheduled",
+                                    module = "Deployment | Terminate |Notify",
                                     date = None ,
                                     fromuser = "AM %s"% objectxmpp.boundjid.bare,
                                     touser = "")
@@ -272,7 +272,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     who = objectxmpp.boundjid.bare,
                                     how = "",
                                     why = "",
-                                    module = "Deployment | Error | Scheduled",
+                                    module = "Deployment | Error | Notify",
                                     date = None ,
                                     fromuser = "AM %s"% objectxmpp.boundjid.bare,
                                     touser = "")
@@ -284,7 +284,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     who = objectxmpp.boundjid.bare,
                                     how = "",
                                     why = "",
-                                    module = "Deployment | Terminate |Scheduled",
+                                    module = "Deployment | Terminate | Notify",
                                     date = None ,
                                     fromuser = "AM %s"% objectxmpp.boundjid.bare,
                                     touser = "")
@@ -306,7 +306,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                 who = objectxmpp.boundjid.bare,
                                 how = "",
                                 why = "",
-                                module = "Deployment | Error | Dependencies | Transfert",
+                                module = "Deployment | Error | Dependencies | Transfert| Notify",
                                 date = None ,
                                 fromuser = data['name'],
                                 touser = "")
@@ -319,7 +319,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     who = objectxmpp.boundjid.bare,
                                     how = "",
                                     why = "",
-                                    module = "Deployment | Dependencies | Transfert",
+                                    module = "Deployment | Dependencies | Transfert | Notify",
                                     date = None ,
                                     fromuser = data['name'],
                                     touser = "")
@@ -331,7 +331,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                 who = objectxmpp.boundjid.bare,
                                 how = "",
                                 why = "",
-                                module = "Deployment | End",
+                                module = "Deployment | Terminate | Notify",
                                 date = None ,
                                 fromuser = data['name'],
                                 touser = "")
@@ -368,7 +368,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     who = objectxmpp.boundjid.bare,
                                     how = "",
                                     why = "",
-                                    module = "Deployment | Dependencies | Transfert",
+                                    module = "Deployment | Dependencies | Transfert | Notify",
                                     date = None ,
                                     fromuser = "AM %s"% objectxmpp.boundjid.bare,
                                     touser = "")
@@ -380,7 +380,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     who = objectxmpp.boundjid.bare,
                                     how = "",
                                     why = "",
-                                    module = "Deployment | End",
+                                    module = "Deployment | Terminate | Notify",
                                     date = None ,
                                     fromuser = "AM %s"% objectxmpp.boundjid.bare,
                                     touser = "")
@@ -400,7 +400,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     who = objectxmpp.boundjid.bare,
                                     how = "",
                                     why = "",
-                                    module = "Deployment",
+                                    module = "Deployment | Terminate | Notify",
                                     date = None ,
                                     fromuser = "AM %s"% objectxmpp.boundjid.bare,
                                     touser = "")
@@ -412,18 +412,18 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                 if len(objectxmpp.back_to_deploy[sessionid]['Dependency']) > 0:
                     loaddependency = objectxmpp.back_to_deploy[sessionid]['Dependency'].pop()
                     data = copy.deepcopy(objectxmpp.back_to_deploy[sessionid]['packagelist'][loaddependency])
-                    objectxmpp.xmpplog('! : dependency [%s] '%(data['name']),
-                                       type = 'deploy',
-                                    sessionname = sessionid,
-                                    priority = -1,
-                                    action = "",
-                                    who = objectxmpp.boundjid.bare,
-                                    how = "",
-                                    why = "",
-                                    module = "Deployment",
-                                    date = None ,
-                                    fromuser = "AM %s"% objectxmpp.boundjid.bare,
-                                    touser = "")
+                    objectxmpp.xmpplog( '! : dependency [%s] '%(data['name']),
+                                        type = 'deploy',
+                                        sessionname = sessionid,
+                                        priority = -1,
+                                        action = "",
+                                        who = objectxmpp.boundjid.bare,
+                                        how = "",
+                                        why = "",
+                                        module = "Deployment | Dependency",
+                                        date = None ,
+                                        fromuser = "AM %s"% objectxmpp.boundjid.bare,
+                                        touser = "")
                     try:
                         objectxmpp.back_to_deploy[sessionid]['Dependency'].remove(loaddependency)
                     except Exception:
@@ -670,7 +670,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     who = objectxmpp.boundjid.bare,
                                     how = "",
                                     why = "",
-                                    module = "Deployment",
+                                    module = "Deployment | Notify",
                                     date = None ,
                                     fromuser = data['advanced']['login'],
                                     touser = "")
@@ -696,7 +696,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     who = objectxmpp.boundjid.bare,
                                     how = "",
                                     why = "",
-                                    module = "Deployment | Transfert",
+                                    module = "Deployment | Transfert | Notify",
                                     date = None ,
                                     fromuser = data['advanced']['login'],
                                     touser = "")
@@ -709,12 +709,12 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     who = objectxmpp.boundjid.bare,
                                     how = "",
                                     why = "",
-                                    module = "Deployment | Transfert",
+                                    module = "Deployment | Transfert | Notify",
                                     date = None ,
                                     fromuser = data['advanced']['login'],
                                     touser = "")
             else:
-                objectxmpp.xmpplog('file transfer is disabled',
+                objectxmpp.xmpplog('File transfer is disabled',
                                     type = 'deploy',
                                     sessionname = sessionid,
                                     priority = -1,
@@ -722,7 +722,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     who = objectxmpp.boundjid.bare,
                                     how = "",
                                     why = "",
-                                    module = "Deployment | Transfert",
+                                    module = "Deployment | Transfert | Notify",
                                     date = None ,
                                     fromuser = data['advanced']['login'],
                                     touser = "")
@@ -888,7 +888,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                                 who = objectxmpp.boundjid.bare,
                                                 how = "",
                                                 why = "",
-                                                module = "Deployment | Error",
+                                                module = "Deployment | Error | Download | Transfert",
                                                 date = None ,
                                                 fromuser = data_in_session['advanced']['login'],
                                                 touser = "")
@@ -901,7 +901,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                                 who = objectxmpp.boundjid.bare,
                                                 how = "",
                                                 why = "",
-                                                module = "Deployment | Error",
+                                                module = "Deployment | Error | Download | Transfert",
                                                 date = None ,
                                                 fromuser = data_in_session['advanced']['login'],
                                                 touser = "")
