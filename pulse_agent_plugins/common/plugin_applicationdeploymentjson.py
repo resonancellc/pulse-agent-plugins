@@ -698,7 +698,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     why = "",
                                     module = "Deployment | Transfert | Notify",
                                     date = None ,
-                                    fromuser = data['advanced']['login'],
+                                    fromuser = data['login'],
                                     touser = "")
                 if 'methodetransfert' in data:
                     objectxmpp.xmpplog('Transfert Method is %s'%data['methodetransfert'],
@@ -711,7 +711,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     why = "",
                                     module = "Deployment | Transfert | Notify",
                                     date = None ,
-                                    fromuser = data['advanced']['login'],
+                                    fromuser = data['login'],
                                     touser = "")
             else:
                 objectxmpp.xmpplog('File transfer is disabled',
@@ -724,7 +724,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     why = "",
                                     module = "Deployment | Transfert | Notify",
                                     date = None ,
-                                    fromuser = data['advanced']['login'],
+                                    fromuser = data['login'],
                                     touser = "")
 
         if 'transfert' in data \
