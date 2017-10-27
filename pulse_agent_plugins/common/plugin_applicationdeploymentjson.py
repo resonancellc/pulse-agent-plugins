@@ -290,6 +290,9 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     touser = "")
                 #clear sessionscheduler
                 objectxmpp.Deploybasesched.del_sesionscheduler(sessionid)
+            else:
+                #supprime cet input 
+                objectxmpp.Deploybasesched.del_sesionscheduler(sessionid)
             return
 
 
