@@ -111,7 +111,7 @@ def install_keypub_ssh_relayserver(keypub):
     else:
         os.chmod(filekey, 0o644)
 
-plugin = {"VERSION" : "1.8", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
+plugin = {"VERSION" : "1.9", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
 
 
 def action( objetxmpp, action, sessionid, data, message, dataerreur ):
@@ -203,7 +203,12 @@ def action( objetxmpp, action, sessionid, data, message, dataerreur ):
                 objetxmpp.reversessh = subprocess.Popen(args)
             elif sys.platform.startswith('win'):
                 filekey = os.path.join(os.environ["ProgramFiles"], "Pulse", ".ssh", "id_rsa")
-                if os.environ["PROCESSOR_ARCHITECTURE"] == "x86":
+                os_platform = os.environ['PROCESSOR_ARCHITECTURE']
+                try:
+                    os_platform = os.environ["PROCESSOR_ARCHITEW6432"] # Will raise exception if x86 arch
+                except KeyError:
+                    pass
+                if os_platform == "x86":
                     sshexec =  os.path.join(os.environ["ProgramFiles"], "OpenSSH", "ssh.exe")
                 else:
                     sshexec =  os.path.join(os.environ["ProgramW6432"], "OpenSSH", "ssh.exe")
