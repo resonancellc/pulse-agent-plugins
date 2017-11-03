@@ -24,7 +24,7 @@ import MySQLdb
 import traceback
 import sys
 
-plugin = {"VERSION" : "1.0", "NAME" : "guacamole",  "TYPE" : "relayserver"}
+plugin = {"VERSION" : "1.1", "NAME" : "guacamole",  "TYPE" : "relayserver"}
 
 
 def action( xmppobject, action, sessionid, data, message, dataerreur ):
@@ -37,16 +37,25 @@ def action( xmppobject, action, sessionid, data, message, dataerreur ):
                              passwd=xmppobject.config.guacamole_dbpasswd,
                              db=xmppobject.config.guacamole_dbname)
         cursor = db.cursor()
-        sql = """ SELECT parameter_value FROM guacamole_connection_parameter WHERE connection_id = %s AND parameter_name = 'port';"""%(data['cux_id'])
+        # First find out if we need to run a reversessh connection
+        sql = """ SELECT parameter_value FROM guacamole_connection_parameter WHERE connection_id = %s AND parameter_name = 'hostname';"""%(data['cux_id'])
         cursor.execute(sql)
         results = cursor.fetchall()
-        localport = results[0][0]
-        if data['cux_type'] == 'SSH':
-            remoteport = 22
-        elif data['cux_type'] == 'RDP':
-            remoteport = 3389
-        elif data['cux_type'] == 'VNC':
-            remoteport = 5900
+        hostname = results[0][0]
+        if hostname == 'localhost':
+            return
+        else:
+            # We need to run a reversessh connection
+            sql = """ SELECT parameter_value FROM guacamole_connection_parameter WHERE connection_id = %s AND parameter_name = 'port';"""%(data['cux_id'])
+            cursor.execute(sql)
+            results = cursor.fetchall()
+            localport = results[0][0]
+            if data['cux_type'] == 'SSH':
+                remoteport = 22
+            elif data['cux_type'] == 'RDP':
+                remoteport = 3389
+            elif data['cux_type'] == 'VNC':
+                remoteport = 5900
 
     except Exception as e:
         db.close()

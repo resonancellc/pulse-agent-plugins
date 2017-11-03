@@ -24,8 +24,9 @@ from  lib.utils import pluginprocess
 import MySQLdb
 import traceback
 from random import randint
+import socket
 
-plugin = {"VERSION": "1.4", "NAME" :"guacamoleconf", "TYPE":"relayserver"}
+plugin = {"VERSION": "1.5", "NAME" :"guacamoleconf", "TYPE":"relayserver"}
 
 def insertprotocole(protocole, hostname):
     return """INSERT INTO guacamole_connection (connection_name, protocol) VALUES ( '%s_%s', '%s');"""%(protocole.upper(), hostname, protocole.lower())
@@ -83,8 +84,17 @@ def action(objetxmpp, action, sessionid, data, message, dataerreur, result):
     ###################################
     try:
         for proto in protos:
-            hostname = 'localhost'
-            port = randint(49152, 65535)
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            try:
+                sock.connect((data['machine_ip'], int(data['remoteservice'][proto])))
+                # Machine is directly reachable. We will not need a reversessh connection
+                hostname = data['machine_ip']
+                port = data['remoteservice'][proto]
+            except socket.error:
+                # Machine is not reachable. We will need a reversessh connection
+                hostname = 'localhost'
+                port = randint(49152, 65535)
+            sock.close()
             cursor.execute(insertparameter(result['data']['connection'][proto.upper()], 'hostname', hostname))
             db.commit()
             cursor.execute(insertparameter(result['data']['connection'][proto.upper()], 'port', port))
