@@ -41,9 +41,9 @@ def action(xmppobject, action, sessionid, data, message, dataerreur, result):
     logging.log(DEBUGPULSEPLUGIN,"plugin %s"% (plugin))
     if sys.platform.startswith('linux'):
         try:
-            finv = os.path.join("/","tmp","inventory.txt")
-            simplecommand("fusioninventory-agent  --stdout > %s"%finv)
-            Fichier = open(finv, 'r')
+            fileinvantaire = os.path.join("/","tmp","inventory.txt")
+            simplecommand("fusioninventory-agent  --stdout > %s"%fileinvantaire)
+            Fichier = open(fileinvantaire, 'r')
             result['data']['inventory'] = Fichier.read()
             Fichier.close()
             result['data']['inventory'] = base64.b64encode(zlib.compress(result['data']['inventory'], 9))
@@ -108,4 +108,14 @@ def action(xmppobject, action, sessionid, data, message, dataerreur, result):
             traceback.print_exc(file=sys.stdout)
             raise
     elif sys.platform.startswith('darwin'):
-        pass
+        try:
+            fileinvantaire = os.path.join("/","tmp","inventory.txt")
+            ## attention this command has been tested on only 1 Mac
+            simplecommand("/opt/fusioninventory-agent/bin/fusioninventory-agent --local=%s"%fileinvantaire)
+            Fichier = open(fileinvantaire, 'r')
+            result['data']['inventory'] = Fichier.read()
+            Fichier.close()
+            result['data']['inventory'] = base64.b64encode(zlib.compress(result['data']['inventory'], 9))
+        except Exception as e:
+            traceback.print_exc(file=sys.stdout)
+            raise
