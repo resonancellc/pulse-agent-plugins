@@ -32,7 +32,7 @@ import copy
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
 
-plugin = {"VERSION" : "1.9", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
+plugin = {"VERSION" : "2.0", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
 
 
 """
@@ -223,7 +223,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         # between: run, abandonmentdeploy and pause
         if 'actionscheduler' in data:
             if data['actionscheduler'] == "run":
-                print "RUN DEPLOY"
+                logging.getLogger().debug("RUN DEPLOY")
                 sessioninfo  = objectxmpp.Deploybasesched.get_sesionscheduler(sessionid)
                 if sessioninfo == "":
                     objectxmpp.xmpplog('<span style="font-weight: bold;color : red;">Erreur execution package after tranfert files Scheduling erreur session missing</span>',
@@ -255,13 +255,13 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                     datajson =  json.loads(sessioninfo)
                     #datasend = datajson['data']
                     datasend = datajson
-                    print datasend
-                    print "Supprime dans base"
+                    # print datasend
+                    # print "Supprime dans base"
                     objectxmpp.Deploybasesched.del_sesionscheduler(sessionid)
                     initialisesequence(datasend, objectxmpp, sessionid)
                     return
             elif data['actionscheduler'] == "pause":
-             
+
                 return
             elif data['actionscheduler'] == "abandonmentdeploy":
                 objectxmpp.xmpplog('<span style="font-weight: bold;color : red;">DEPLOY SCHEDULED : ABANDONNED</span>',
@@ -292,6 +292,30 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                 objectxmpp.Deploybasesched.del_sesionscheduler(sessionid)
             else:
                 #supprime cet input 
+                objectxmpp.xmpplog('<span style="font-weight: bold;color : red;">DEPLOY SCHEDULED : ERROR</span>',
+                                    type = 'deploy',
+                                    sessionname = sessionid,
+                                    priority = -1,
+                                    action = "",
+                                    who = objectxmpp.boundjid.bare,
+                                    how = "",
+                                    why = "",
+                                    module = "Deployment | Error | Notify",
+                                    date = None ,
+                                    fromuser = "AM %s"% objectxmpp.boundjid.bare,
+                                    touser = "")
+                objectxmpp.xmpplog('DEPLOYMENT TERMINATE',
+                                    type = 'deploy',
+                                    sessionname = sessionid,
+                                    priority = -1,
+                                    action = "",
+                                    who = objectxmpp.boundjid.bare,
+                                    how = "",
+                                    why = "",
+                                    module = "Deployment | Terminate | Notify",
+                                    date = None ,
+                                    fromuser = "AM %s"% objectxmpp.boundjid.bare,
+                                    touser = "")
                 objectxmpp.Deploybasesched.del_sesionscheduler(sessionid)
             return
 
@@ -338,10 +362,13 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                 date = None ,
                                 fromuser = data['name'],
                                 touser = "")
+            
+            
+            
             #clean session
             objectxmpp.session.clearnoevent(sessionid)
             #clean if not session
-            cleanbacktodeploy(objectxmpp)
+            cleanbacktodeploy(objectxmpp)            
             return
 
         # condition for quit deploy reinjection de message avec condition error
@@ -349,7 +376,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         if len(data) == 0:
             if 'msgstate' in message['body'] and 'msg' in message['body']['msgstate']  and message['body']['msgstate']['msg'].startswith("end error"):
                 if message['body']['msgstate']['quitonerror']:
-                    print "Quit session %s on error "%sessionid
+                    logging.getLogger().debug("Quit session %s on error "%sessionid)
                     objectxmpp.xmpplog('<span style="font-weight: bold;color : red;">STOP DEPLOY ON ERROR</span>',
                                     type = 'deploy',
                                     sessionname = sessionid,
@@ -394,7 +421,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             #signal deploy terminate si session n'ai pas dans back_to_deploy
             if sessionid not in objectxmpp.back_to_deploy:
                 # Deployment to finish here.
-                print "termine la session %s"%sessionid
+                logging.getLogger().debug("termine la session %s"%sessionid)
                 objectxmpp.xmpplog('DEPLOYMENT TERMINATE',
                                     type = 'deploy',
                                     sessionname = sessionid,
@@ -691,6 +718,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             data['methodetransfert'] = data['descriptor']['info']['methodetransfert']
         if 'transfert' in data:
             if data['transfert'] == True:
+                #print json.dumps(data,indent = 4)
                 objectxmpp.xmpplog('file transfert is enabled',
                                     type = 'deploy',
                                     sessionname = sessionid,
@@ -782,21 +810,21 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                         #mtype = 'chat')
             else:
                 # The session exists
-                print "LA SESSION EXISTE"
+                logging.getLogger().debug("LA SESSION EXISTE")
                 objsession = objectxmpp.session.sessionfromsessiondata(sessionid)
                 data_in_session = objsession.getdatasession()
-                print "LA SESSION EXISTE"
+                logging.getLogger().debug("LA SESSION EXISTE")
                 if 'step' not in data:
-                    print "STEP NOT"
+                    logging.getLogger().debug("STEP NOT")
                     if 'keyinstall' in data and data['keyinstall'] == True:
                         # We manage the message condition installation key
-                        print "keyinstall in true"
+                        logging.getLogger().debug("keyinstall in true")
                         data_in_session['keyinstall'] = True
                         objsession.setdatasession(data_in_session)
 
 
                     if 'actiontype' in data and 'folders_packages' in data and data['actiontype'] == 'requestinfo' :
-                        print "folders_packages"
+                        logging.getLogger().debug("folders_packages")
                         data_in_session['folders_packages'] = data['folders_packages']
                         objsession.setdatasession(data_in_session)
 
