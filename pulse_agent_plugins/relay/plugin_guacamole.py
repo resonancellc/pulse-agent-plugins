@@ -24,7 +24,7 @@ import MySQLdb
 import traceback
 import sys
 
-plugin = {"VERSION" : "1.1", "NAME" : "guacamole",  "TYPE" : "relayserver"}
+plugin = {"VERSION" : "1.2", "NAME" : "guacamole",  "TYPE" : "relayserver"}
 
 
 def action( xmppobject, action, sessionid, data, message, dataerreur ):
@@ -42,7 +42,7 @@ def action( xmppobject, action, sessionid, data, message, dataerreur ):
         cursor.execute(sql)
         results = cursor.fetchall()
         hostname = results[0][0]
-        if hostname == 'localhost':
+        if hostname != 'localhost':
             return
         else:
             # We need to run a reversessh connection
