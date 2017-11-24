@@ -28,6 +28,9 @@ import logging
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
 plugin = {"VERSION" : "1.0", "NAME" : "rsapplicationdeploymentjson", "TYPE" : "relayserver"}
+
+
+
 def action(objectxmpp, action, sessionid, data, message, dataerreur):
     #logging.getLogger().debug("RECV data message %s\n###############\n"%json.dumps(data, indent=4))
     logging.log(DEBUGPULSEPLUGIN,"plugin %s on %s %s from %s"% (plugin, objectxmpp.config.agenttype, message['to'], message['from']))
@@ -41,11 +44,13 @@ def action(objectxmpp, action, sessionid, data, message, dataerreur):
 
     logging.getLogger().debug("#################RELAY SERVER#####################")
     logging.getLogger().debug("##############demande pacquage %s ##############"%(data['deploy']))
-    logging.getLogger().debug("#############################################")
+    logging.getLogger().debug("##################################################")
     #envoy descripteur
     try:
-        descriptor =  managepackage.getdescripteurpathpackageuuid(data['deploy'])
-    except Exception:
+        descriptor =  managepackage.getdescriptorpackageuuid(data['deploy'])
+    except Exception as e:
+        logging.getLogger().error(str(e))
+        logging.getLogger().error("plugin rsapplicationdeploymentjson Error, package [%s] uuid descriptor missing"%data['deploy'])
         descriptor = None
     if descriptor is not None:
         datasend['action'] = "applicationdeploymentjson"
@@ -54,8 +59,7 @@ def action(objectxmpp, action, sessionid, data, message, dataerreur):
         datasend['data'] ['packagefile'] = os.listdir(datasend['data']['path'])
         datasend['data'] ['Dtypequery'] =  "TQ"
         datasend['data'] ['Devent'] = "DEPLOYMENT START"
-        datasend['data'] ['name'] = managepackage.getNamepathpackageuuid(data['deploy'])
-        print json.dumps(datasend, indent=4)
+        datasend['data'] ['name'] = managepackage.getnamepackagefromuuidpackage(data['deploy'])
         objectxmpp.send_message(mto=message['from'],
                                 mbody=json.dumps(datasend),
                                 mtype='chat')
