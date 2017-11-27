@@ -32,7 +32,7 @@ import copy
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
 
-plugin = {"VERSION" : "2.1", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
+plugin = {"VERSION" : "2.2", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
 
 
 """
@@ -701,7 +701,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                     objectxmpp.send_message(mto=data['jidmaster'],
                                             mbody = json.dumps(datasend1),
                                             mtype = 'chat')
-            if datasend['data']['advanced']['exec'] == True or not 'advanced' in datasend['data']:
+            if datasend['data']['advanced']['exec'] == True or not 'exec' in datasend['data']['advanced']:
                 # deploy directly
                 datasend['data']['advanced']['scheduling'] = False
                 initialisesequence(datasend, objectxmpp, sessionid)
@@ -937,7 +937,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                                 why = "",
                                                 module = "Deployment | Error | Download | Transfert",
                                                 date = None ,
-                                                fromuser = data_in_session['advanced']['login'],
+                                                fromuser = data_in_session['login'],
                                                 touser = "")
                             if obcmd['code'] != 0:
                                 objectxmpp.xmpplog('<span style="color: red;";>[xxx]: Terminate deploy ERROR transfert %s </span>'%obcmd['result'],
@@ -950,7 +950,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                                 why = "",
                                                 module = "Deployment | Error | Download | Transfert",
                                                 date = None ,
-                                                fromuser = data_in_session['advanced']['login'],
+                                                fromuser = data_in_session['login'],
                                                 touser = "")
                             logging.getLogger().debug("CALL FOR NEXT PACKAGE")
 
