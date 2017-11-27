@@ -701,7 +701,12 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                     objectxmpp.send_message(mto=data['jidmaster'],
                                             mbody = json.dumps(datasend1),
                                             mtype = 'chat')
-            if datasend['data']['advanced']['exec'] == True or not 'exec' in datasend['data']['advanced']:
+
+            if not 'advanced' in datasend['data']:
+                datasend['data']['advanced'] = {}
+                datasend['data']['advanced']['exec'] = True
+
+            if datasend['data']['advanced']['exec'] == True or not 'advanced' in datasend['data']:
                 # deploy directly
                 datasend['data']['advanced']['scheduling'] = False
                 initialisesequence(datasend, objectxmpp, sessionid)
