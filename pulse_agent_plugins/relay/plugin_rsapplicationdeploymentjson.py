@@ -27,7 +27,7 @@ import logging
 
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
-plugin = {"VERSION" : "1.0", "NAME" : "rsapplicationdeploymentjson", "TYPE" : "relayserver"}
+plugin = {"VERSION" : "1.1", "NAME" : "rsapplicationdeploymentjson", "TYPE" : "relayserver"}
 
 
 

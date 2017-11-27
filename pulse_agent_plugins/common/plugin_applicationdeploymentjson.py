@@ -32,7 +32,7 @@ import copy
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
 
-plugin = {"VERSION" : "2.0", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
+plugin = {"VERSION" : "2.1", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
 
 
 """
@@ -289,7 +289,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                 #clear sessionscheduler
                 objectxmpp.Deploybasesched.del_sesionscheduler(sessionid)
             else:
-                #supprime cet input 
+                #supprime cet input
                 objectxmpp.xmpplog('<span style="font-weight: bold;color : red;">DEPLOY SCHEDULED : ERROR</span>',
                                     type = 'deploy',
                                     sessionname = sessionid,
@@ -504,7 +504,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             try:
                 # Necessary datas are added.
                 # If we do not have these data global has all the dislocation we add them.
-                # Son applique a la dependence les proprietes du packages 
+                # Son applique a la dependence les proprietes du packages
                 if not 'ipmachine' in data:
                     logging.getLogger().debug("addition global informations for deploy mode push dependency")
                     data['ipmachine'] = objectxmpp.back_to_deploy[sessionid]['ipmachine']
@@ -531,7 +531,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                 # Then we look in the list of descriptors if these data of each dependence are present
                 for dependency in objectxmpp.back_to_deploy[sessionid]['Dependency']:
                     if dependency == "": continue
-                    
+
                     if not dependency in objectxmpp.back_to_deploy[sessionid]['packagelist']:
                         #on demande a (rs pakage server) de nous envoyé le descripteurs de ce package
                         datasend = {
@@ -992,4 +992,3 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                             objectxmpp.send_message(mto=data_in_session['jidmaster'],
                                                     mbody = json.dumps(datasend),
                                                     mtype = 'chat')
-
