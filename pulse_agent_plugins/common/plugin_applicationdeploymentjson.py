@@ -32,7 +32,7 @@ import copy
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
 
-plugin = {"VERSION" : "2.2", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
+plugin = {"VERSION" : "2.3", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
 
 
 """
@@ -495,6 +495,8 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                     objectxmpp.back_to_deploy[sessionid]['methodetransfert'] = data['methodetransfert']
                     objectxmpp.back_to_deploy[sessionid]['transfert'] = data['transfert']
                     objectxmpp.back_to_deploy[sessionid]['uuid'] = data['uuid']
+                    objectxmpp.back_to_deploy[sessionid]['ippackageserver'] = data['ippackageserver']
+                    objectxmpp.back_to_deploy[sessionid]['portpackageserver'] = data['portpackageserver']
                     if 'advanced' in data:
                         objectxmpp.back_to_deploy[sessionid]['advanced'] = data['advanced']
             except Exception as e:
@@ -517,6 +519,8 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                     data['transfert'] = objectxmpp.back_to_deploy[sessionid]['transfert']
                     data['uuid'] = objectxmpp.back_to_deploy[sessionid]['uuid']
                     data['jidrelay'] = objectxmpp.back_to_deploy[sessionid]['jidrelay']
+                    data['ippackageserver'] = objectxmpp.back_to_deploy[sessionid]['ippackageserver']
+                    data['portpackageserver'] = objectxmpp.back_to_deploy[sessionid]['portpackageserver']
                     if 'advanced' in objectxmpp.back_to_deploy[sessionid]:
                         data['advanced'] =  objectxmpp.back_to_deploy[sessionid]['advanced']
 
@@ -613,6 +617,8 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                 data['transfert'] = objectxmpp.back_to_deploy[sessionid]['transfert']
                 data['uuid'] = objectxmpp.back_to_deploy[sessionid]['uuid']
                 data['jidrelay'] = objectxmpp.back_to_deploy[sessionid]['jidrelay']
+                data['ippackageserver'] = objectxmpp.back_to_deploy[sessionid]['ippackageserver']
+                data['portpackageserver'] = objectxmpp.back_to_deploy[sessionid]['portpackageserver']
                 if 'advanced' in objectxmpp.back_to_deploy[sessionid]:
                     data['advanced'] =  objectxmpp.back_to_deploy[sessionid]['advanced']
             objectxmpp.session.sessionsetdata(sessionid, data)
