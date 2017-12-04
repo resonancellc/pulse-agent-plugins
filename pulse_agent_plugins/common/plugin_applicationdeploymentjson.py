@@ -32,7 +32,7 @@ import copy
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
 
-plugin = {"VERSION" : "2.4", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
+plugin = {"VERSION" : "2.5", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
 
 
 """
@@ -503,6 +503,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                 logging.getLogger().error(str(e))
 
         if sessionid in objectxmpp.back_to_deploy and not 'start' in objectxmpp.back_to_deploy[sessionid]:
+            #create list package deploy
             try:
                 # Necessary datas are added.
                 # If we do not have these data global has all the dislocation we add them.
@@ -545,8 +546,20 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                             'ret' : 0,
                             'base64' : False
                         }
-                        objectxmpp.back_to_deploy[sessionid]['count']+=1
-                        if objectxmpp.back_to_deploy[sessionid]['count'] > 25:
+                        objectxmpp.back_to_deploy[sessionid]['count']+= 1
+                        if objectxmpp.back_to_deploy[sessionid]['count'] > 30:
+                            objectxmpp.xmpplog( 'Warning [%s]  '%(data['name']),
+                                        type = 'deploy',
+                                        sessionname = sessionid,
+                                        priority = -1,
+                                        action = "",
+                                        who = objectxmpp.boundjid.bare,
+                                        how = "",
+                                        why = "",
+                                        module = "Deployment | Dependency",
+                                        date = None ,
+                                        fromuser = "AM %s"% objectxmpp.boundjid.bare,
+                                        touser = "")
                             return
                         # If it lacks a dependency descriptor it is requested to relay server
                         objectxmpp.send_message(   mto = data['jidrelay'],
@@ -558,10 +571,17 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                 else:
                     # All dependencies are taken into account.
                     # You must deploy the descriptors of the dependency list starting with the end (pop)
-                    objectxmpp.back_to_deploy[sessionid]['Dependency']
-                    logging.getLogger().debug("Start Multi-dependency deployment.")
-                    logging.getLogger().debug("Dependency list %s"%(objectxmpp.back_to_deploy[sessionid]['Dependency']))
-                    objectxmpp.xmpplog('! : Start Multi-dependency deployment.\n (dependence list %s)'%(objectxmpp.back_to_deploy[sessionid]['Dependency']),
+                    #objectxmpp.back_to_deploy[sessionid]['Dependency']
+                    #logging.getLogger().debug("Start Multi-dependency deployment.")
+                    strdeploypack = []
+                    packlistdescribemapdeploy = []
+                    for k in objectxmpp.back_to_deploy[sessionid]['Dependency']:
+                        if not k in packlistdescribemapdeploy:
+                            packlistdescribemapdeploy.append(str(k))
+                            strdeploypack.append(objectxmpp.back_to_deploy[sessionid]['packagelist'][k]['descriptor']['info']['software'])
+                    objectxmpp.back_to_deploy[sessionid]['Dependency'] = packlistdescribemapdeploy
+                    strdeploypack.reverse()
+                    objectxmpp.xmpplog('(Prepare the Deployment Plan for %s : [%s])'%( strdeploypack[-1], ", ".join(strdeploypack)),
                                         type = 'deploy',
                                         sessionname = sessionid,
                                         priority = -1,
@@ -574,22 +594,24 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                         fromuser = data['name'],
                                         touser = "")
 
-                    firstinstall =  objectxmpp.back_to_deploy[sessionid]['Dependency'].pop()
+                    logging.getLogger().debug("Dependencies list %s"%(objectxmpp.back_to_deploy[sessionid]['Dependency']))
+                    firstinstall = objectxmpp.back_to_deploy[sessionid]['Dependency'].pop()
 
                     objectxmpp.back_to_deploy[sessionid]['start'] = True
+
                     data = copy.deepcopy(objectxmpp.back_to_deploy[sessionid]['packagelist'][firstinstall])
-                    objectxmpp.xmpplog('! : first dependency [%s] '%(data['name']),
-                                        type = 'deploy',
-                                        sessionname = sessionid,
-                                        priority = -1,
-                                        action = "",
-                                        who = objectxmpp.boundjid.bare,
-                                        how = "",
-                                        why = "",
-                                        module = "Deployment",
-                                        date = None ,
-                                        fromuser = data['name'],
-                                        touser = "")
+                    #objectxmpp.xmpplog('! : first dependency [%s] '%(data['name']),
+                                        #type = 'deploy',
+                                        #sessionname = sessionid,
+                                        #priority = -1,
+                                        #action = "",
+                                        #who = objectxmpp.boundjid.bare,
+                                        #how = "",
+                                        #why = "",
+                                        #module = "Deployment",
+                                        #date = None ,
+                                        #fromuser = data['name'],
+                                        #touser = "")
                     try:
                         # Removes all the occurrences of this package if it exists because it is installing
                         objectxmpp.back_to_deploy[sessionid]['Dependency'].remove(firstinstall)
@@ -602,7 +624,6 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                 logging.getLogger().error(str(e))
 
         if sessionid in objectxmpp.back_to_deploy:
-
             # Necessary datas are added.
             # If one has not in data this information is added.
             if not 'ipmachine' in data:
