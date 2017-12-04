@@ -32,7 +32,7 @@ import copy
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
 
-plugin = {"VERSION" : "2.3", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
+plugin = {"VERSION" : "2.4", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
 
 
 """
@@ -473,7 +473,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                     objectxmpp.back_to_deploy[sessionid]['packagelist'] = {}
 
                 data['deploy'] = data['path'].split("/")[-1]
-
+                data['descriptor']['info']['Dependency'].reverse()
                 data['descriptor']['info']['Dependency'].insert(0,data['deploy'] )
                 objectxmpp.back_to_deploy[sessionid]['Dependency'] = objectxmpp.back_to_deploy[sessionid]['Dependency'] + data['descriptor']['info']['Dependency']
                 del data['descriptor']['info']['Dependency']
