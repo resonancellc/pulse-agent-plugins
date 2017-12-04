@@ -548,7 +548,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                         }
                         objectxmpp.back_to_deploy[sessionid]['count']+= 1
                         if objectxmpp.back_to_deploy[sessionid]['count'] > 30:
-                            objectxmpp.xmpplog( 'Warning [%s] verify cyclic dependenies'%(dependency),
+                            objectxmpp.xmpplog( 'Warning [%s] verify cyclic dependencies'%(dependency),
                                         type = 'deploy',
                                         sessionname = sessionid,
                                         priority = -1,
