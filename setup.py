@@ -45,7 +45,7 @@ setup(
 
     keywords='pulse agent plugins',
     name='pulse_agent_plugins',
-    version='1.2',
+    version='1.3',
     debian_distro='stretch',
     description = 'XMPP Agent plugins for pulse',
     url='https://www.siveo.net/',
@@ -57,4 +57,3 @@ setup(
     extras_require={},
     install_requires=[],
     )
-

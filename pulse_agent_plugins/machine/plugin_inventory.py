@@ -19,30 +19,31 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA 02110-1301, USA.
 
-from  lib.utils import pluginprocess
-import sys
-import os
-from  lib.utils import simplecommand
+from  lib.utils import pluginprocess, simplecommand
+import os, sys, platform
 import zlib
 import base64
 import traceback
 import json
 import logging
+
 if sys.platform.startswith('win'):
     from lib.registerwindows import constantregisterwindows
     import _winreg
 
 DEBUGPULSEPLUGIN = 25
-plugin = {"VERSION": "1.3", "NAME" :"inventory", "TYPE":"machine"}
+ERRORPULSEPLUGIN = 40
+WARNINGPULSEPLUGIN = 30
+plugin = {"VERSION": "1.4", "NAME" :"inventory", "TYPE":"machine"}
 
 @pluginprocess
 def action(xmppobject, action, sessionid, data, message, dataerreur, result):
     logging.log(DEBUGPULSEPLUGIN,"plugin %s"% (plugin))
     if sys.platform.startswith('linux'):
         try:
-            finv = os.path.join("/","tmp","inventory.txt")
-            simplecommand("fusioninventory-agent  --stdout > %s"%finv)
-            Fichier = open(finv, 'r')
+            fileinvantaire = os.path.join("/","tmp","inventory.txt")
+            simplecommand("fusioninventory-agent  --stdout > %s"%fileinvantaire)
+            Fichier = open(fileinvantaire, 'r')
             result['data']['inventory'] = Fichier.read()
             Fichier.close()
             result['data']['inventory'] = base64.b64encode(zlib.compress(result['data']['inventory'], 9))
@@ -51,6 +52,12 @@ def action(xmppobject, action, sessionid, data, message, dataerreur, result):
             raise
     elif sys.platform.startswith('win'):
         try:
+            bitness = platform.architecture()[0]
+            if bitness == '32bit':
+                other_view_flag = _winreg.KEY_WOW64_64KEY
+            elif bitness == '64bit':
+                other_view_flag = _winreg.KEY_WOW64_32KEY
+
             # run the inventory
             program = os.path.join(os.environ["ProgramFiles"], 'FusionInventory-Agent', 'fusioninventory-agent.bat')
             namefile = os.path.join(os.environ["ProgramFiles"], 'Pulse', 'tmp', 'inventory.txt')
@@ -74,28 +81,41 @@ def action(xmppobject, action, sessionid, data, message, dataerreur, result):
                     hive = registry_key.split('\\')[0].strip('"')
                     sub_key = registry_key.split('\\')[-1].strip('"')
                     path = registry_key.replace(hive+'\\', '').replace('\\'+sub_key, '').strip('"')
-                    print "hive: %s" % hive
-                    print "path: %s" % path
-                    print "sub_key: %s" % sub_key
+                    logging.log(DEBUGPULSEPLUGIN, "hive: %s" % hive)
+                    logging.log(DEBUGPULSEPLUGIN, "path: %s" % path)
+                    logging.log(DEBUGPULSEPLUGIN, "sub_key: %s" % sub_key)
                     reg_constants = constantregisterwindows()
                     try:
-                        key = _winreg.OpenKey(reg_constants.getkey(hive), path)
+                        key = _winreg.OpenKey(reg_constants.getkey(hive),
+                                              path,
+                                              0,
+                                              _winreg.KEY_READ | other_view_flag)
                         key_value = _winreg.QueryValueEx(key, sub_key)
-                        print "key_value: %s" % str(key_value[0])
+                        logging.log(DEBUGPULSEPLUGIN,"key_value: %s" % str(key_value[0]))
                         result['data']['reginventory'][reg_key_num]['value'] = str(key_value[0])
                         _winreg.CloseKey(key)
                     except Exception, e:
-                        print "Error getting key: %s" % str(e)
+                        logging.log(ERRORPULSEPLUGIN,"Error getting key: %s" % str(e))
                         result['data']['reginventory'][reg_key_num]['value'] = ""
                         pass
                 # generate the json and encode
-                print "---------- Registry inventory Data ----------"
-                print json.dumps(result['data']['reginventory'], indent=4, separators=(',', ': '))
-                print "---------- End Registry inventory Data ----------"
+                logging.log(DEBUGPULSEPLUGIN,"---------- Registry inventory Data ----------")
+                logging.log(DEBUGPULSEPLUGIN,json.dumps(result['data']['reginventory'], indent=4, separators=(',', ': ')))
+                logging.log(DEBUGPULSEPLUGIN,"---------- End Registry inventory Data ----------")
                 result['data']['reginventory'] = base64.b64encode(json.dumps(result['data']['reginventory'], indent=4, separators=(',', ': ')))
         except Exception, e:
-            print "Error: %s" % str(e)
+            logging.log(ERRORPULSEPLUGIN,"Error: %s" % str(e))
             traceback.print_exc(file=sys.stdout)
             raise
     elif sys.platform.startswith('darwin'):
-        pass
+        try:
+            fileinvantaire = os.path.join("/","tmp","inventory.txt")
+            ## attention this command has been tested on only 1 Mac
+            simplecommand("/opt/fusioninventory-agent/bin/fusioninventory-agent --local=%s"%fileinvantaire)
+            Fichier = open(fileinvantaire, 'r')
+            result['data']['inventory'] = Fichier.read()
+            Fichier.close()
+            result['data']['inventory'] = base64.b64encode(zlib.compress(result['data']['inventory'], 9))
+        except Exception as e:
+            traceback.print_exc(file=sys.stdout)
+            raise
