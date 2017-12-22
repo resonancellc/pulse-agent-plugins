@@ -18,6 +18,9 @@
 # along with Pulse 2; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA 02110-1301, USA.
+# file  plugin_applicationdeploymentjson.py
+
+
 import json
 import sys, os
 from lib.managepackage import managepackage, search_list_of_deployment_packages
@@ -32,7 +35,7 @@ import copy
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
 
-plugin = {"VERSION" : "2.5", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
+plugin = {"VERSION" : "2.6", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
 
 
 """
@@ -146,13 +149,16 @@ def initialisesequence(datasend, objectxmpp, sessionid ):
     grafcet(objectxmpp, datasend)
     logging.getLogger().debug("outing graphcet phase1")
 
-def curlgetdownloadfile( destfile, urlfile, insecure = True):
+def curlgetdownloadfile( destfile, urlfile, insecure = True, limit_rate_ko= None):
     # As long as the file is opened in binary mode, both Python 2 and Python 3
     # can write response body to it without decoding.
     with open(destfile, 'wb') as f:
         c = pycurl.Curl()
         c.setopt(c.URL, urlfile)
         c.setopt(c.WRITEDATA, f)
+        if limit_rate_ko is not None and limit_rate_ko != '' and int(limit_rate_ko) > 0:
+            # limit_rate_ko en octed in curl
+            c.setopt(c.MAX_RECV_SPEED_LARGE, int(limit_rate_ko)*1024)
         if insecure :
             # option equivalent a friser de --insecure
             c.setopt(pycurl.SSL_VERIFYPEER, 0)
@@ -944,19 +950,29 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                             logging.getLogger().debug("TRANSFERT PACKAGE from %s"%pathin)
                             #The rsync command will have this form
                             #cmd = "rsync --delete -e \"ssh -o IdentityFile=/root/.ssh/id_rsa -o StrictHostKeyChecking=no -o Batchmode=yes -o PasswordAuthentication=no -o ServerAliveInterval=10 -o CheckHostIP=no -o ConnectTimeout=10\"   -av %s/ %s@%s:\"%s/\""%(pathin, "pulse", data_in_session['ipmachine'], pathout)
-                            cmd = "scp -r -o IdentityFile=/root/.ssh/id_rsa "\
-                                    "-o StrictHostKeyChecking=no "\
-                                    "-o UserKnownHostsFile=/dev/null "\
-                                    "-o Batchmode=yes "\
-                                    "-o PasswordAuthentication=no "\
-                                    "-o ServerAliveInterval=10 "\
-                                    "-o CheckHostIP=no "\
-                                    "-o ConnectTimeout=10 "\
+                            
+                            #-l limit
+                            #Limits the used bandwidth, specified in Kbit/s.
+                            if 'limit_rate_ko' in data_in_session and \
+                                data_in_session['limit_rate_ko'] != "" and\
+                                    int(data_in_session['limit_rate_ko'])> 0:
+                                cmdpre = "scp -r -l %d "%data_in_session['limit_rate_ko']
+                            else: 
+                                cmdpre = "scp -r "
+
+                            option = "-o IdentityFile=/root/.ssh/id_rsa "\
+                                     "-o StrictHostKeyChecking=no "\
+                                     "-o UserKnownHostsFile=/dev/null "\
+                                     "-o Batchmode=yes "\
+                                     "-o PasswordAuthentication=no "\
+                                     "-o ServerAliveInterval=10 "\
+                                     "-o CheckHostIP=no "\
+                                     "-o ConnectTimeout=10 "\
                                         "%s %s@%s:\"\\\"%s\\\"\""%( pathin,
                                                         "pulse",
                                                         data_in_session['ipmachine'],
                                                         data_in_session['folders_packages'])
-
+                            cmd = cmdpre + option
                             logging.getLogger().debug("tranfert cmd :\n %s"%cmd)
                             obcmd = simplecommandstr(cmd)
                             objectxmpp.xmpplog("push transfert package :%s to %s"%(data_in_session['name'],data_in_session['jidmachine'] ),
