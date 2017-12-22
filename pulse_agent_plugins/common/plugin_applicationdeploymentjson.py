@@ -31,11 +31,11 @@ import pycurl
 import platform
 from lib.utils import save_back_to_deploy, cleanbacktodeploy, simplecommandstr, get_keypub_ssh
 import copy
-
+import traceback
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
 
-plugin = {"VERSION" : "2.6", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
+plugin = {"VERSION" : "2.7", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
 
 
 """
@@ -154,6 +154,7 @@ def curlgetdownloadfile( destfile, urlfile, insecure = True, limit_rate_ko= None
     # can write response body to it without decoding.
     with open(destfile, 'wb') as f:
         c = pycurl.Curl()
+        urlfile=urlfile.replace(" ", "%20")
         c.setopt(c.URL, urlfile)
         c.setopt(c.WRITEDATA, f)
         if limit_rate_ko is not None and limit_rate_ko != '' and int(limit_rate_ko) > 0:
@@ -176,7 +177,15 @@ def recuperefile(datasend, objectxmpp, ippackage, portpackage):
             dest = os.path.join(datasend['data']['pathpackageonmachine'], filepackage)
             urlfile = curlurlbase + filepackage
             try:
-                objectxmpp.xmpplog('download  file : %s Package : %s'%( filepackage, datasend['data']['name']),
+                if 'limit_rate_ko' in datasend['data']['descriptor']['info'] and \
+                                datasend['data']['descriptor']['info']['limit_rate_ko'] != "" and\
+                                    int(datasend['data']['descriptor']['info']['limit_rate_ko'])> 0:
+                    limit_rate_ko = datasend['data']['descriptor']['info']['limit_rate_ko']
+                    msg = 'download  file : %s Package : %s <span style="font-weight: bold;color : orange;">[transfert rate %s ko]</span>'%( filepackage, datasend['data']['name'],limit_rate_ko)
+                else:
+                    limit_rate_ko = ""
+                    msg = 'download  file : %s Package : %s'%( filepackage, datasend['data']['name'])
+                objectxmpp.xmpplog( msg,
                                     type = 'deploy',
                                     sessionname = datasend['sessionid'],
                                     priority = -1,
@@ -188,9 +197,11 @@ def recuperefile(datasend, objectxmpp, ippackage, portpackage):
                                     date = None ,
                                     fromuser = datasend['data']['advanced']['login'],
                                     touser = "")
-                curlgetdownloadfile( dest, urlfile)
-            except Exception:
-                objectxmpp.xmpplog('<span style="font-weight: bold;color : red;">STOP DEPLOY ON ERROR : download curl [%s] package : %s</span>'%(curlurlbase),
+                curlgetdownloadfile( dest, urlfile, insecure = True, limit_rate_ko= limit_rate_ko)
+            except Exception as e:
+                traceback.print_exc(file=sys.stdout)
+                logging.getLogger().debug(str(e))
+                objectxmpp.xmpplog('<span style="font-weight: bold;color : red;">STOP DEPLOY ON ERROR : download curl [%s] file package : %s</span>'%(curlurlbase, filepackage),
                                     type = 'deploy',
                                     sessionname = datasend['sessionid'],
                                     priority = -1,
@@ -770,7 +781,8 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         #determine methode transfert
         if 'descriptor' in data and 'info' in data['descriptor'] and 'methodetransfert' in data['descriptor']['info']:
             data['methodetransfert'] = data['descriptor']['info']['methodetransfert']
-
+        if 'descriptor' in data and 'info' in data['descriptor'] and 'limit_rate_ko' in data['descriptor']['info']:
+            data['limit_rate_ko'] = data['descriptor']['info']['limit_rate_ko']
 
         if 'transfert' in data:
             if data['transfert'] == True:
@@ -950,16 +962,14 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                             logging.getLogger().debug("TRANSFERT PACKAGE from %s"%pathin)
                             #The rsync command will have this form
                             #cmd = "rsync --delete -e \"ssh -o IdentityFile=/root/.ssh/id_rsa -o StrictHostKeyChecking=no -o Batchmode=yes -o PasswordAuthentication=no -o ServerAliveInterval=10 -o CheckHostIP=no -o ConnectTimeout=10\"   -av %s/ %s@%s:\"%s/\""%(pathin, "pulse", data_in_session['ipmachine'], pathout)
-                            
-                            #-l limit
-                            #Limits the used bandwidth, specified in Kbit/s.
                             if 'limit_rate_ko' in data_in_session and \
                                 data_in_session['limit_rate_ko'] != "" and\
                                     int(data_in_session['limit_rate_ko'])> 0:
-                                cmdpre = "scp -r -l %d "%data_in_session['limit_rate_ko']
+                                cmdpre = "scp -r -l %s "%data_in_session['limit_rate_ko']
+                                msg = "push transfert package :%s to %s <span style='font-weight: bold;color : orange;'> [transfert rate %s ko]</span>"%(data_in_session['name'],data_in_session['jidmachine'], data_in_session['limit_rate_ko'])
                             else: 
                                 cmdpre = "scp -r "
-
+                                msg = "push transfert package :%s to %s"%(data_in_session['name'],data_in_session['jidmachine'])
                             option = "-o IdentityFile=/root/.ssh/id_rsa "\
                                      "-o StrictHostKeyChecking=no "\
                                      "-o UserKnownHostsFile=/dev/null "\
@@ -975,7 +985,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                             cmd = cmdpre + option
                             logging.getLogger().debug("tranfert cmd :\n %s"%cmd)
                             obcmd = simplecommandstr(cmd)
-                            objectxmpp.xmpplog("push transfert package :%s to %s"%(data_in_session['name'],data_in_session['jidmachine'] ),
+                            objectxmpp.xmpplog( msg,
                                                 type = 'deploy',
                                                 sessionname = sessionid,
                                                 priority = -1,
