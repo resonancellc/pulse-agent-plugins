@@ -9,9 +9,11 @@ build:
 	mkdir -p usr/lib/python2.7/dist-packages/pulse_xmpp_agent/pluginsmachine
 	mkdir -p var/lib/pulse2/xmpp_baseplugin
 	mkdir -p var/lib/pulse2/xmpp_basepluginscheduler
-	cp -frv pulse_agent_plugins/common/* var/lib/pulse2/xmpp_baseplugin
-	cp -frv pulse_agent_plugins/machine/* var/lib/pulse2/xmpp_baseplugin
-	cp -frv pulse_agent_plugins/relay/* var/lib/pulse2/xmpp_baseplugin
+	cp -frv pulse_agent_plugins/common/plugin_* var/lib/pulse2/xmpp_baseplugin
+	cp -frv pulse_agent_plugins/machine/plugin_* var/lib/pulse2/xmpp_baseplugin
+	cp -frv pulse_agent_plugins/relay/plugin_* var/lib/pulse2/xmpp_baseplugin
+	cp -fv  pulse_agent_plugins/machine/scheduling_* var/lib/pulse2/xmpp_basepluginscheduler
+	cp -fv  pulse_agent_plugins/relay/scheduling_* var/lib/pulse2/xmpp_basepluginscheduler
 	cp -fv pulse_agent_plugins/common/plugin_* usr/lib/python2.7/dist-packages/pulse_xmpp_agent/pluginsrelay
 	cp -fv pulse_agent_plugins/common/plugin_* usr/lib/python2.7/dist-packages/pulse_xmpp_agent/pluginsmachine
 	cp -fv pulse_agent_plugins/machine/plugin_* usr/lib/python2.7/dist-packages/pulse_xmpp_agent/pluginsmachine

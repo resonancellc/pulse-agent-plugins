@@ -1,2 +1,3 @@
 var/lib/pulse2/xmpp_baseplugin
+var/lib/pulse2/xmpp_basepluginscheduler
 etc/pulse-xmpp-agent/inventory.ini
