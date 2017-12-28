@@ -15,6 +15,13 @@ build:
 	cp -fv pulse_agent_plugins/common/* usr/lib/python2.7/dist-packages/pulse_xmpp_agent/pluginsmachine
 	cp -fv pulse_agent_plugins/machine/* usr/lib/python2.7/dist-packages/pulse_xmpp_agent/pluginsmachine
 	cp -frv pulse_agent_plugins/relay/* usr/lib/python2.7/dist-packages/pulse_xmpp_agent/pluginsrelay
+	mkdir -p usr/lib/python2.7/dist-packages/pulse_xmpp_agent/descriptor_scheduler_machine/
+	cp -fv pulse_agent_plugins/machine/scheduling_*.py usr/lib/python2.7/dist-packages/pulse_xmpp_agent/descriptor_scheduler_machine/
+	mkdir -p usr/lib/python2.7/dist-packages/pulse_xmpp_agent/descriptor_scheduler_relay/
+	cp -fv pulse_agent_plugins/relay/scheduling_*.py usr/lib/python2.7/dist-packages/pulse_xmpp_agent/descriptor_scheduler_relay/
+	#FIXME: Ugly , do it a cleaner way
+	rm -fv usr/lib/python2.7/dist-packages/pulse_xmpp_agent/pluginsrelay/scheduling_*.py
+	rm -fv usr/lib/python2.7/dist-packages/pulse_xmpp_agent/pluginsmachine/scheduling_*.py
 	mkdir -p var/lib/pulse2/clients/config
 	cp pulse_agent_plugins/config/guacamoleconf.ini.in var/lib/pulse2/clients/config 
 	cp pulse_agent_plugins/config/inventory.ini var/lib/pulse2/clients/config
