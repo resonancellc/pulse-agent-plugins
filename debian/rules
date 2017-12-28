@@ -12,6 +12,7 @@ build:
 	cp -frv pulse_agent_plugins/common/plugin_* var/lib/pulse2/xmpp_baseplugin
 	cp -frv pulse_agent_plugins/machine/plugin_* var/lib/pulse2/xmpp_baseplugin
 	cp -frv pulse_agent_plugins/relay/plugin_* var/lib/pulse2/xmpp_baseplugin
+	cp -fv  pulse_agent_plugins/common/scheduling_* var/lib/pulse2/xmpp_basepluginscheduler
 	cp -fv  pulse_agent_plugins/machine/scheduling_* var/lib/pulse2/xmpp_basepluginscheduler
 	cp -fv  pulse_agent_plugins/relay/scheduling_* var/lib/pulse2/xmpp_basepluginscheduler
 	cp -fv pulse_agent_plugins/common/plugin_* usr/lib/python2.7/dist-packages/pulse_xmpp_agent/pluginsrelay
@@ -22,8 +23,10 @@ build:
 	cp -fv pulse_agent_plugins/machine/scheduling_*.py usr/lib/python2.7/dist-packages/pulse_xmpp_agent/descriptor_scheduler_machine/
 	mkdir -p usr/lib/python2.7/dist-packages/pulse_xmpp_agent/descriptor_scheduler_relay/
 	cp -fv pulse_agent_plugins/relay/scheduling_*.py usr/lib/python2.7/dist-packages/pulse_xmpp_agent/descriptor_scheduler_relay/
+	cp -fv pulse_agent_plugins/common/scheduling_*.py usr/lib/python2.7/dist-packages/pulse_xmpp_agent/descriptor_scheduler_machine/
+	cp -fv pulse_agent_plugins/common/scheduling_*.py usr/lib/python2.7/dist-packages/pulse_xmpp_agent/descriptor_scheduler_relay/
 	mkdir -p var/lib/pulse2/clients/config
-	cp pulse_agent_plugins/config/guacamoleconf.ini.in var/lib/pulse2/clients/config 
+	cp pulse_agent_plugins/config/guacamoleconf.ini.in var/lib/pulse2/clients/config
 	cp pulse_agent_plugins/config/inventory.ini var/lib/pulse2/clients/config
 	mkdir -p etc/pulse-xmpp-agent/
 	cp pulse_agent_plugins/config/inventory.ini etc/pulse-xmpp-agent/
