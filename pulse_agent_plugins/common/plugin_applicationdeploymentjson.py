@@ -35,7 +35,7 @@ import traceback
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
 
-plugin = {"VERSION" : "2.7", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
+plugin = {"VERSION" : "2.8", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
 
 
 """
@@ -56,7 +56,7 @@ def cleandescriptor( datasend ):
         except KeyError:
             pass
         try:
-            del datasend['descriptor']['Macos']
+            del datasend['descriptor']['mac']
         except KeyError:
             pass
         try:
@@ -71,7 +71,7 @@ def cleandescriptor( datasend ):
         except KeyError:
             pass
         try:
-            del datasend['descriptor']['Macos']
+            del datasend['descriptor']['mac']
         except KeyError:
             pass
         try:
@@ -90,9 +90,9 @@ def cleandescriptor( datasend ):
         except KeyError:
             pass
         try:
-            datasend['descriptor']['sequence'] = datasend['descriptor']['Macos']['sequence']
+            datasend['descriptor']['sequence'] = datasend['descriptor']['mac']['sequence']
             #del datasend['descriptor']['Macos']['sequence']
-            del datasend['descriptor']['Macos']
+            del datasend['descriptor']['mac']
         except:
             return False
     datasend['typeos'] = sys.platform
@@ -967,7 +967,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     int(data_in_session['limit_rate_ko'])> 0:
                                 cmdpre = "scp -r -l %s "%data_in_session['limit_rate_ko']
                                 msg = "push transfert package :%s to %s <span style='font-weight: bold;color : orange;'> [transfert rate %s ko]</span>"%(data_in_session['name'],data_in_session['jidmachine'], data_in_session['limit_rate_ko'])
-                            else: 
+                            else:
                                 cmdpre = "scp -r "
                                 msg = "push transfert package :%s to %s"%(data_in_session['name'],data_in_session['jidmachine'])
                             option = "-o IdentityFile=/root/.ssh/id_rsa "\

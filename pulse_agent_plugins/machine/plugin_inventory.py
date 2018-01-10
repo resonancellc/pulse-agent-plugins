@@ -34,7 +34,7 @@ if sys.platform.startswith('win'):
 DEBUGPULSEPLUGIN = 25
 ERRORPULSEPLUGIN = 40
 WARNINGPULSEPLUGIN = 30
-plugin = {"VERSION": "1.5", "NAME" :"inventory", "TYPE":"machine"}
+plugin = {"VERSION": "1.6", "NAME" :"inventory", "TYPE":"machine"}
 
 @pluginprocess
 def action(xmppobject, action, sessionid, data, message, dataerreur, result):
