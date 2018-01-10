@@ -111,7 +111,7 @@ def action(xmppobject, action, sessionid, data, message, dataerreur, result):
         try:
             inventoryfile = os.path.join("/","tmp","inventory.txt")
             ## attention this command has been tested on only 1 Mac
-            simplecommand("/opt/fusioninventory-agent/bin/fusioninventory-agent --local=%s"%inventoryfile)
+            simplecommand("/opt/fusioninventory-agent/bin/fusioninventory-inventory > %s"%inventoryfile)
             Fichier = open(inventoryfile, 'r')
             result['data']['inventory'] = Fichier.read()
             Fichier.close()
