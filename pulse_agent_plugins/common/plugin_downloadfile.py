@@ -21,14 +21,9 @@
 import logging
 
 from lib.utils import  simplecommand
-import sys
-import os
-from subprocess import Popen
-import shlex
+
 import json
-import subprocess
-from lib.utils import file_get_contents, file_put_contents
-import shutil
+from lib.utils import file_put_contents
 import time
 import socket
 

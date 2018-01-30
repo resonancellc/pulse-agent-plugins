@@ -22,7 +22,6 @@
 this plugin process inventory from crontab descriptor time
 """
 import logging
-import json
 from  lib.utils import getRandomName, call_plugin
 
 plugin = { "VERSION" : "1.1", "NAME" : "pluging scheduled inventory", "TYPE" : "scheduled" }

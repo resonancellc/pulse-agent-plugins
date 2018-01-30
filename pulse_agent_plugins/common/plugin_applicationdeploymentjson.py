@@ -29,7 +29,8 @@ from lib.grafcetdeploy import grafcet
 import logging
 import pycurl
 import platform
-from lib.utils import save_back_to_deploy, cleanbacktodeploy, simplecommandstr, get_keypub_ssh
+#from lib.utils import save_back_to_deploy, cleanbacktodeploy, simplecommandstr, get_keypub_ssh
+from lib.utils import save_back_to_deploy, cleanbacktodeploy, simplecommandstr
 import copy
 import traceback
 logger = logging.getLogger()

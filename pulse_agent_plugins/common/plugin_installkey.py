@@ -18,12 +18,11 @@
 # along with Pulse 2; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA 02110-1301, USA.
-import json
+
 import sys, os
-from lib.managepackage import managepackage, search_list_of_deployment_packages
+
 
 import logging
-import platform
 from lib.utils import file_get_contents, file_put_contents_w_a
 
 logger = logging.getLogger()
