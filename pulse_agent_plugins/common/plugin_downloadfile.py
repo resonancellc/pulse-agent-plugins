@@ -90,10 +90,10 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
     logging.getLogger().debug("###################################################")
     print json.dumps(data,indent=4)
     reversessh = False
-    localport = 22
+    localport = paramglobal['remoteport']
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
-        sock.connect((data['ipmachine'], 22))
+        sock.connect((data['ipmachine'], paramglobal['remoteport']))
     except socket.error:
         localport = randint(49152, 65535)
         reversessh = True
@@ -111,11 +111,10 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
     cretefileconfigrescp = "Host %s\nPort %s\nHost %s\nPort %s\n"%(data['ipmaster'], paramglobal['portsshmaster'], data['ipmachine'], localport)
     file_put_contents(paramglobal['filetmpconfigssh'],  cretefileconfigrescp)
 
-    if reversessh == True:
+    if reversessh == False:
         command = scpfile(source, dest)
     else:
-        ##install reverssh
-
+        ## install reverssh
         datareversessh = {
             'action': 'reverse_ssh_on',
             'sessionid': sessionid,
@@ -133,10 +132,8 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         objectxmpp.send_message(mto = message['to'],
                     mbody = json.dumps(datareversessh),
                     mtype = 'chat')
- 
         # initialise se cp
         command = scpfile(source, dest, portscr = localport, portdest=paramglobal['portsshmaster'])
-
         time.sleep(paramglobal['timeupreverssh'])
     print json.dumps(data,indent=4)
     print "----------------------------"
@@ -147,5 +144,3 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
     print z['result']
     print z['code']
     print "----------------------------"
-
-
