@@ -105,7 +105,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
     cretefileconfigrescp = "Host %s\nPort %s\nHost %s\nPort %s\n"%(data['ipmaster'], paramglobal['portsshmaster'], data['ipmachinepublic'], localport)
     file_put_contents(paramglobal['filetmpconfigssh'],  cretefileconfigrescp)
 
-    if reversessh == True:
+    if reversessh == False:
         command = scpfile(source, dest)
     else:
         ##install reverssh
