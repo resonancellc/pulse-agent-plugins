@@ -21,18 +21,21 @@
 import logging
 
 from lib.utils import  simplecommand
-
+import sys
+import os
+from subprocess import Popen
+import shlex
 import json
-from lib.utils import file_put_contents
-from random import randint
+import subprocess
+from lib.utils import file_get_contents, file_put_contents
+import shutil
 import time
 import socket
 
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
-plugin = { "VERSION" : "1.0", "NAME" : "downloadfile", "TYPE" : "all" }
+plugin = { "VERSION" : "1.1", "NAME" : "downloadfile", "TYPE" : "all" }
 paramglobal = {"timeupreverssh" : 20 , "portsshmaster" : 22, "filetmpconfigssh" : "/tmp/tmpsshconf", "remoteport" : 22}
-
 def create_path(type ="windows", host="", ipordomain="", path=""):
     """
         warning you must enter a raw string for parameter path
@@ -86,10 +89,10 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
     logging.getLogger().debug("###################################################")
     print json.dumps(data,indent=4)
     reversessh = False
-    localport = paramglobal['remoteport']
+    localport = 22
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
-        sock.connect((data['ipmachine'], paramglobal['remoteport']))
+        sock.connect((data['ipmachinepublic'], 22))
     except socket.error:
         localport = randint(49152, 65535)
         reversessh = True
@@ -99,18 +102,19 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
     #print json.dumps(data,indent=4)
     #scp file from 2 hosts
     if str(data['osmachine']).startswith('Linux') or str(data['osmachine']).startswith('darwin'):
-        source = create_path(type = "linux", host = "root", ipordomain=data['ipmachine'], path = r'%s'%data['path_src_machine'])
+        source = create_path(type = "linux", host = "root", ipordomain=data['ipmachinepublic'], path = r'%s'%data['path_src_machine'])
     else:
-        source = create_path(type = "windows", host = "pulse", ipordomain = data['ipmachine'], path = r'%s'%data['path_src_machine'])
+        source = create_path(type = "windows", host = "pulse", ipordomain = data['ipmachinepublic'], path = r'%s'%data['path_src_machine'])
     dest = create_path(type ="linux", host="root", ipordomain=data['ipars'], path=data['path_dest_master'])
 
-    cretefileconfigrescp = "Host %s\nPort %s\nHost %s\nPort %s\n"%(data['ipmaster'], paramglobal['portsshmaster'], data['ipmachine'], localport)
+    cretefileconfigrescp = "Host %s\nPort %s\nHost %s\nPort %s\n"%(data['ipmaster'], paramglobal['portsshmaster'], data['ipmachinepublic'], localport)
     file_put_contents(paramglobal['filetmpconfigssh'],  cretefileconfigrescp)
 
-    if reversessh == False:
+    if reversessh == True:
         command = scpfile(source, dest)
     else:
-        ## install reverssh
+        ##install reverssh
+
         datareversessh = {
             'action': 'reverse_ssh_on',
             'sessionid': sessionid,
@@ -128,8 +132,10 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         objectxmpp.send_message(mto = message['to'],
                     mbody = json.dumps(datareversessh),
                     mtype = 'chat')
+ 
         # initialise se cp
         command = scpfile(source, dest, portscr = localport, portdest=paramglobal['portsshmaster'])
+
         time.sleep(paramglobal['timeupreverssh'])
     print json.dumps(data,indent=4)
     print "----------------------------"
@@ -140,3 +146,5 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
     print z['result']
     print z['code']
     print "----------------------------"
+
+
