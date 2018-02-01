@@ -23,7 +23,6 @@ import logging
 from lib.utils import  simplecommand
 
 import json
-import subprocess
 from lib.utils import  file_put_contents
 import time
 import socket
