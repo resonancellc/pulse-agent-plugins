@@ -94,7 +94,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
     reversessh = False
     localport = paramglobal['remoteport']
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.settimeout(timeupdetectreverssh)
+    sock.settimeout(paramglobal['timeupdetectreverssh'])
     try:
         sock.connect((data['ipmachinepublic'], paramglobal['remoteport']))
     except socket.error:
