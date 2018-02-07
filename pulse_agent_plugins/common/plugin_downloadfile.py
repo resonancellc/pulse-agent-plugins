@@ -37,7 +37,7 @@ import socket
 from random import randint
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
-plugin = { "VERSION" : "1.12", "NAME" : "downloadfile", "TYPE" : "all" }
+plugin = { "VERSION" : "1.13", "NAME" : "downloadfile", "TYPE" : "all" }
 paramglobal = {"timeupreverssh" : 20 , "portsshmaster" : 22, "filetmpconfigssh" : "/tmp/tmpsshconf", "remoteport" : 22}
 def create_path(type ="windows", host="", ipordomain="", path=""):
     """
@@ -48,6 +48,7 @@ def create_path(type ="windows", host="", ipordomain="", path=""):
         return ""
     if type == "windows":
         if host != "" and ipordomain != "":
+            print host,ipordomain,path
             return "%s@%s:\"\\\"%s\\\"\""%( host,
                                             ipordomain,
                                             path)
@@ -61,8 +62,8 @@ def create_path(type ="windows", host="", ipordomain="", path=""):
         else:
             return "\"%s\""%(path)
 
-def scpfile(scr, dest, portscr = None, portdest = None):
-    if portscr is  None or portdest is None:
+def scpfile(scr, dest, portscr = None, portdest = None, reverbool=False):
+    if reverbool:
         # version fichier de configuration.
         cmdpre = "scp -rp3 -F %s "\
                     "-o IdentityFile=/root/.ssh/id_rsa "\
@@ -90,12 +91,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
     logging.getLogger().debug("###################################################")
     logging.getLogger().debug("call %s from %s"%(plugin,message['from']))
     logging.getLogger().debug("###################################################")
-    
-    
-    #package_server_ip
-    
-    
-    
+
     print json.dumps(data,indent=4)
     reversessh = False
     localport = 22
@@ -130,9 +126,10 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         cretefileconfigrescp = "Host %s\nPort %s\nHost %s\nPort %s\n"%(data['ipmaster'], paramglobal['portsshmaster'], "localhost", localport)
         file_put_contents(paramglobal['filetmpconfigssh'],  cretefileconfigrescp)
 
-    dest = create_path(type ="linux", host="root", ipordomain=data['ipmaster'], path=data['path_dest_master'])
-
-
+    dest = create_path(type ="linux",
+                       host="root",
+                       ipordomain=data['ipmaster'],
+                       path=data['path_dest_master'])
     if reversessh == False:
         command = scpfile(source, dest)
     else:
@@ -143,7 +140,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             'data' : {
                     'request' : 'askinfo',
                     'port' : localport,
-                    'host' : data['package_server_ip'],
+                    'host' : data['host'],
                     'remoteport' : paramglobal['remoteport'],
                     'reversetype' : 'R',
                     'options' : 'createreversessh'
@@ -156,7 +153,11 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                     mtype = 'chat')
  
         # initialise se cp
-        command = scpfile(source, dest, portscr = localport, portdest=paramglobal['portsshmaster'])
+        command = scpfile(source,
+                          dest,
+                          portscr  = localport,
+                          portdest = paramglobal['portsshmaster'],
+                          reverbool = True)
 
         time.sleep(paramglobal['timeupreverssh'])
     print json.dumps(data,indent=4)
@@ -168,3 +169,5 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
     print z['result']
     print z['code']
     print "----------------------------"
+
+    #do reservessh halt for sessionid
