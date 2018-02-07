@@ -20,7 +20,7 @@
 # MA 02110-1301, USA.
 #
 # file plugin_downloadfile.py
-
+# pluginsrelay/plugin_downloadfile.py
 import logging
 
 from lib.utils import  simplecommand
@@ -37,8 +37,8 @@ import socket
 from random import randint
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
-plugin = { "VERSION" : "1.11", "NAME" : "downloadfile", "TYPE" : "all" }
-paramglobal = {"timeupreverssh" : 20 , "timeupdetectreverssh" : 5.0, "portsshmaster" : 22, "filetmpconfigssh" : "/tmp/tmpsshconf", "remoteport" : 22}
+plugin = { "VERSION" : "1.12", "NAME" : "downloadfile", "TYPE" : "all" }
+paramglobal = {"timeupreverssh" : 20 , "portsshmaster" : 22, "filetmpconfigssh" : "/tmp/tmpsshconf", "remoteport" : 22}
 def create_path(type ="windows", host="", ipordomain="", path=""):
     """
         warning you must enter a raw string for parameter path
@@ -90,13 +90,19 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
     logging.getLogger().debug("###################################################")
     logging.getLogger().debug("call %s from %s"%(plugin,message['from']))
     logging.getLogger().debug("###################################################")
+    
+    
+    #package_server_ip
+    
+    
+    
     print json.dumps(data,indent=4)
     reversessh = False
-    localport = paramglobal['remoteport']
+    localport = 22
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.settimeout(paramglobal['timeupdetectreverssh'])
+    sock.settimeout(5.0)
     try:
-        sock.connect((data['ipmachinepublic'], paramglobal['remoteport']))
+        sock.connect((data['ipmachine'], 22))
     except socket.error:
         localport = randint(49152, 65535)
         reversessh = True
@@ -105,27 +111,31 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         sock.close()
     #print json.dumps(data,indent=4)
     ##scp file from 2 hosts
+    if reversessh == False:
+        if str(data['osmachine']).startswith('Linux') or str(data['osmachine']).startswith('darwin'):
+            source = create_path(type = "linux", host = "root", ipordomain=data['ipmachine'], path = r'%s'%data['path_src_machine'])
+        else:
+            source = create_path(type = "windows", host = "pulse", ipordomain = data['ipmachine'], path = r'%s'%data['path_src_machine'])
 
-    if str(data['osmachine']).startswith('Linux') or str(data['osmachine']).startswith('darwin'):
-        source = create_path(type = "linux", host = "root", ipordomain=data['ipmachine'], path = r'%s'%data['path_src_machine'])
+
+        cretefileconfigrescp = "Host %s\nPort %s\nHost %s\nPort %s\n"%(data['ipmaster'], paramglobal['portsshmaster'], data['ipmachine'], localport)
+        file_put_contents(paramglobal['filetmpconfigssh'],  cretefileconfigrescp)
     else:
-        source = create_path(type = "windows", host = "pulse", ipordomain = data['ipmachine'], path = r'%s'%data['path_src_machine'])
+        if str(data['osmachine']).startswith('Linux') or str(data['osmachine']).startswith('darwin'):
+            source = create_path(type = "linux", host = "root", ipordomain="localhost", path = r'%s'%data['path_src_machine'])
+        else:
+            source = create_path(type = "windows", host = "pulse", ipordomain = "localhost", path = r'%s'%data['path_src_machine'])
+
+
+        cretefileconfigrescp = "Host %s\nPort %s\nHost %s\nPort %s\n"%(data['ipmaster'], paramglobal['portsshmaster'], "localhost", localport)
+        file_put_contents(paramglobal['filetmpconfigssh'],  cretefileconfigrescp)
+
     dest = create_path(type ="linux", host="root", ipordomain=data['ipmaster'], path=data['path_dest_master'])
 
-    cretefileconfigrescp = "Host %s\nPort %s\nHost %s\nPort %s\n"%(data['ipmaster'], paramglobal['portsshmaster'], data['ipmachine'], localport)
-    file_put_contents(paramglobal['filetmpconfigssh'],  cretefileconfigrescp)
+
     if reversessh == False:
         command = scpfile(source, dest)
     else:
-        ##install reverssh ipmachinepublic
-        if str(data['osmachine']).startswith('Linux') or str(data['osmachine']).startswith('darwin'):
-            source = create_path(type = "linux", host = "root", ipordomain=data['ipmachinepublic'], path = r'%s'%data['path_src_machine'])
-        else:
-            source = create_path(type = "windows", host = "pulse", ipordomain = data['ipmachinepublic'], path = r'%s'%data['path_src_machine'])
-        dest = create_path(type ="linux", host="root", ipordomain=data['ipars'], path=data['path_dest_master'])
-
-        cretefileconfigrescp = "Host %s\nPort %s\nHost %s\nPort %s\n"%(data['ipmaster'], paramglobal['portsshmaster'], data['ipmachinepublic'], localport)
-        file_put_contents(paramglobal['filetmpconfigssh'],  cretefileconfigrescp)
 
         datareversessh = {
             'action': 'reverse_ssh_on',
@@ -133,7 +143,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             'data' : {
                     'request' : 'askinfo',
                     'port' : localport,
-                    'host' : data['host'],
+                    'host' : data['package_server_ip'],
                     'remoteport' : paramglobal['remoteport'],
                     'reversetype' : 'R',
                     'options' : 'createreversessh'
