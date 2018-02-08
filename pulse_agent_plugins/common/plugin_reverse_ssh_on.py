@@ -18,6 +18,7 @@
 # along with Pulse 2; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA 02110-1301, USA.
+# file plugin_reverse_ssh_on.py
 
 import sys
 import os
@@ -25,9 +26,11 @@ from subprocess import Popen
 import shlex
 import json
 import subprocess
-from lib.utils import file_get_contents, file_put_contents
+from lib.utils import file_get_contents, file_put_contents, simplecommandstr
 import shutil
 import logging
+
+plugin = {"VERSION" : "1.9", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
 
 def checkresult(result):
     if result['codereturn'] != 0:
@@ -111,7 +114,7 @@ def install_keypub_ssh_relayserver(keypub):
     else:
         os.chmod(filekey, 0o644)
 
-plugin = {"VERSION" : "1.9", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
+
 
 
 def action( objetxmpp, action, sessionid, data, message, dataerreur ):
@@ -191,8 +194,6 @@ def action( objetxmpp, action, sessionid, data, message, dataerreur ):
                 remoteport = data['remoteport']
             except Exception:
                 remoteport = '22'
-            if objetxmpp.reversessh is not None:
-                print "WARNING reverse ssh exists"
             if sys.platform.startswith('linux'):
                 dd = """#!/bin/bash
                 /usr/bin/ssh -t -t -%s %s:localhost:%s -o StrictHostKeyChecking=no -i "/home/reversessh/.ssh/id_rsa" -l reversessh %s&
@@ -200,7 +201,19 @@ def action( objetxmpp, action, sessionid, data, message, dataerreur ):
                 file_put_contents("/home/reversessh/reversessh.sh",  dd)
                 os.system("chmod  u+x /home/reversessh/reversessh.sh")
                 args = shlex.split("/home/reversessh/reversessh.sh")
-                objetxmpp.reversessh = subprocess.Popen(args)
+                if not 'persistance' in data:
+                    data['persistance'] = "no"
+                if 'persistance' in data and data['persistance'].lower() != "no":
+                    logging.getLogger().info("suppression reversessh %s"%str(objetxmpp.reversesshmanage[data['persistance']]))
+                    cmd = "kill -9 %s"%str(objetxmpp.reversesshmanage[data['persistance']])
+                    logging.getLogger().info(cmd)
+                    obcmd = simplecommandstr(cmd)
+                result = subprocess.Popen(args)
+                if 'persistance' in data and data['persistance'].lower() != "no":
+                    objetxmpp.reversesshmanage[data['persistance']] = str(result.pid)
+                else:
+                    objetxmpp.reversesshmanage['other'] = str(result.pid)
+                logging.getLogger().info("creation reverse ssh pid = %s"% objetxmpp.reversesshmanage[data['persistance']])
             elif sys.platform.startswith('win'):
                 filekey = os.path.join(os.environ["ProgramFiles"], "Pulse", ".ssh", "id_rsa")
                 os_platform = os.environ['PROCESSOR_ARCHITECTURE']
@@ -218,7 +231,27 @@ def action( objetxmpp, action, sessionid, data, message, dataerreur ):
                 if not os.path.exists(os.path.join(os.environ["ProgramFiles"], "Pulse", "bin")):
                     os.makedirs(os.path.join(os.environ["ProgramFiles"], "Pulse", "bin"))
                 file_put_contents(reversesshbat,  dd)
-                objetxmpp.reversessh = subprocess.Popen(reversesshbat)
+                if not 'persistance' in data:
+                    data['persistance'] = "no"
+
+                if 'persistance' in data and data['persistance'].lower() != "no":
+                    ###autre piste.
+                    ###### voir cela powershell.exe "Stop-Process -Force (Get-NetTCPConnection -LocalPort 22).OwningProcess"
+                    #### cmd = 'wmic path win32_process Where "Commandline like \'%reversessh%\'" Call Terminate'
+                    logging.getLogger().info("suppression reversessh %s"%str(objetxmpp.reversesshmanage[data['persistance']]))
+                    cmd = "taskkill /F /PID %s"%str(objetxmpp.reversesshmanage[data['persistance']])
+                    logging.getLogger().info(cmd)
+                    obcmd = simplecommandstr(cmd)
+
+                result = subprocess.Popen(reversesshbat)
+
+                if 'persistance' in data and data['persistance'].lower() != "no":
+                    objetxmpp.reversesshmanage[data['persistance']] = str(result.pid)
+                else:
+                    objetxmpp.reversesshmanage['other'] = str(result.pid)
+                logging.getLogger().info("creation reverse ssh pid = %s"% objetxmpp.reversesshmanage[data['persistance']])
+
+
             elif sys.platform.startswith('darwin'):
                 dd = """#!/bin/bash
                 /usr/bin/ssh -t -t -%s %s:localhost:%s -o StrictHostKeyChecking=no -i "/home/reversessh/.ssh/id_rsa" -l reversessh %s&
@@ -226,11 +259,25 @@ def action( objetxmpp, action, sessionid, data, message, dataerreur ):
                 file_put_contents("/home/reversessh/reversessh.sh",  dd)
                 os.system("chmod  u+x /home/reversessh/reversessh.sh")
                 args = shlex.split("/home/reversessh/reversessh.sh")
-                objetxmpp.reversessh = subprocess.Popen(args)
+                if not 'persistance' in data:
+                    data['persistance'] = "no"
+                if 'persistance' in data and data['persistance'].lower() != "no":
+                    logging.getLogger().info("suppression reversessh %s"%str(objetxmpp.reversesshmanage[data['persistance']]))
+                    cmd = "kill -9 %s"%str(objetxmpp.reversesshmanage[data['persistance']])
+                    logging.getLogger().info(cmd)
+                    obcmd = simplecommandstr(cmd)
+                result = subprocess.Popen(args)
+                if 'persistance' in data and data['persistance'].lower() != "no":
+                    objetxmpp.reversesshmanage[data['persistance']] = str(result.pid)
+                else:
+                    objetxmpp.reversesshmanage['other'] = str(result.pid)
+                logging.getLogger().info("creation reverse ssh pid = %s"% objetxmpp.reversesshmanage[data['persistance']])
             else:
                 dd=""
         elif data['options'] == "stopreversessh":
             if sys.platform.startswith('win'):
+                ### voir cela powershell.exe "Stop-Process -Force (Get-NetTCPConnection -LocalPort 22).OwningProcess"
+                
                 cmd = 'wmic path win32_process Where "Commandline like \'%reversessh%\'" Call Terminate'
                 subprocess.Popen(cmd)
             else:

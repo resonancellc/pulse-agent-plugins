@@ -143,7 +143,8 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                     'host' : data['host'],
                     'remoteport' : paramglobal['remoteport'],
                     'reversetype' : 'R',
-                    'options' : 'createreversessh'
+                    'options' : 'createreversessh',
+                    'persistance' : 'Downloadfile'
             },
             'ret' : 0,
             'base64' : False }
