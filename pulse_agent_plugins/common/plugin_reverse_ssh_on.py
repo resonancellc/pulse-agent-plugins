@@ -30,7 +30,7 @@ from lib.utils import file_get_contents, file_put_contents, simplecommandstr
 import shutil
 import logging
 
-plugin = {"VERSION" : "1.9", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
+plugin = {"VERSION" : "2.0", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
 
 def checkresult(result):
     if result['codereturn'] != 0:

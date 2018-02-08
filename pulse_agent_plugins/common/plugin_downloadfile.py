@@ -37,7 +37,7 @@ import socket
 from random import randint
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
-plugin = { "VERSION" : "1.13", "NAME" : "downloadfile", "TYPE" : "all" }
+plugin = { "VERSION" : "1.14", "NAME" : "downloadfile", "TYPE" : "all" }
 paramglobal = {"timeupreverssh" : 20 , "portsshmaster" : 22, "filetmpconfigssh" : "/tmp/tmpsshconf", "remoteport" : 22}
 def create_path(type ="windows", host="", ipordomain="", path=""):
     """
