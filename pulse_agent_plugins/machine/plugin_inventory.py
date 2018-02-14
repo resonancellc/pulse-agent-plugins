@@ -34,16 +34,16 @@ if sys.platform.startswith('win'):
 DEBUGPULSEPLUGIN = 25
 ERRORPULSEPLUGIN = 40
 WARNINGPULSEPLUGIN = 30
-plugin = {"VERSION": "1.4", "NAME" :"inventory", "TYPE":"machine"}
+plugin = {"VERSION": "1.6", "NAME" :"inventory", "TYPE":"machine"}
 
 @pluginprocess
 def action(xmppobject, action, sessionid, data, message, dataerreur, result):
     logging.log(DEBUGPULSEPLUGIN,"plugin %s"% (plugin))
     if sys.platform.startswith('linux'):
         try:
-            fileinvantaire = os.path.join("/","tmp","inventory.txt")
-            simplecommand("fusioninventory-agent  --stdout > %s"%fileinvantaire)
-            Fichier = open(fileinvantaire, 'r')
+            inventoryfile = os.path.join("/","tmp","inventory.txt")
+            simplecommand("fusioninventory-agent --local=%s"%inventoryfile)
+            Fichier = open(inventoryfile, 'r')
             result['data']['inventory'] = Fichier.read()
             Fichier.close()
             result['data']['inventory'] = base64.b64encode(zlib.compress(result['data']['inventory'], 9))
@@ -109,10 +109,10 @@ def action(xmppobject, action, sessionid, data, message, dataerreur, result):
             raise
     elif sys.platform.startswith('darwin'):
         try:
-            fileinvantaire = os.path.join("/","tmp","inventory.txt")
+            inventoryfile = os.path.join("/","tmp","inventory.txt")
             ## attention this command has been tested on only 1 Mac
-            simplecommand("/opt/fusioninventory-agent/bin/fusioninventory-agent --local=%s"%fileinvantaire)
-            Fichier = open(fileinvantaire, 'r')
+            simplecommand("/opt/fusioninventory-agent/bin/fusioninventory-inventory > %s"%inventoryfile)
+            Fichier = open(inventoryfile, 'r')
             result['data']['inventory'] = Fichier.read()
             Fichier.close()
             result['data']['inventory'] = base64.b64encode(zlib.compress(result['data']['inventory'], 9))

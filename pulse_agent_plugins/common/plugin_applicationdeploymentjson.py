@@ -18,6 +18,9 @@
 # along with Pulse 2; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA 02110-1301, USA.
+# file  plugin_applicationdeploymentjson.py
+
+
 import json
 import sys, os
 from lib.managepackage import managepackage, search_list_of_deployment_packages
@@ -26,13 +29,14 @@ from lib.grafcetdeploy import grafcet
 import logging
 import pycurl
 import platform
-from lib.utils import save_back_to_deploy, cleanbacktodeploy, simplecommandstr, get_keypub_ssh
+#from lib.utils import save_back_to_deploy, cleanbacktodeploy, simplecommandstr, get_keypub_ssh
+from lib.utils import save_back_to_deploy, cleanbacktodeploy, simplecommandstr
 import copy
-
+import traceback
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
 
-plugin = {"VERSION" : "2.5", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
+plugin = {"VERSION" : "2.8", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
 
 
 """
@@ -53,7 +57,7 @@ def cleandescriptor( datasend ):
         except KeyError:
             pass
         try:
-            del datasend['descriptor']['Macos']
+            del datasend['descriptor']['mac']
         except KeyError:
             pass
         try:
@@ -68,7 +72,7 @@ def cleandescriptor( datasend ):
         except KeyError:
             pass
         try:
-            del datasend['descriptor']['Macos']
+            del datasend['descriptor']['mac']
         except KeyError:
             pass
         try:
@@ -87,9 +91,9 @@ def cleandescriptor( datasend ):
         except KeyError:
             pass
         try:
-            datasend['descriptor']['sequence'] = datasend['descriptor']['Macos']['sequence']
+            datasend['descriptor']['sequence'] = datasend['descriptor']['mac']['sequence']
             #del datasend['descriptor']['Macos']['sequence']
-            del datasend['descriptor']['Macos']
+            del datasend['descriptor']['mac']
         except:
             return False
     datasend['typeos'] = sys.platform
@@ -146,13 +150,17 @@ def initialisesequence(datasend, objectxmpp, sessionid ):
     grafcet(objectxmpp, datasend)
     logging.getLogger().debug("outing graphcet phase1")
 
-def curlgetdownloadfile( destfile, urlfile, insecure = True):
+def curlgetdownloadfile( destfile, urlfile, insecure = True, limit_rate_ko= None):
     # As long as the file is opened in binary mode, both Python 2 and Python 3
     # can write response body to it without decoding.
     with open(destfile, 'wb') as f:
         c = pycurl.Curl()
+        urlfile=urlfile.replace(" ", "%20")
         c.setopt(c.URL, urlfile)
         c.setopt(c.WRITEDATA, f)
+        if limit_rate_ko is not None and limit_rate_ko != '' and int(limit_rate_ko) > 0:
+            # limit_rate_ko en octed in curl
+            c.setopt(c.MAX_RECV_SPEED_LARGE, int(limit_rate_ko)*1024)
         if insecure :
             # option equivalent a friser de --insecure
             c.setopt(pycurl.SSL_VERIFYPEER, 0)
@@ -170,7 +178,15 @@ def recuperefile(datasend, objectxmpp, ippackage, portpackage):
             dest = os.path.join(datasend['data']['pathpackageonmachine'], filepackage)
             urlfile = curlurlbase + filepackage
             try:
-                objectxmpp.xmpplog('download  file : %s Package : %s'%( filepackage, datasend['data']['name']),
+                if 'limit_rate_ko' in datasend['data']['descriptor']['info'] and \
+                                datasend['data']['descriptor']['info']['limit_rate_ko'] != "" and\
+                                    int(datasend['data']['descriptor']['info']['limit_rate_ko'])> 0:
+                    limit_rate_ko = datasend['data']['descriptor']['info']['limit_rate_ko']
+                    msg = 'download  file : %s Package : %s <span style="font-weight: bold;color : orange;">[transfert rate %s ko]</span>'%( filepackage, datasend['data']['name'],limit_rate_ko)
+                else:
+                    limit_rate_ko = ""
+                    msg = 'download  file : %s Package : %s'%( filepackage, datasend['data']['name'])
+                objectxmpp.xmpplog( msg,
                                     type = 'deploy',
                                     sessionname = datasend['sessionid'],
                                     priority = -1,
@@ -182,9 +198,11 @@ def recuperefile(datasend, objectxmpp, ippackage, portpackage):
                                     date = None ,
                                     fromuser = datasend['data']['advanced']['login'],
                                     touser = "")
-                curlgetdownloadfile( dest, urlfile)
-            except Exception:
-                objectxmpp.xmpplog('<span style="font-weight: bold;color : red;">STOP DEPLOY ON ERROR : download curl [%s] package : %s</span>'%(curlurlbase),
+                curlgetdownloadfile( dest, urlfile, insecure = True, limit_rate_ko= limit_rate_ko)
+            except Exception as e:
+                traceback.print_exc(file=sys.stdout)
+                logging.getLogger().debug(str(e))
+                objectxmpp.xmpplog('<span style="font-weight: bold;color : red;">STOP DEPLOY ON ERROR : download curl [%s] file package : %s</span>'%(curlurlbase, filepackage),
                                     type = 'deploy',
                                     sessionname = datasend['sessionid'],
                                     priority = -1,
@@ -764,7 +782,8 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         #determine methode transfert
         if 'descriptor' in data and 'info' in data['descriptor'] and 'methodetransfert' in data['descriptor']['info']:
             data['methodetransfert'] = data['descriptor']['info']['methodetransfert']
-
+        if 'descriptor' in data and 'info' in data['descriptor'] and 'limit_rate_ko' in data['descriptor']['info']:
+            data['limit_rate_ko'] = data['descriptor']['info']['limit_rate_ko']
 
         if 'transfert' in data:
             if data['transfert'] == True:
@@ -944,22 +963,30 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                             logging.getLogger().debug("TRANSFERT PACKAGE from %s"%pathin)
                             #The rsync command will have this form
                             #cmd = "rsync --delete -e \"ssh -o IdentityFile=/root/.ssh/id_rsa -o StrictHostKeyChecking=no -o Batchmode=yes -o PasswordAuthentication=no -o ServerAliveInterval=10 -o CheckHostIP=no -o ConnectTimeout=10\"   -av %s/ %s@%s:\"%s/\""%(pathin, "pulse", data_in_session['ipmachine'], pathout)
-                            cmd = "scp -r -o IdentityFile=/root/.ssh/id_rsa "\
-                                    "-o StrictHostKeyChecking=no "\
-                                    "-o UserKnownHostsFile=/dev/null "\
-                                    "-o Batchmode=yes "\
-                                    "-o PasswordAuthentication=no "\
-                                    "-o ServerAliveInterval=10 "\
-                                    "-o CheckHostIP=no "\
-                                    "-o ConnectTimeout=10 "\
+                            if 'limit_rate_ko' in data_in_session and \
+                                data_in_session['limit_rate_ko'] != "" and\
+                                    int(data_in_session['limit_rate_ko'])> 0:
+                                cmdpre = "scp -r -l %s "%data_in_session['limit_rate_ko']
+                                msg = "push transfert package :%s to %s <span style='font-weight: bold;color : orange;'> [transfert rate %s ko]</span>"%(data_in_session['name'],data_in_session['jidmachine'], data_in_session['limit_rate_ko'])
+                            else:
+                                cmdpre = "scp -r "
+                                msg = "push transfert package :%s to %s"%(data_in_session['name'],data_in_session['jidmachine'])
+                            option = "-o IdentityFile=/root/.ssh/id_rsa "\
+                                     "-o StrictHostKeyChecking=no "\
+                                     "-o UserKnownHostsFile=/dev/null "\
+                                     "-o Batchmode=yes "\
+                                     "-o PasswordAuthentication=no "\
+                                     "-o ServerAliveInterval=10 "\
+                                     "-o CheckHostIP=no "\
+                                     "-o ConnectTimeout=10 "\
                                         "%s %s@%s:\"\\\"%s\\\"\""%( pathin,
                                                         "pulse",
                                                         data_in_session['ipmachine'],
                                                         data_in_session['folders_packages'])
-
+                            cmd = cmdpre + option
                             logging.getLogger().debug("tranfert cmd :\n %s"%cmd)
                             obcmd = simplecommandstr(cmd)
-                            objectxmpp.xmpplog("push transfert package :%s to %s"%(data_in_session['name'],data_in_session['jidmachine'] ),
+                            objectxmpp.xmpplog( msg,
                                                 type = 'deploy',
                                                 sessionname = sessionid,
                                                 priority = -1,

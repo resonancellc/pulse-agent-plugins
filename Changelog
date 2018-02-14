@@ -1,7 +1,8 @@
 pulse-agent-plugins 1.4
 =========================
 
- * 
+ * Fix deployment on MacOS
+ * Fix inventory on MacOS
 
 
 pulse-agent-plugins 1.3
