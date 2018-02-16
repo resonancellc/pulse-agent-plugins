@@ -20,7 +20,7 @@
 # MA 02110-1301, USA.
 #
 # file plugin_downloadfile.py
-
+# pluginsrelay/plugin_downloadfile.py
 import logging
 
 from lib.utils import  simplecommand
@@ -37,7 +37,7 @@ import socket
 from random import randint
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
-plugin = { "VERSION" : "1.61", "NAME" : "downloadfile", "TYPE" : "all" }
+plugin = { "VERSION" : "1.63", "NAME" : "downloadfile", "TYPE" : "all" }
 paramglobal = {"timeupreverssh" : 20 , "portsshmaster" : 22, "filetmpconfigssh" : "/tmp/tmpsshconf", "remoteport" : 22}
 def create_path(type ="windows", host="", ipordomain="", path=""):
     """
@@ -48,6 +48,7 @@ def create_path(type ="windows", host="", ipordomain="", path=""):
         return ""
     if type == "windows":
         if host != "" and ipordomain != "":
+            print host,ipordomain,path
             return "%s@%s:\"\\\"%s\\\"\""%( host,
                                             ipordomain,
                                             path)
@@ -61,8 +62,8 @@ def create_path(type ="windows", host="", ipordomain="", path=""):
         else:
             return "\"%s\""%(path)
 
-def scpfile(scr, dest, portscr = None, portdest = None):
-    if portscr is  None or portdest is None:
+def scpfile(scr, dest, reverbool=False):
+    if reverbool:
         # version fichier de configuration.
         cmdpre = "scp -rp3 -F %s "\
                     "-o IdentityFile=/root/.ssh/id_rsa "\
@@ -90,6 +91,8 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
     logging.getLogger().debug("###################################################")
     logging.getLogger().debug("call %s from %s"%(plugin,message['from']))
     logging.getLogger().debug("###################################################")
+
+    print json.dumps(data,indent=4)
     reversessh = False
     localport = 22
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -102,7 +105,10 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         #send create reverse ssh to machine
     finally:
         sock.close()
-    if reversessh:
+    #print json.dumps(data,indent=4)
+    ##scp file from 2 hosts
+
+    if reversessh == True:
         objectxmpp.xmpplog( 'Reverse ssh for nat machine %s'% data['hostname'],
                             type = 'noset',
                             sessionname = sessionid,
@@ -115,7 +121,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                             date = None ,
                             fromuser = "",
                             touser = "")
-    ##scp file from 2 hosts
+
     if reversessh == False:
         if str(data['osmachine']).startswith('Linux') or str(data['osmachine']).startswith('darwin'):
             source = create_path(type = "linux", host = "root", ipordomain=data['ipmachine'], path = r'%s'%data['path_src_machine'])
@@ -135,19 +141,21 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         cretefileconfigrescp = "Host %s\nPort %s\nHost %s\nPort %s\n"%(data['ipmaster'], paramglobal['portsshmaster'], "localhost", localport)
         file_put_contents(paramglobal['filetmpconfigssh'],  cretefileconfigrescp)
 
-    dest = create_path(type ="linux", host="root", ipordomain=data['ipmaster'], path=data['path_dest_master'])
-
-
+    dest = create_path(type ="linux",
+                       host="root",
+                       ipordomain=data['ipmaster'],
+                       path=data['path_dest_master'])
     if reversessh == False:
         command = scpfile(source, dest)
     else:
+
         datareversessh = {
             'action': 'reverse_ssh_on',
             'sessionid': sessionid,
             'data' : {
                     'request' : 'askinfo',
                     'port' : localport,
-                    'host' : data['package_server_ip'],
+                    'host' : data['host'],
                     'remoteport' : paramglobal['remoteport'],
                     'reversetype' : 'R',
                     'options' : 'createreversessh',
@@ -155,17 +163,19 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             },
             'ret' : 0,
             'base64' : False }
+
         objectxmpp.send_message(mto = message['to'],
                     mbody = json.dumps(datareversessh),
                     mtype = 'chat')
  
         # initialise se cp
-        command = scpfile(source, dest, portscr = localport, portdest=paramglobal['portsshmaster'])
+        command = scpfile(source,
+                          dest,
+                          reverbool = True)
 
         time.sleep(paramglobal['timeupreverssh'])
     print json.dumps(data,indent=4)
     print "----------------------------"
-
     print "exec command\n %s"%command
     print "----------------------------"
     print "----------------------------"
@@ -184,7 +194,8 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
     z = simplecommand(command)
     print z['result']
     print z['code']
-    
+    print "----------------------------"
+
     if z['code'] != 0:
         objectxmpp.xmpplog( 'error Copy file %s from machine %s to Master'%( os.path.basename(data['path_src_machine']), data['hostname']),
                                 type = 'noset',
