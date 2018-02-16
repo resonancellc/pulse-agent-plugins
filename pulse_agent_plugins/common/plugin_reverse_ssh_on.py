@@ -30,7 +30,7 @@ from lib.utils import file_get_contents, file_put_contents, simplecommandstr
 import shutil
 import logging
 
-plugin = {"VERSION" : "2.1", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
+plugin = {"VERSION" : "2.2", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
 
 def checkresult(result):
     if result['codereturn'] != 0:
@@ -209,7 +209,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur ):
                 remoteport = '22'
 
             objectxmpp.xmpplog( 'create reverse ssh on machine : %s '\
-                                  'type reverse : %s remote port :%s'%(message['to'], reversetype, remoteport),
+                                  'type reverse : %s port :%s'%(message['to'], reversetype, data['port']),
                                 type = 'noset',
                                 sessionname = sessionid,
                                 priority = -1,
@@ -254,18 +254,19 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur ):
                 else:
                     objectxmpp.reversesshmanage['other'] = str(result.pid)
                 logging.getLogger().info("creation reverse ssh pid = %s"% objectxmpp.reversesshmanage[data['persistance']])
-                objectxmpp.xmpplog(  'create reverse ssh pid : %s '%(str(result.pid)),
-                                    type = 'noset',
-                                    sessionname = sessionid,
-                                    priority = -1,
-                                    action = "",
-                                    who = objectxmpp.boundjid.bare,
-                                    how = "",
-                                    why = "",
-                                    module = "Notify | Reversessh",
-                                    date = None ,
-                                    fromuser = "",
-                                    touser = "")
+                objectxmpp.xmpplog( 'create reverse ssh on machine : %s '\
+                                  'type reverse : %s port :%s'%(message['to'], reversetype, data['port']),
+                                type = 'noset',
+                                sessionname = sessionid,
+                                priority = -1,
+                                action = "",
+                                who = objectxmpp.boundjid.bare,
+                                how = "",
+                                why = "",
+                                module = "Notify | Packaging | Reversessh",
+                                date = None ,
+                                fromuser = "",
+                                touser = "")
             elif sys.platform.startswith('win'):
                 filekey = os.path.join(os.environ["ProgramFiles"], "Pulse", ".ssh", "id_rsa")
                 os_platform = os.environ['PROCESSOR_ARCHITECTURE']
@@ -315,19 +316,19 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur ):
                 else:
                     objectxmpp.reversesshmanage['other'] = str(result.pid)
                 logging.getLogger().info("creation reverse ssh pid = %s"% objectxmpp.reversesshmanage[data['persistance']])
-                objectxmpp.xmpplog(  "creation reverse ssh pid = %s"% objectxmpp.reversesshmanage[data['persistance']],
-                                    type = 'noset',
-                                    sessionname = sessionid,
-                                    priority = -1,
-                                    action = "",
-                                    who = objectxmpp.boundjid.bare,
-                                    how = "",
-                                    why = "",
-                                    module = "Notify | Reversessh",
-                                    date = None ,
-                                    fromuser = "",
-                                    touser = "")
-
+                objectxmpp.xmpplog( 'create reverse ssh on machine : %s '\
+                                  'type reverse : %s port :%s'%(message['to'], reversetype, data['port']),
+                                type = 'noset',
+                                sessionname = sessionid,
+                                priority = -1,
+                                action = "",
+                                who = objectxmpp.boundjid.bare,
+                                how = "",
+                                why = "",
+                                module = "Notify | Packaging | Reversessh",
+                                date = None ,
+                                fromuser = "",
+                                touser = "")
 
             elif sys.platform.startswith('darwin'):
                 dd = """#!/bin/bash
