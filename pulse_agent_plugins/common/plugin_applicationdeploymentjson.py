@@ -24,7 +24,7 @@
 import json
 import sys, os
 from lib.managepackage import managepackage, search_list_of_deployment_packages
-
+import socket
 from lib.grafcetdeploy import grafcet
 import logging
 import pycurl
@@ -779,11 +779,34 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         logging.getLogger().debug("###################################################")
         logging.getLogger().debug("##############AGENT RELAY SERVER###################")
         logging.getLogger().debug("###################################################")
+        if 'advanced' in data and 'limit_rate_ko' in data['advanced'] :
+            if data['advanced']['limit_rate_ko'] != 0:
+                #limit_rate_ko in avansed deploy
+                data['descriptor']['info']['limit_rate_ko']= str(data['advanced']['limit_rate_ko'])
+                objectxmpp.xmpplog('limite rade avanced deploy : %s'%data['descriptor']['info']['limit_rate_ko'],
+                                    type = 'deploy',
+                                    sessionname = sessionid,
+                                    priority = -1,
+                                    action = "",
+                                    who = objectxmpp.boundjid.bare,
+                                    how = "",
+                                    why = "",
+                                    module = "Deployment | Transfert | Notify",
+                                    date = None ,
+                                    fromuser = data['login'],
+                                    touser = "")
         #determine methode transfert
         if 'descriptor' in data and 'info' in data['descriptor'] and 'methodetransfert' in data['descriptor']['info']:
             data['methodetransfert'] = data['descriptor']['info']['methodetransfert']
         if 'descriptor' in data and 'info' in data['descriptor'] and 'limit_rate_ko' in data['descriptor']['info']:
             data['limit_rate_ko'] = data['descriptor']['info']['limit_rate_ko']
+
+
+
+
+
+
+
 
         if 'transfert' in data:
             if data['transfert'] == True:
@@ -825,6 +848,32 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     date = None ,
                                     fromuser = data['login'],
                                     touser = "")
+
+        #verify if possible methode of transfert.
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(5.0)
+        try:
+            sock.connect((data['ipmachine'], 22))
+        except socket.error:
+            if 'transfert' in data  and data['transfert'] == True \
+                    and 'methodetransfert' in data \
+                        and data['methodetransfert'] != "pullcurl":
+                data['methodetransfert'] = "pullcurl"
+                objectxmpp.xmpplog('Warning push methode impossible for machine nat: force pull curl method',
+                                    type = 'deploy',
+                                    sessionname = sessionid,
+                                    priority = -1,
+                                    action = "",
+                                    who = objectxmpp.boundjid.bare,
+                                    how = "",
+                                    why = "",
+                                    module = "Deployment | Transfert | Notify",
+                                    date = None ,
+                                    fromuser = data['login'],
+                                    touser = "")
+        finally:
+            sock.close()
+
 
         if 'transfert' in data \
             and data['transfert'] == True\
