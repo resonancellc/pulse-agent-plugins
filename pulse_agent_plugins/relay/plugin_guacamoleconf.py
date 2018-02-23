@@ -108,12 +108,16 @@ def action(objetxmpp, action, sessionid, data, message, dataerreur, result):
             db.commit()
             cursor.execute(insertparameter(result['data']['connection'][proto.upper()], 'color-depth', '24'))
             db.commit()
-            if listen_timeout:
+            try:
                 cursor.execute(insertparameter(result['data']['connection'][proto.upper()], 'listen-timeout', listen_timeout))
                 db.commit()
-            if reverse_connect:
+            except NameError:
+                pass
+            try:
                 cursor.execute(insertparameter(result['data']['connection'][proto.upper()], 'reverse-connect', reverse_connect))
                 db.commit()
+            except NameError:
+                pass
     except MySQLdb.Error, e:
         db.close()
         dataerreur['data']['msg'] = "MySQL Error: %s" % str(e)
