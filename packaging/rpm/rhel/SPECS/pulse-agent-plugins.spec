@@ -52,6 +52,7 @@ plugins for pulse xmppmaster
 
 %files -n pulseagent-plugins-relay
 %python2_sitelib/pulse_xmpp_agent/pluginsrelay
+%python2_sitelib/pulse_xmpp_agent/descriptor_scheduler_relay
 %_var/lib/pulse2/clients/config/
 
 #--------------------------------------------------------------------
@@ -68,6 +69,7 @@ plugins for pulse xmppmaster
 %files -n pulseagent-plugins-machine
 %_sysconfdir/pulse-xmpp-agent/inventory.ini
 %python2_sitelib/pulse_xmpp_agent/pluginsmachine
+%python2_sitelib/pulse_xmpp_agent/descriptor_scheduler_machine
 
 #--------------------------------------------------------------------
 
