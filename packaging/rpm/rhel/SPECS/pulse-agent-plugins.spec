@@ -34,6 +34,7 @@ plugins for pulse xmppmaster
 
 %files -n pulse-xmppmaster-agentplugins
 %_var/lib/pulse2/xmpp_baseplugin
+%_var/lib/pulse2/xmpp_basepluginscheduler
 %python2_sitelib/pulse_agent_plugins-1.?-py2.7.egg-info
 
 #--------------------------------------------------------------------
@@ -86,6 +87,9 @@ mkdir -p %buildroot%_var/lib/pulse2/xmpp_baseplugin
 cp -frv pulse_agent_plugins/common/* %buildroot%_var/lib/pulse2/xmpp_baseplugin
 cp -frv pulse_agent_plugins/machine/* %buildroot%_var/lib/pulse2/xmpp_baseplugin
 cp -frv pulse_agent_plugins/relay/* %buildroot%_var/lib/pulse2/xmpp_baseplugin
+
+
+mkdir -p %buildroot%_var/lib/pulse2/xmpp_basepluginscheduler
 
 mkdir -p %buildroot%_var/lib/pulse2/clients/config
 cp pulse_agent_plugins/config/guacamoleconf.ini.in %buildroot%_var/lib/pulse2/clients/config
