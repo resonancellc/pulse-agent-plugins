@@ -6,9 +6,9 @@ Summary:	Pulse Agent Plugins
 Name:		pulse-agent-plugins
 Version:	1.3
 %if ! %use_git
-Release:        19%{?dist}
+Release:        20%{?dist}
 %else
-Release:        19.%git.1%{?dist}
+Release:        20.%git.1%{?dist}
 %endif
 Source0:        %name-%version.tar.gz
 License:	MIT
