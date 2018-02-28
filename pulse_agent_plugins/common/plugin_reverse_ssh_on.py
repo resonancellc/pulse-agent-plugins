@@ -30,7 +30,7 @@ from lib.utils import file_get_contents, file_put_contents, simplecommandstr
 import shutil
 import logging
 
-plugin = {"VERSION" : "2.3", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
+plugin = {"VERSION" : "2.4", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
 
 def checkresult(result):
     if result['codereturn'] != 0:
@@ -337,9 +337,9 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur ):
                 dd = """#!/bin/bash
                 /usr/bin/ssh -t -t -%s %s:localhost:%s -o StrictHostKeyChecking=no -i "/home/reversessh/.ssh/id_rsa" -l reversessh %s&
                 """%(reversetype, data['port'], remoteport, data['relayserverip'])
-                file_put_contents("/home/reversessh/reversessh.sh",  dd)
-                os.system("chmod  u+x /home/reversessh/reversessh.sh")
-                args = shlex.split("/home/reversessh/reversessh.sh")
+                file_put_contents("/Users/reversessh/reversessh.sh",  dd)
+                os.system("chmod u+x /Users/reversessh/reversessh.sh")
+                args = shlex.split("/Users/reversessh/reversessh.sh")
                 if not 'persistance' in data:
                     data['persistance'] = "no"
                 if 'persistance' in data and data['persistance'].lower() != "no":
