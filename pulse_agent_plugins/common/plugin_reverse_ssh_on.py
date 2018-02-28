@@ -30,7 +30,7 @@ from lib.utils import file_get_contents, file_put_contents, simplecommandstr
 import shutil
 import logging
 
-plugin = {"VERSION" : "2.2", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
+plugin = {"VERSION" : "2.3", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
 
 def checkresult(result):
     if result['codereturn'] != 0:
@@ -44,7 +44,8 @@ def genratekeyforARSreverseSSH():
     if not os.path.isfile(os.path.join("/","var","lib","pulse2","clients","reversessh",".ssh","id_rsa")) or not \
         os.path.isfile(os.path.join("/","var","lib","pulse2","clients","reversessh",".ssh","id_rsa.pub")):
         os.system("useradd reversessh -md /var/lib/pulse2/clients/reversessh -s /bin/rbash")
-        os.makedirs("/var/lib/pulse2/clients/reversessh/.ssh/")
+        if not os.path.isdir(os.path.join("/","var","lib","pulse2","clients","reversessh",".ssh")):
+            os.makedirs(os.path.join("/","var","lib","pulse2","clients","reversessh",".ssh"))
         os.system("ssh-keygen -b 2048 -t rsa -f /var/lib/pulse2/clients/reversessh/.ssh/id_rsa -q -N \"\"")
         shutil.copyfile("/var/lib/pulse2/clients/reversessh/.ssh/id_rsa.pub", "/var/lib/pulse2/clients/reversessh/.ssh/authorized_keys")
         os.system("chown -R reversessh: /var/lib/pulse2/clients/reversessh/")
@@ -72,7 +73,8 @@ def install_keypriv_ssh_relayserver(keypriv):
     elif sys.platform.startswith('win'):
         filekey = os.path.join(os.environ["ProgramFiles"], "Pulse", ".ssh", "id_rsa")
     elif sys.platform.startswith('darwin'):
-        os.makedirs("/Users/reversessh/.ssh")
+        if not os.path.isdir(os.path.join("/","Users","reversessh",".ssh")):
+            os.makedirs(os.path.join("/","Users","reversessh",".ssh"))
         filekey = os.path.join("/","Users","reversessh",".ssh", "id_rsa")
     else:
         return
@@ -97,7 +99,8 @@ def install_keypub_ssh_relayserver(keypub):
     elif sys.platform.startswith('win'):
         filekey = os.path.join(os.environ["ProgramFiles"], "Pulse", ".ssh", "id_rsa.pub")
     elif sys.platform.startswith('darwin'):
-        os.makedirs("/Users/reversessh/.ssh")
+        if not os.path.isdir(os.path.join("/","Users","reversessh",".ssh")):
+            os.makedirs(os.path.join("/","Users","reversessh",".ssh"))
         filekey = os.path.join("/","Users","reversessh",".ssh", "id_rsa.pub")
     else:
         return
@@ -196,7 +199,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur ):
                                     touser = "")
 
         if data['options'] == "createreversessh":
-            
+
             install_keypriv_ssh_relayserver(data['key'])
             install_keypub_ssh_relayserver(data['keypub'])
             try:
@@ -380,7 +383,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur ):
         elif data['options'] == "stopreversessh":
             if sys.platform.startswith('win'):
                 ### voir cela powershell.exe "Stop-Process -Force (Get-NetTCPConnection -LocalPort 22).OwningProcess"
-                
+
                 cmd = 'wmic path win32_process Where "Commandline like \'%reversessh%\'" Call Terminate'
                 subprocess.Popen(cmd)
             else:
