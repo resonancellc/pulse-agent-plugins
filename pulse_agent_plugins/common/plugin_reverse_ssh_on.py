@@ -30,7 +30,7 @@ from lib.utils import file_get_contents, file_put_contents, simplecommandstr
 import shutil
 import logging
 
-plugin = {"VERSION" : "2.4", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
+plugin = {"VERSION" : "2.5", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
 
 def checkresult(result):
     if result['codereturn'] != 0:
@@ -335,7 +335,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur ):
 
             elif sys.platform.startswith('darwin'):
                 dd = """#!/bin/bash
-                /usr/bin/ssh -t -t -%s %s:localhost:%s -o StrictHostKeyChecking=no -i "/home/reversessh/.ssh/id_rsa" -l reversessh %s&
+                /usr/bin/ssh -t -t -%s %s:localhost:%s -o StrictHostKeyChecking=no -i "/Users/reversessh/.ssh/id_rsa" -l reversessh %s&
                 """%(reversetype, data['port'], remoteport, data['relayserverip'])
                 file_put_contents("/Users/reversessh/reversessh.sh",  dd)
                 os.system("chmod u+x /Users/reversessh/reversessh.sh")
