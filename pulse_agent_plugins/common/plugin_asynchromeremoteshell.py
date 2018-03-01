@@ -25,14 +25,14 @@ import traceback
 import sys, os
 import logging
 
-plugin = {"VERSION": "1.0", "NAME" : "asynchromeremoteshell", "TYPE" : "all"}
+plugin = {"VERSION": "1.1", "NAME" : "asynchromeremoteshell", "TYPE" : "all"}
 
 
 def action(objectxmpp, action, sessionid, data, message, dataerreur):
-    logging.getLogger().debug("###################################################")
-    logging.getLogger().debug("call %s from %s"%(plugin,message['from']))
-    logging.getLogger().debug("###################################################")
-    print json.dumps(data, indent =4);
+    logging.getLogger().info("###################################################")
+    logging.getLogger().info("call %s from %s"%(plugin,message['from']))
+    logging.getLogger().info("###################################################")
+    
     result = {
                     'action': "result%s"%action,
                     'sessionid': sessionid,
@@ -42,13 +42,18 @@ def action(objectxmpp, action, sessionid, data, message, dataerreur):
                 }
     try:
         obj = simplecommand(data['command'])
+        logging.getLogger().info("encodage result : %s"%sys.stdout.encoding)
 
-        ####obj['result'] = [x.rstrip('\n') for x in  obj['result'] if x != "\n"]
         result['ret'] = 0
         result['data']['code'] = obj['code']
-        result['data']['result'] = [ x.strip(os.linesep) for x in obj['result'] ]
+        try:
+            result['data']['result'] = [ x.decode('utf-8', 'ignore').strip(os.linesep) for x in obj['result'] ]
+        except Exception as e:
+            logging.getLogger().error("error decodage result")
+            logging.getLogger().error(str(e))
+            result['data']['result'] = [ x.decode('latin-1').strip(os.linesep) for x in obj['result'] ]
         objectxmpp.send_message(    mto=message['from'],
-                                    mbody=json.dumps(result, sort_keys=True, indent=4),
+                                    mbody=json.dumps(result, indent=4),
                                     mtype='chat')
     except Exception as e:
         logging.getLogger().error(str(e))
