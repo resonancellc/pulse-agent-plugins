@@ -30,7 +30,7 @@ from lib.utils import file_get_contents, file_put_contents, simplecommandstr
 import shutil
 import logging
 
-plugin = {"VERSION" : "2.5", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
+plugin = {"VERSION" : "2.6", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
 
 def checkresult(result):
     if result['codereturn'] != 0:
@@ -365,6 +365,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur ):
                     objectxmpp.reversesshmanage[data['persistance']] = str(result.pid)
                 else:
                     objectxmpp.reversesshmanage['other'] = str(result.pid)
+                    data['persistance'] = "no"
                 logging.getLogger().info("creation reverse ssh pid = %s"% objectxmpp.reversesshmanage[data['persistance']])
                 objectxmpp.xmpplog(  "creation reverse ssh pid = %s"% objectxmpp.reversesshmanage[data['persistance']],
                                     type = 'noset',
