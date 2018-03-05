@@ -25,7 +25,7 @@ import sys
 import time
 import logging
 
-plugin = {"VERSION" : "1.3", "NAME" : "guacamole",  "TYPE" : "all"}
+plugin = {"VERSION" : "1.4", "NAME" : "guacamole",  "TYPE" : "all"}
 
 
 def action( xmppobject, action, sessionid, data, message, dataerreur ):
@@ -121,6 +121,13 @@ def action( xmppobject, action, sessionid, data, message, dataerreur ):
             if sys.platform.startswith('win'):
                 try:
                     simplecommand("\"%ProgramFiles(x86)%\\TightVNC\\tvnserver.exe\" -controlservice -connect localhost")
+                except Exception, e:
+                    logging.getLogger().error( "Error: %s" % str(e))
+                    traceback.print_exc(file=sys.stdout)
+                    raise
+            if sys.platform.startswith('darwin'):
+                try:
+                    simplecommand("\"/Applications/Vine Server.app/Contents/MacOS/OSXvnc-server\" -connectHost localhost")
                 except Exception, e:
                     logging.getLogger().error( "Error: %s" % str(e))
                     traceback.print_exc(file=sys.stdout)
