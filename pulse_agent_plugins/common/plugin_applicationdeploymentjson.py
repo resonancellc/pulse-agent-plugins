@@ -36,7 +36,7 @@ import traceback
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
 
-plugin = {"VERSION" : "2.8", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
+plugin = {"VERSION" : "2.9", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
 
 
 """
@@ -801,13 +801,6 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         if 'descriptor' in data and 'info' in data['descriptor'] and 'limit_rate_ko' in data['descriptor']['info']:
             data['limit_rate_ko'] = data['descriptor']['info']['limit_rate_ko']
 
-
-
-
-
-
-
-
         if 'transfert' in data:
             if data['transfert'] == True:
                 objectxmpp.xmpplog('file transfert is enabled',
@@ -849,30 +842,30 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     fromuser = data['login'],
                                     touser = "")
 
-        #verify if possible methode of transfert.
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.settimeout(5.0)
-        try:
-            sock.connect((data['ipmachine'], 22))
-        except socket.error:
-            if 'transfert' in data  and data['transfert'] == True \
-                    and 'methodetransfert' in data \
-                        and data['methodetransfert'] != "pullcurl":
-                data['methodetransfert'] = "pullcurl"
-                objectxmpp.xmpplog('Warning push methode impossible for machine nat: force pull curl method',
-                                    type = 'deploy',
-                                    sessionname = sessionid,
-                                    priority = -1,
-                                    action = "",
-                                    who = objectxmpp.boundjid.bare,
-                                    how = "",
-                                    why = "",
-                                    module = "Deployment | Transfert | Notify",
-                                    date = None ,
-                                    fromuser = data['login'],
-                                    touser = "")
-        finally:
-            sock.close()
+            #verify if possible methode of transfert.
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(5.0)
+            try:
+                sock.connect((data['ipmachine'], 22))
+            except socket.error:
+                if 'transfert' in data  and data['transfert'] == True \
+                        and 'methodetransfert' in data \
+                            and data['methodetransfert'] != "pullcurl":
+                    data['methodetransfert'] = "pullcurl"
+                    objectxmpp.xmpplog('Warning push methode impossible for machine nat: force pull curl method',
+                                        type = 'deploy',
+                                        sessionname = sessionid,
+                                        priority = -1,
+                                        action = "",
+                                        who = objectxmpp.boundjid.bare,
+                                        how = "",
+                                        why = "",
+                                        module = "Deployment | Transfert | Notify",
+                                        date = None ,
+                                        fromuser = data['login'],
+                                        touser = "")
+            finally:
+                sock.close()
 
 
         if 'transfert' in data \
