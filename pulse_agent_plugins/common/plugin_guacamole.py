@@ -25,7 +25,7 @@ import sys
 import time
 import logging
 
-plugin = {"VERSION" : "1.5", "NAME" : "guacamole",  "TYPE" : "all"}
+plugin = {"VERSION" : "1.6", "NAME" : "guacamole",  "TYPE" : "all"}
 
 
 def action( xmppobject, action, sessionid, data, message, dataerreur ):
@@ -84,7 +84,7 @@ def action( xmppobject, action, sessionid, data, message, dataerreur ):
                         'remoteport' : remoteport,
                         'reversetype' : reversetype,
                         'options' : 'createreversessh',
-                        'persistance' : 'Guacamole'
+                        'persistance' : data['cux_type']
                 },
                 'ret' : 0,
                 'base64' : False }
