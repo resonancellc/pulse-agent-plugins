@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# (c) 2016 siveo, http://www.siveo.net
+# (c) 2016-2018 siveo, http://www.siveo.net
 #
 # This file is part of Pulse 2, http://www.siveo.net
 #
@@ -25,7 +25,7 @@ import sys
 import time
 import logging
 
-plugin = {"VERSION" : "1.3", "NAME" : "guacamole",  "TYPE" : "all"}
+plugin = {"VERSION" : "1.6", "NAME" : "guacamole",  "TYPE" : "all"}
 
 
 def action( xmppobject, action, sessionid, data, message, dataerreur ):
@@ -83,7 +83,8 @@ def action( xmppobject, action, sessionid, data, message, dataerreur ):
                         'host' : data['uuid'],
                         'remoteport' : remoteport,
                         'reversetype' : reversetype,
-                        'options' : 'createreversessh'
+                        'options' : 'createreversessh',
+                        'persistance' : data['cux_type']
                 },
                 'ret' : 0,
                 'base64' : False }
@@ -121,6 +122,14 @@ def action( xmppobject, action, sessionid, data, message, dataerreur ):
             if sys.platform.startswith('win'):
                 try:
                     simplecommand("\"%ProgramFiles(x86)%\\TightVNC\\tvnserver.exe\" -controlservice -connect localhost")
+                except Exception, e:
+                    logging.getLogger().error( "Error: %s" % str(e))
+                    traceback.print_exc(file=sys.stdout)
+                    raise
+            if sys.platform.startswith('darwin'):
+                try:
+                    simplecommand("pkill OSXvnc-server -connecthost localhost")
+                    simplecommand("\"/Applications/Vine Server.app/Contents/MacOS/OSXvnc-server\" -connectHost localhost")
                 except Exception, e:
                     logging.getLogger().error( "Error: %s" % str(e))
                     traceback.print_exc(file=sys.stdout)

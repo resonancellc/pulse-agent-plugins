@@ -1,8 +1,11 @@
 pulse-agent-plugins 1.4
 =========================
 
- * Fix deployment on MacOS
- * Fix inventory on MacOS
+ * [Feature] Add support for file transfers from client to Pulse server
+ * [Feature] Allow use of remote protocols in reverse mode
+ * [Bugfix] Fix deployment on macOS
+ * [Bugfix] Fix inventory on macOS
+ * [Bugfix] Fix reversessh on macOS
 
 
 pulse-agent-plugins 1.3
