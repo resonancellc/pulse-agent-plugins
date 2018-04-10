@@ -36,11 +36,12 @@ DEBUGPULSEPLUGIN = 25
 plugin = { "VERSION" : "1.0", "NAME" : "cluster", "TYPE" : "relayserver", "DESC" : "update list ARS cluster" }
 
 def action( objectxmpp, action, sessionid, data, message, dataerreur):
-    logging.getLogger().info("call %s from %s"%(plugin,message['from']))
-    # print json.dumps(data, indent = 4)
+    logging.getLogger().debug("call %s from %s"%(plugin,message['from']))
+    #print json.dumps(data, indent = 4)
     if "subaction" in data:
         if data['subaction'] == "initclusterlist":
             # update list cluster jid
+            #list friend ars
             jidclusterlistrelayservers = [jidrelayserver for jidrelayserver in data['data'] if jidrelayserver != message['to']]
 
             datacluster = MsgToContributorCluster(objectxmpp.session.getcountsession())
@@ -50,35 +51,40 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                 if not ars in objectxmpp.jidclusterlistrelayservers:
                     objectxmpp.jidclusterlistrelayservers[ars] = { 'numbersession' : 0 }
 
-
+            delars=[]
             for ars in objectxmpp.jidclusterlistrelayservers:
                 if not ars in jidclusterlistrelayservers:
-                    del objectxmpp.jidclusterlistrelayservers[ars]
+                    delars.append(ars)
+
+            for ars in delars:
+                del objectxmpp.jidclusterlistrelayservers[ars]
+
+            for ars in objectxmpp.jidclusterlistrelayservers:
                 result = {
                                 'action': "%s"%action,
                                 'sessionid': sessionid,
-                                "subaction" : "refreshload",
-                                'data' : datacluster,
+                                'data' :  { "subaction" : "refreshload", 'data' : {"numbersession" : objectxmpp.session.getcountsession() }},
                                 'ret' : 0,
                                 'base64' : False
                     }
-                objectxmpp.send_message( mto=message['from'],
+                objectxmpp.send_message( mto=ars,
                                 mbody=json.dumps(result),
                                 mtype='chat')
 
         elif data['subaction'] == "refreshload":
-            print "refrehload"
+            objectxmpp.jidclusterlistrelayservers[message['from']] = data['data']
 
-    result = {
-                'action': "result%s"%action,
-                'sessionid': sessionid,
-                'data' : {},
-                'ret' : 0,
-                'base64' : False }
+        logging.getLogger().debug("new ARS list friend of cluster : %s"% objectxmpp.jidclusterlistrelayservers)
 
-    logging.getLogger().debug("new ARS list friend of cluster : %s"% objectxmpp.jidclusterlistrelayservers)
+    #result = {
+                #'action': "result%s"%action,
+                #'sessionid': sessionid,
+                #'data' : objectxmpp.jidclusterlistrelayservers,
+                #'ret' : 0,
+                #'base64' : False }
 
-    #message
-    objectxmpp.send_message( mto=message['from'],
-                             mbody=json.dumps(result),
-                             mtype='chat')
+
+    ##message
+    #objectxmpp.send_message( mto=message['from'],
+                             #mbody=json.dumps(result),
+                             #mtype='chat')
