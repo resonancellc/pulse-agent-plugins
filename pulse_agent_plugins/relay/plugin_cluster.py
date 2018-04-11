@@ -23,14 +23,6 @@ import json
 import logging
 logger = logging.getLogger()
 
-
-def MsgToContributorCluster(countsessiondeploy):
-    #create message
-    return {
-                "data" : { "numbersession" : countsessiondeploy
-                }
-            }
-
 DEBUGPULSEPLUGIN = 25
 
 plugin = { "VERSION" : "1.0", "NAME" : "cluster", "TYPE" : "relayserver", "DESC" : "update list ARS cluster" }
@@ -43,8 +35,6 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             # update list cluster jid
             #list friend ars
             jidclusterlistrelayservers = [jidrelayserver for jidrelayserver in data['data'] if jidrelayserver != message['to']]
-
-            datacluster = MsgToContributorCluster(objectxmpp.session.getcountsession())
 
             # delete reference ARS si pas dans jidclusterlistrelayservers
             for ars in jidclusterlistrelayservers:
