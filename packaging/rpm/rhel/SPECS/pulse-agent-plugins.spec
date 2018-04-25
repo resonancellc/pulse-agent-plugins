@@ -4,7 +4,7 @@
 
 Summary:	Pulse Agent Plugins
 Name:		pulse-agent-plugins
-Version:	1.5
+Version:	1.4
 %if ! %use_git
 Release:        20%{?dist}
 %else
@@ -74,7 +74,7 @@ plugins for pulse xmppmaster
 #--------------------------------------------------------------------
 
 %prep
-%setup -q
+%setup -q 
 
 # Remove bundled egg-info
 rm -rf %{tarname}.egg-info
@@ -83,7 +83,7 @@ rm -rf %{tarname}.egg-info
 %py2_build
 
 %install
-%py2_install
+%py2_install 
 
 mkdir -p %buildroot%_var/lib/pulse2/xmpp_baseplugin
 cp -frv pulse_agent_plugins/common/* %buildroot%_var/lib/pulse2/xmpp_baseplugin
@@ -96,3 +96,6 @@ mkdir -p %buildroot%_var/lib/pulse2/xmpp_basepluginscheduler
 mkdir -p %buildroot%_var/lib/pulse2/clients/config
 cp pulse_agent_plugins/config/guacamoleconf.ini.in %buildroot%_var/lib/pulse2/clients/config
 cp pulse_agent_plugins/config/inventory.ini %buildroot%_var/lib/pulse2/clients/config
+
+
+
