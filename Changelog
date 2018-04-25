@@ -1,3 +1,7 @@
+pulse-agent-plugins 1.5
+=========================
+ * [Bugfix] Fix python package to include all plugins
+
 pulse-agent-plugins 1.4
 =========================
 
