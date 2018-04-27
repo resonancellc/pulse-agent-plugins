@@ -25,7 +25,7 @@ logger = logging.getLogger()
 
 DEBUGPULSEPLUGIN = 25
 
-plugin = { "VERSION" : "1.0", "NAME" : "cluster", "TYPE" : "relayserver", "DESC" : "update list ARS cluster" }
+plugin = { "VERSION" : "1.0001", "NAME" : "cluster", "TYPE" : "relayserver", "DESC" : "update list ARS cluster" }
 
 def action( objectxmpp, action, sessionid, data, message, dataerreur):
     logging.getLogger().debug("call %s from %s"%(plugin,message['from']))
@@ -35,12 +35,10 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             # update list cluster jid
             #list friend ars
             jidclusterlistrelayservers = [jidrelayserver for jidrelayserver in data['data'] if jidrelayserver != message['to']]
-
             # delete reference ARS si pas dans jidclusterlistrelayservers
             for ars in jidclusterlistrelayservers:
                 if not ars in objectxmpp.jidclusterlistrelayservers:
                     objectxmpp.jidclusterlistrelayservers[ars] = { 'numbersession' : 0 }
-
             delars=[]
             for ars in objectxmpp.jidclusterlistrelayservers:
                 if not ars in jidclusterlistrelayservers:
@@ -53,18 +51,49 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                 result = {
                                 'action': "%s"%action,
                                 'sessionid': sessionid,
-                                'data' :  { "subaction" : "refreshload", 'data' : {"numbersession" : objectxmpp.session.getcountsession() }},
+                                'data' :  { "subaction" : "refreshload", 
+                                            "data" : { "numbersession" : objectxmpp.checklevelcharge() } },
                                 'ret' : 0,
                                 'base64' : False
                     }
                 objectxmpp.send_message( mto=ars,
                                 mbody=json.dumps(result),
                                 mtype='chat')
-
+            logging.getLogger().debug("new ARS list friend of cluster : %s"% objectxmpp.jidclusterlistrelayservers)
         elif data['subaction'] == "refreshload":
             objectxmpp.jidclusterlistrelayservers[message['from']] = data['data']
+            logging.getLogger().debug("new ARS list friend of cluster : %s"% objectxmpp.jidclusterlistrelayservers)
+        elif data['subaction'] == "removeresource":
+            resource = objectxmpp.checklevelcharge(-1)
+            #print json.dumps(data , indent = 4)
+            objectxmpp.xmpplog('plugin Cluster : charge ARS (%s): %s'%(objectxmpp.boundjid.bare, resource),
+                                type = 'deploy',
+                                sessionname = sessionid,
+                                priority = -1,
+                                action = "",
+                                who = objectxmpp.boundjid.bare,
+                                how = "",
+                                why = "",
+                                module = "Deployment | Cluster | Notify",
+                                date = None ,
+                                fromuser = data['data']['user'],
+                                touser = "")
+        elif data['subaction'] == "takeresource":
+            resource = objectxmpp.checklevelcharge(1)
+            #print json.dumps(data , indent = 4)
+            objectxmpp.xmpplog('plugin Cluster : charge ARS (%s): %s'%(objectxmpp.boundjid.bare, resource),
+                                type = 'deploy',
+                                sessionname = sessionid,
+                                priority = -1,
+                                action = "",
+                                who = objectxmpp.boundjid.bare,
+                                how = "",
+                                why = "",
+                                module = "Deployment | Cluster | Notify",
+                                date = None ,
+                                fromuser = data['data']['user'],
+                                touser = "")
 
-        logging.getLogger().debug("new ARS list friend of cluster : %s"% objectxmpp.jidclusterlistrelayservers)
 
     #result = {
                 #'action': "result%s"%action,
