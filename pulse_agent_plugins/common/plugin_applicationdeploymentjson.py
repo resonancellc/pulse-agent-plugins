@@ -135,7 +135,6 @@ def takeresource(datasend, objectxmpp, sessionid):
     jidrs = JID(datasendl['data']['jidrelay'])
     jidr = "%s@%s"%(jidrs.user, jidrs.domain) 
     if jidr != objectxmpp.boundjid.bare:
-        # libere la resources sur ARS par message (rend 1 resource)
         msgresource = {
                     'action': "cluster",
                     'sessionid': sessionid,
@@ -172,7 +171,6 @@ def removeresource(datasend, objectxmpp, sessionid):
     jidrs = JID(datasendl['data']['jidrelay'])
     jidr = "%s@%s"%(jidrs.user, jidrs.domain)
     if jidr != objectxmpp.boundjid.bare:
-        # libere la resources sur ARS par message (rend 1 resource)
         msgresource = {
                     'action': "cluster",
                     'sessionid': sessionid,
@@ -235,7 +233,6 @@ def curlgetdownloadfile( destfile, urlfile, insecure = True, limit_rate_ko= None
             # limit_rate_ko en octed in curl
             c.setopt(c.MAX_RECV_SPEED_LARGE, int(limit_rate_ko)*1024)
         if insecure :
-            # option equivalent a friser de --insecure
             c.setopt(pycurl.SSL_VERIFYPEER, 0)
             c.setopt(pycurl.SSL_VERIFYHOST, 0)
         c.perform()
@@ -265,9 +262,6 @@ def recuperefile(datasend, objectxmpp, ippackage, portpackage, sessionid):
             dest = os.path.join(datasend['data']['pathpackageonmachine'], filepackage)
             urlfile = curlurlbase + filepackage
             
-            #logging.getLogger().debug("###################################################")
-            #logging.getLogger().debug("adress telechargement package par le client en curl : " + urlfile)
-            #logging.getLogger().debug("###################################################")
             try:
                 if 'limit_rate_ko' in datasend['data']['descriptor']['info'] and \
                                 datasend['data']['descriptor']['info']['limit_rate_ko'] != "" and\
