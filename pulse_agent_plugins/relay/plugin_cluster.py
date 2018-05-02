@@ -25,20 +25,42 @@ logger = logging.getLogger()
 
 DEBUGPULSEPLUGIN = 25
 
-plugin = { "VERSION" : "1.0001", "NAME" : "cluster", "TYPE" : "relayserver", "DESC" : "update list ARS cluster" }
+plugin = { "VERSION" : "1.0002", "NAME" : "cluster", "TYPE" : "relayserver", "DESC" : "update list ARS cluster" }
+
+def refreshremotears(objectxmpp, action, sessionid):
+    for ars in objectxmpp.jidclusterlistrelayservers:
+        result = {
+                        'action': "%s"%action,
+                        'sessionid': sessionid,
+                        'data' :  { "subaction" : "refreshload", 
+                                    "data" : { "numbersession" : objectxmpp.checklevelcharge() 
+                                    } 
+                        },
+                        'ret' : 0,
+                        'base64' : False
+        }
+        objectxmpp.send_message( mto=ars,
+                        mbody=json.dumps(result),
+                        mtype='chat')
+    logging.getLogger().debug("plugin cluster : refresh charge (%s) of ars %s to list remote ars cluster %s"%\
+                                                    ( objectxmpp.checklevelcharge(),\
+                                                      objectxmpp.boundjid.bare,\
+                                                      objectxmpp.jidclusterlistrelayservers))
 
 def action( objectxmpp, action, sessionid, data, message, dataerreur):
     logging.getLogger().debug("call %s from %s"%(plugin,message['from']))
-    #print json.dumps(data, indent = 4)
+    print json.dumps(data, indent = 4)
     if "subaction" in data:
         if data['subaction'] == "initclusterlist":
             # update list cluster jid
             #list friend ars
             jidclusterlistrelayservers = [jidrelayserver for jidrelayserver in data['data'] if jidrelayserver != message['to']]
+
             # delete reference ARS si pas dans jidclusterlistrelayservers
             for ars in jidclusterlistrelayservers:
                 if not ars in objectxmpp.jidclusterlistrelayservers:
                     objectxmpp.jidclusterlistrelayservers[ars] = { 'numbersession' : 0 }
+
             delars=[]
             for ars in objectxmpp.jidclusterlistrelayservers:
                 if not ars in jidclusterlistrelayservers:
@@ -48,24 +70,25 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                 del objectxmpp.jidclusterlistrelayservers[ars]
 
             for ars in objectxmpp.jidclusterlistrelayservers:
+                # update list cluster jid  charge
                 result = {
                                 'action': "%s"%action,
                                 'sessionid': sessionid,
                                 'data' :  { "subaction" : "refreshload", 
-                                            "data" : { "numbersession" : objectxmpp.checklevelcharge() } },
+                                            "data" : { "numbersession" : objectxmpp.levelcharge } },
                                 'ret' : 0,
                                 'base64' : False
-                    }
+                }
                 objectxmpp.send_message( mto=ars,
-                                mbody=json.dumps(result),
-                                mtype='chat')
+                                            mbody=json.dumps(result),
+                                            mtype='chat')
             logging.getLogger().debug("new ARS list friend of cluster : %s"% objectxmpp.jidclusterlistrelayservers)
         elif data['subaction'] == "refreshload":
             objectxmpp.jidclusterlistrelayservers[message['from']] = data['data']
             logging.getLogger().debug("new ARS list friend of cluster : %s"% objectxmpp.jidclusterlistrelayservers)
         elif data['subaction'] == "removeresource":
             resource = objectxmpp.checklevelcharge(-1)
-            #print json.dumps(data , indent = 4)
+            refreshremotears(objectxmpp, action, sessionid)
             objectxmpp.xmpplog('plugin Cluster : charge ARS (%s): %s'%(objectxmpp.boundjid.bare, resource),
                                 type = 'deploy',
                                 sessionname = sessionid,
@@ -80,7 +103,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                 touser = "")
         elif data['subaction'] == "takeresource":
             resource = objectxmpp.checklevelcharge(1)
-            #print json.dumps(data , indent = 4)
+            refreshremotears(objectxmpp, action, sessionid)
             objectxmpp.xmpplog('plugin Cluster : charge ARS (%s): %s'%(objectxmpp.boundjid.bare, resource),
                                 type = 'deploy',
                                 sessionname = sessionid,
@@ -93,8 +116,6 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                 date = None ,
                                 fromuser = data['data']['user'],
                                 touser = "")
-
-
     #result = {
                 #'action': "result%s"%action,
                 #'sessionid': sessionid,
