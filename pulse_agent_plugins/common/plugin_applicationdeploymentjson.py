@@ -575,8 +575,8 @@ def action(objectxmpp, action, sessionid, data, message, dataerreur):
                     #objectxmpp.session.clearnoevent(sessionid)
 
 
-        #il y a des dependences dans package
-        if 'Dependency' in data['descriptor']['info'] and  len (data['descriptor']['info'] ['Dependency']) != 0:
+        """ There is dependancies in the package """
+        if 'Dependency' in data['descriptor']['info'] and len (data['descriptor']['info']['Dependency']) != 0:
             # Not immediately deployed
             # The deployment is prepared for the next
             try:
@@ -587,7 +587,7 @@ def action(objectxmpp, action, sessionid, data, message, dataerreur):
 
                 data['deploy'] = data['path'].split("/")[-1]
                 data['descriptor']['info']['Dependency'].reverse()
-                data['descriptor']['info']['Dependency'].insert(0,data['deploy'])
+                data['descriptor']['info']['Dependency'].insert(0, data['deploy'])
                 objectxmpp.back_to_deploy[sessionid]['Dependency'] = objectxmpp.back_to_deploy[sessionid]['Dependency'] + data['descriptor']['info']['Dependency']
                 del data['descriptor']['info']['Dependency']
                 logging.getLogger().debug("Dependency deployement %s"%(objectxmpp.back_to_deploy[sessionid]['Dependency']))
@@ -635,7 +635,7 @@ def action(objectxmpp, action, sessionid, data, message, dataerreur):
                     data['ippackageserver'] = objectxmpp.back_to_deploy[sessionid]['ippackageserver']
                     data['portpackageserver'] = objectxmpp.back_to_deploy[sessionid]['portpackageserver']
                     if 'advanced' in objectxmpp.back_to_deploy[sessionid]:
-                        data['advanced'] =  objectxmpp.back_to_deploy[sessionid]['advanced']
+                        data['advanced'] = objectxmpp.back_to_deploy[sessionid]['advanced']
 
                 # Verify that for each Dependency one has its descriptor
                 # Store the dependency descriptor in back_to_deploy object for the session
@@ -659,7 +659,7 @@ def action(objectxmpp, action, sessionid, data, message, dataerreur):
                             'ret' : 0,
                             'base64' : False
                         }
-                        objectxmpp.back_to_deploy[sessionid]['count']+= 1
+                        objectxmpp.back_to_deploy[sessionid]['count'] += 1
                         if objectxmpp.back_to_deploy[sessionid]['count'] > 30:
                             objectxmpp.xmpplog('Warning [%s] verify cyclic dependencies'%(dependency),
                                                type='deploy',
@@ -675,9 +675,9 @@ def action(objectxmpp, action, sessionid, data, message, dataerreur):
                                                touser="")
                             return
                         # If it lacks a dependency descriptor it is requested to relay server
-                        objectxmpp.send_message(mto = data['jidrelay'],
-                                                mbody = json.dumps(datasend),
-                                                mtype = 'chat')
+                        objectxmpp.send_message(mto=data['jidrelay'],
+                                                mbody=json.dumps(datasend),
+                                                mtype='chat')
                         if sessionid in objectxmpp.back_to_deploy:
                             save_back_to_deploy(objectxmpp.back_to_deploy)
                         return
@@ -713,7 +713,7 @@ def action(objectxmpp, action, sessionid, data, message, dataerreur):
                     objectxmpp.back_to_deploy[sessionid]['start'] = True
 
                     data = copy.deepcopy(objectxmpp.back_to_deploy[sessionid]['packagelist'][firstinstall])
-                    
+
                     try:
                         # Removes all the occurrences of this package if it exists because it is installing
                         objectxmpp.back_to_deploy[sessionid]['Dependency'].remove(firstinstall)
@@ -743,7 +743,7 @@ def action(objectxmpp, action, sessionid, data, message, dataerreur):
                 data['ippackageserver'] = objectxmpp.back_to_deploy[sessionid]['ippackageserver']
                 data['portpackageserver'] = objectxmpp.back_to_deploy[sessionid]['portpackageserver']
                 if 'advanced' in objectxmpp.back_to_deploy[sessionid]:
-                    data['advanced'] =  objectxmpp.back_to_deploy[sessionid]['advanced']
+                    data['advanced'] = objectxmpp.back_to_deploy[sessionid]['advanced']
             objectxmpp.session.sessionsetdata(sessionid, data)
 
         datasend = {
