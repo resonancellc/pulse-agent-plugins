@@ -746,13 +746,12 @@ def action(objectxmpp, action, sessionid, data, message, dataerreur):
                     data['advanced'] = objectxmpp.back_to_deploy[sessionid]['advanced']
             objectxmpp.session.sessionsetdata(sessionid, data)
 
-        datasend = {
-                        'action': action,
-                        'sessionid': sessionid,
-                        'data' : data,
-                        'ret' : 0,
-                        'base64' : False
-                    }
+        datasend = {'action': action,
+                    'sessionid': sessionid,
+                    'data' : data,
+                    'ret' : 0,
+                    'base64' : False
+                   }
 
 
 
@@ -770,13 +769,13 @@ def action(objectxmpp, action, sessionid, data, message, dataerreur):
                                    date=None,
                                    fromuser=datasend['data']['name'],
                                    touser="")
-                datasend = {
-                                'action': "result" + action,
-                                'sessionid': sessionid,
-                                'data' : data,
-                                'ret' : -1,
-                                'base64' : False
-                }
+                datasend = {'action': "result" + action,
+                            'sessionid': sessionid,
+                            'data' : data,
+                            'ret' : -1,
+                            'base64' : False
+                           }
+
                 datasend['data']['descriptor']['sequence']=[{"action" : "ERROR",
                                                             "description" : "DESCRIPTOR MISSING FOR Paltform %s os[%s]"%(sys.platform,platform.platform()),
                                                             "step" : -1,
@@ -1333,13 +1332,12 @@ def action(objectxmpp, action, sessionid, data, message, dataerreur):
                                                    touser="")
                                 data_in_session['environ'] = {}
                                 cleandescriptor(data_in_session)
-                                datalog = {
-                                    'action' : "result%s"%action,
-                                    'sessionid': sessionid,
-                                    'ret' : 255,
-                                    'base64' : False,
-                                    'data' : data_in_session
-                                }
+                                datalog = {'action' : "result%s"%action,
+                                           'sessionid': sessionid,
+                                           'ret' : 255,
+                                           'base64' : False,
+                                           'data' : data_in_session
+                                          }
 
                                 objectxmpp.send_message(mto='log@pulse',
                                                         mbody=json.dumps(datalog),
@@ -1353,9 +1351,9 @@ def action(objectxmpp, action, sessionid, data, message, dataerreur):
                                 return
                             logging.getLogger().debug("CALL FOR NEXT PACKAGE")
                             # call for aller step suivant
-                            objectxmpp.send_message(mto = objectxmpp.boundjid.bare,
-                                                mbody = json.dumps(create_message_self_for_transfertfile(sessionid)),
-                                                mtype = 'chat')
+                            objectxmpp.send_message(mto=objectxmpp.boundjid.bare,
+                                                    mbody=json.dumps(create_message_self_for_transfertfile(sessionid)),
+                                                    mtype='chat')
                         else:
                             ##undinstall keypublic on machine after transfert package
                             #keypublic = get_keypub_ssh()
@@ -1375,7 +1373,7 @@ def action(objectxmpp, action, sessionid, data, message, dataerreur):
                                                 'sessionid': sessionid,
                                                 'data' : data_in_session,
                                                 'ret' : 0,
-                                                'base64' : False }
+                                                'base64' : False}
                             #logging.getLogger().debug(json.dumps(transfertdeploy, indent = 4))
                             objectxmpp.send_message(mto = data_in_session['jidmachine'],
                                     mbody = json.dumps(transfertdeploy),
@@ -1389,5 +1387,5 @@ def action(objectxmpp, action, sessionid, data, message, dataerreur):
                                         'base64' : False
                                     }
                             objectxmpp.send_message(mto=data_in_session['jidmaster'],
-                                                    mbody = json.dumps(datasend),
-                                                    mtype = 'chat')
+                                                    mbody=json.dumps(datasend),
+                                                    mtype='chat')
