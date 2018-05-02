@@ -576,7 +576,7 @@ def action(objectxmpp, action, sessionid, data, message, dataerreur):
 
 
         """ There is dependancies in the package """
-        if 'Dependency' in data['descriptor']['info'] and len (data['descriptor']['info']['Dependency']) != 0:
+        if 'Dependency' in data['descriptor']['info'] and len(data['descriptor']['info']['Dependency']) != 0:
             # Not immediately deployed
             # The deployment is prepared for the next
             try:
