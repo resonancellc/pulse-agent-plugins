@@ -146,8 +146,8 @@ def takeresource(datasend, objectxmpp, sessionid):
         objectxmpp.send_message(mto = datasendl['data']['jidrelay'],
                                 mbody = json.dumps(msgresource),
                                 mtype = 'chat')
-    else :
-        resource = objectxmpp.checklevelcharge(1)
+#    else:
+#        resource = objectxmpp.checklevelcharge(1)
     objectxmpp.xmpplog('take resource : %s'%datasendl['data']['jidrelay'],
                        type = 'deploy',
                        sessionname = sessionid,
@@ -181,8 +181,8 @@ def removeresource(datasend, objectxmpp, sessionid):
         objectxmpp.send_message(mto = datasendl['data']['jidrelay'],
                                 mbody = json.dumps(msgresource),
                                 mtype = 'chat')
-    else :
-        resource = objectxmpp.checklevelcharge(-1)
+#    else :
+#        resource = objectxmpp.checklevelcharge(-1)
     objectxmpp.xmpplog('restores ressourse : %s'%datasendl['data']['jidrelay'], 
                        type = 'deploy',
                        sessionname = sessionid,
