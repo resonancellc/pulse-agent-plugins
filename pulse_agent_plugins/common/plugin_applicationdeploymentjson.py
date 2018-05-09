@@ -334,9 +334,9 @@ def signalendsessionforARS(datasend , objectxmpp, sessionid, error = False):
         if error == False:
             msgsessionend['ret'] = 0
         datasend['endsession'] = True
-        objectxmpp.send_message(mto = datasendl['data']['jidrelay'],
-                                mbody = json.dumps(msgsessionend),
-                                mtype = 'chat')
+        objectxmpp.send_message(mto=datasend['data']['jidrelay'],
+                                mbody=json.dumps(msgsessionend),
+                                mtype='chat')
     except Exception as e:
         logging.getLogger().debug(str(e))
         traceback.print_exc(file=sys.stdout)
