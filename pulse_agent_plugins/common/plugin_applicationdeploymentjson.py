@@ -148,7 +148,7 @@ def takeresource(datasend, objectxmpp, sessionid):
                                 mtype = 'chat')
 #    else:
 #        resource = objectxmpp.checklevelcharge(1)
-    objectxmpp.xmpplog('take resource : %s'%datasendl['data']['jidrelay'],
+    objectxmpp.xmpplog('take resource : %s'%datasend['data']['jidrelay'],
                        type = 'deploy',
                        sessionname = sessionid,
                        priority = -1,
