@@ -238,7 +238,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur ):
                     logging.getLogger().info("suppression reversessh %s"%str(objectxmpp.reversesshmanage[data['persistance']]))
                     cmd = "kill -9 %s"%str(objectxmpp.reversesshmanage[data['persistance']])
                     logging.getLogger().info(cmd)
-                    obcmd = simplecommandstr(cmd)
+                    simplecommandstr(cmd)
                     objectxmpp.xmpplog( "suppression reversessh %s"%str(objectxmpp.reversesshmanage[data['persistance']]),
                                         type = 'noset',
                                         sessionname = sessionid,
@@ -298,7 +298,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur ):
                         logging.getLogger().info("suppression reversessh %s"%str(objectxmpp.reversesshmanage[data['persistance']]))
                         cmd = "taskkill /F /PID %s"%str(objectxmpp.reversesshmanage[data['persistance']])
                         logging.getLogger().info(cmd)
-                        obcmd = simplecommandstr(cmd)
+                        simplecommandstr(cmd)
                         objectxmpp.xmpplog( "suppression reversessh %s"%str(objectxmpp.reversesshmanage[data['persistance']]),
                                         type = 'noset',
                                         sessionname = sessionid,
@@ -347,7 +347,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur ):
                         logging.getLogger().info("suppression reversessh %s"%str(objectxmpp.reversesshmanage[data['persistance']]))
                         cmd = "kill -9 %s"%str(objectxmpp.reversesshmanage[data['persistance']])
                         logging.getLogger().info(cmd)
-                        obcmd = simplecommandstr(cmd)
+                        simplecommandstr(cmd)
                         objectxmpp.xmpplog( "suppression reversessh %s"%str(objectxmpp.reversesshmanage[data['persistance']]),
                                         type = 'noset',
                                         sessionname = sessionid,
