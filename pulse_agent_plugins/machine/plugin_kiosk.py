@@ -19,11 +19,10 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA 02110-1301, USA.
 
-from  lib.utils import simplecommand
+import logging
 import json
 import traceback
 import sys
-import logging
 
 plugin = {"VERSION": "1.0", "NAME" : "kiosk", "TYPE" : "machine"}
 
@@ -32,12 +31,10 @@ def action(objectxmpp, action, sessionid, data, message, dataerreur):
     logging.getLogger().debug("=====================================================")
     logging.getLogger().debug(plugin)
     logging.getLogger().debug("=====================================================")
-    print json.dumps(data, indent = 4)
-    datasend= {
-        'action' : "result%s"%plugin['NAME'],
-        'data' :{'subaction' : 'test'},
-        'sessionid' : sessionid
-        }
+    datasend = {'action' : "result%s"%plugin['NAME'],
+                'data' :{'subaction' : 'test'},
+                'sessionid' : sessionid
+               }
     try:
         if data['subaction'] == 'test':
             datasend['data']['msg'] = "test success"
@@ -49,9 +46,9 @@ def action(objectxmpp, action, sessionid, data, message, dataerreur):
             pass
 
     except:
-            traceback.print_exc(file=sys.stdout)
-            dataerreur['ret'] = -255
-            dataerreur['data']['msg'] = "command Error\n %s"%data['cmd']
-            objectxmpp.send_message(mto=message['from'],
-                                    mbody=json.dumps(dataerreur),
-                                    mtype='chat')
+        traceback.print_exc(file=sys.stdout)
+        dataerreur['ret'] = -255
+        dataerreur['data']['msg'] = "command Error\n %s"%data['cmd']
+        objectxmpp.send_message(mto=message['from'],
+                                mbody=json.dumps(dataerreur),
+                                mtype='chat')
