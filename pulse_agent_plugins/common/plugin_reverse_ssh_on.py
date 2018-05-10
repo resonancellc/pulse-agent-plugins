@@ -52,12 +52,22 @@ def genratekeyforARSreverseSSH():
         os.chmod("/var/lib/pulse2/clients/reversessh/.ssh", 0o700)
         os.chmod("/var/lib/pulse2/clients/reversessh/.ssh/authorized_keys", 0o600)
 
-def load_key_ssh_relayserver():
-    filekey = os.path.join("/","var","lib","pulse2","clients","reversessh",".ssh","id_rsa")
-    return file_get_contents(filekey)
+def load_key_ssh_relayserver(private=False):
+    """
+        This function load the sskey
+        Args:
+            private: Tell if this is the private of the public ssh key
 
-def load_keypub_ssh_relayserver():
-    filekey = os.path.join("/","var","lib","pulse2","clients","reversessh",".ssh","id_rsa.pub")
+        Returns:
+            The content of the sshkey file
+    """
+
+    if private == True:
+        keyname = "id_rsa"
+    else:
+        keyname = "id_rsa.pub"
+
+    filekey = os.path.join("/", "var", "lib", "pulse2", "clients", "reversessh", ".ssh", keyname)
     return file_get_contents(filekey)
 
 def runProcess(cmd , shell= False, envoption = os.environ):
@@ -65,20 +75,35 @@ def runProcess(cmd , shell= False, envoption = os.environ):
     args = shlex.split(cmd)
     return Popen(args, env=envoption, shell=shell).pid
 
-def install_keypriv_ssh_relayserver(keypriv):
+def install_key_ssh_relayserver(keypriv, private=False):
+    """
+        This function installs the sshkey
+        Args:
+            keypriv: The name of the key to copy on the dest machine
+            private: Tell if this is the private of the public ssh key
+    """
+
+    if private == True:
+        keyname = "id_rsa"
+        keyperm = "0o600"
+    else:
+        keyname = "id_rsa.pub"
+        keyperm = "0o644"
+
     if sys.platform.startswith('linux'):
         if not os.path.isdir(os.path.join(os.path.expanduser('~reversessh'), ".ssh/")):
             os.makedirs(os.path.join(os.path.expanduser('~reversessh'), ".ssh/"))
-        filekey = os.path.join("/","home","reversessh",".ssh", "id_rsa")
+        filekey = os.path.join("/", "home", "reversessh", ".ssh", keyname)
     elif sys.platform.startswith('win'):
-        filekey = os.path.join(os.environ["ProgramFiles"], "Pulse", ".ssh", "id_rsa")
+        filekey = os.path.join(os.environ["ProgramFiles"], "Pulse", ".ssh", keyname)
     elif sys.platform.startswith('darwin'):
-        if not os.path.isdir(os.path.join("/","Users","reversessh",".ssh")):
-            os.makedirs(os.path.join("/","Users","reversessh",".ssh"))
-        filekey = os.path.join("/","Users","reversessh",".ssh", "id_rsa")
+        if not os.path.isdir(os.path.join("/", "Users", "reversessh", ".ssh")):
+            os.makedirs(os.path.join("/", "Users", "reversessh", ".ssh"))
+        filekey = os.path.join("/", "Users", "reversessh", ".ssh", keyname)
     else:
         return
-    file_put_contents(filekey,  keypriv)
+
+    file_put_contents(filekey, keypriv)
     if sys.platform.startswith('win'):
         import win32security
         import ntsecuritycon
@@ -89,36 +114,7 @@ def install_keypriv_ssh_relayserver(keypriv):
         sd.SetSecurityDescriptorDacl(1, dacl, 0)
         win32security.SetFileSecurity(filekey, win32security.DACL_SECURITY_INFORMATION, sd)
     else:
-        os.chmod(filekey, 0o600)
-
-def install_keypub_ssh_relayserver(keypub):
-    if sys.platform.startswith('linux'):
-        if not os.path.isdir(os.path.join(os.path.expanduser('~reversessh'), ".ssh/")):
-            os.makedirs(os.path.join(os.path.expanduser('~reversessh'), ".ssh/"))
-        filekey = os.path.join("/","home","reversessh",".ssh", "id_rsa.pub")
-    elif sys.platform.startswith('win'):
-        filekey = os.path.join(os.environ["ProgramFiles"], "Pulse", ".ssh", "id_rsa.pub")
-    elif sys.platform.startswith('darwin'):
-        if not os.path.isdir(os.path.join("/","Users","reversessh",".ssh")):
-            os.makedirs(os.path.join("/","Users","reversessh",".ssh"))
-        filekey = os.path.join("/","Users","reversessh",".ssh", "id_rsa.pub")
-    else:
-        return
-    file_put_contents(filekey,  keypub)
-    if sys.platform.startswith('win'):
-        import win32security
-        import ntsecuritycon
-        user, domain, type = win32security.LookupAccountName ("", "System")
-        sd = win32security.GetFileSecurity(filekey, win32security.DACL_SECURITY_INFORMATION)
-        dacl = win32security.ACL ()
-        dacl.AddAccessAllowedAce(win32security.ACL_REVISION, ntsecuritycon.FILE_GENERIC_READ | ntsecuritycon.FILE_GENERIC_WRITE, user)
-        sd.SetSecurityDescriptorDacl(1, dacl, 0)
-        win32security.SetFileSecurity(filekey, win32security.DACL_SECURITY_INFORMATION, sd)
-    else:
-        os.chmod(filekey, 0o644)
-
-
-
+        os.chmod(filekey, keyperm)
 
 def action( objectxmpp, action, sessionid, data, message, dataerreur ):
     print plugin
@@ -147,8 +143,8 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur ):
                 returnmessage['data']['sendother'] = "data@infos@jid"
                 returnmessage['data']['sendemettor'] = True
                 returnmessage['data']['relayserverip'] = objectxmpp.ipconnection
-                returnmessage['data']['key'] = load_key_ssh_relayserver()
-                returnmessage['data']['keypub'] = load_keypub_ssh_relayserver()
+                returnmessage['data']['key'] = load_key_ssh_relayserver(private=True)
+                returnmessage['data']['keypub'] = load_key_ssh_relayserver()
                 returnmessage['ret'] = 0
                 returnmessage['action'] = "askinfo"
                 del returnmessage['data']['request']
@@ -171,8 +167,8 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur ):
                 returnmessage['data']['sendother'] = "data@infos@jid"
                 returnmessage['data']['sendemettor'] = True
                 returnmessage['data']['relayserverip'] = objectxmpp.ipconnection
-                returnmessage['data']['key'] = load_key_ssh_relayserver()
-                returnmessage['data']['keypub'] = load_keypub_ssh_relayserver()
+                returnmessage['data']['key'] = load_key_ssh_relayserver(private=True)
+                returnmessage['data']['keypub'] = load_key_ssh_relayserver()
                 returnmessage['ret'] = 0
                 returnmessage['action'] = "askinfo"
                 returnmessage['sessionid'] = sessionid
@@ -199,9 +195,8 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur ):
                                     touser = "")
 
         if data['options'] == "createreversessh":
-
-            install_keypriv_ssh_relayserver(data['key'])
-            install_keypub_ssh_relayserver(data['keypub'])
+            install_key_ssh_relayserver(data['key'], private=True)
+            install_key_ssh_relayserver(data['keypub'])
             try:
                 reversetype = data['reversetype']
             except Exception:
