@@ -34,7 +34,7 @@ if sys.platform.startswith('win'):
 DEBUGPULSEPLUGIN = 25
 ERRORPULSEPLUGIN = 40
 WARNINGPULSEPLUGIN = 30
-plugin = {"VERSION": "1.6", "NAME" :"inventory", "TYPE":"machine"}
+plugin = {"VERSION": "1.7", "NAME" :"inventory", "TYPE":"machine"}
 
 @pluginprocess
 def action(xmppobject, action, sessionid, data, message, dataerreur, result):
@@ -61,7 +61,7 @@ def action(xmppobject, action, sessionid, data, message, dataerreur, result):
             # run the inventory
             program = os.path.join(os.environ["ProgramFiles"], 'FusionInventory-Agent', 'fusioninventory-agent.bat')
             namefile = os.path.join(os.environ["ProgramFiles"], 'Pulse', 'tmp', 'inventory.txt')
-            cmd = """\"%s\" --local=\"%s\""""%(program, namefile)
+            cmd = """\"%s\" --scan-profiles --local=\"%s\""""%(program, namefile)
             simplecommand(cmd)
             Fichier = open(namefile, 'r')
             result['data']['inventory'] = base64.b64encode(zlib.compress(Fichier.read(), 9))
