@@ -30,7 +30,7 @@ from lib.utils import file_get_contents, file_put_contents, simplecommandstr
 import shutil
 import logging
 
-plugin = {"VERSION" : "2.7", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
+plugin = {"VERSION" : "2.8", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
 
 def checkresult(result):
     if result['codereturn'] != 0:
@@ -272,10 +272,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur ):
                     os_platform = os.environ["PROCESSOR_ARCHITEW6432"] # Will raise exception if x86 arch
                 except KeyError:
                     pass
-                if os_platform == "x86":
-                    sshexec =  os.path.join(os.environ["ProgramFiles"], "OpenSSH", "ssh.exe")
-                else:
-                    sshexec =  os.path.join(os.environ["ProgramW6432"], "OpenSSH", "ssh.exe")
+                sshexec =  os.path.join(os.environ["ProgramFiles"], "OpenSSH", "ssh.exe")
                 reversesshbat = os.path.join(os.environ["ProgramFiles"], "Pulse", "bin", "reversessh.bat")
                 dd = """"%s" -t -t -%s %s:localhost:%s -o StrictHostKeyChecking=no -i "%s" -l reversessh %s
                 """%(sshexec, reversetype, data['port'], remoteport, filekey, data['relayserverip'])
