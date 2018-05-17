@@ -24,8 +24,9 @@ import traceback
 import sys
 import time
 import logging
+import os
 
-plugin = {"VERSION" : "1.6", "NAME" : "guacamole",  "TYPE" : "all"}
+plugin = {"VERSION" : "1.7", "NAME" : "guacamole",  "TYPE" : "all"}
 
 
 def action( xmppobject, action, sessionid, data, message, dataerreur ):
@@ -121,7 +122,9 @@ def action( xmppobject, action, sessionid, data, message, dataerreur ):
         if data['options'] == "vnclistenmode":
             if sys.platform.startswith('win'):
                 try:
-                    simplecommand("\"%ProgramFiles(x86)%\\TightVNC\\tvnserver.exe\" -controlservice -connect localhost")
+                    program = os.path.join(os.environ["ProgramFiles"], 'TightVNC', 'tvnserver.exe')
+                    cmd = """\"%s\" -controlservice -connect localhost"""%(program)
+                    simplecommand(cmd)
                 except Exception, e:
                     logging.getLogger().error( "Error: %s" % str(e))
                     traceback.print_exc(file=sys.stdout)
