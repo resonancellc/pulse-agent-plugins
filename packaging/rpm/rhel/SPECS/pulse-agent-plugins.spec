@@ -35,6 +35,8 @@ plugins for pulse xmppmaster
 %files -n pulse-xmppmaster-agentplugins
 %_var/lib/pulse2/xmpp_baseplugin
 %_var/lib/pulse2/xmpp_basepluginscheduler
+%_var/lib/pulse2/clients/config/
+%_var/lib/pulse2/clients/config/inventory.ini.in
 %python2_sitelib/pulse_agent_plugins-1.?-py2.7.egg-info
 
 #--------------------------------------------------------------------
@@ -54,6 +56,7 @@ plugins for pulse xmppmaster
 %python2_sitelib/pulse_xmpp_agent/pluginsrelay
 %python2_sitelib/pulse_xmpp_agent/descriptor_scheduler_relay
 %_var/lib/pulse2/clients/config/
+%_var/lib/pulse2/clients/config/guacamoleconf.ini.in
 
 #--------------------------------------------------------------------
 
@@ -67,7 +70,6 @@ Requires:   python-sleekxmpp
 plugins for pulse xmppmaster
 
 %files -n pulseagent-plugins-machine
-%_sysconfdir/pulse-xmpp-agent/inventory.ini
 %python2_sitelib/pulse_xmpp_agent/pluginsmachine
 %python2_sitelib/pulse_xmpp_agent/descriptor_scheduler_machine
 
@@ -95,4 +97,4 @@ mkdir -p %buildroot%_var/lib/pulse2/xmpp_basepluginscheduler
 
 mkdir -p %buildroot%_var/lib/pulse2/clients/config
 cp pulse_agent_plugins/config/guacamoleconf.ini.in %buildroot%_var/lib/pulse2/clients/config
-cp pulse_agent_plugins/config/inventory.ini %buildroot%_var/lib/pulse2/clients/config
+cp pulse_agent_plugins/config/inventory.ini.in %buildroot%_var/lib/pulse2/clients/config
