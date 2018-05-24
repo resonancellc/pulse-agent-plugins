@@ -26,6 +26,7 @@ import base64
 import traceback
 import json
 import logging
+import subprocess
 
 if sys.platform.startswith('win'):
     from lib.registerwindows import constantregisterwindows
@@ -34,7 +35,7 @@ if sys.platform.startswith('win'):
 DEBUGPULSEPLUGIN = 25
 ERRORPULSEPLUGIN = 40
 WARNINGPULSEPLUGIN = 30
-plugin = {"VERSION": "1.7", "NAME" :"inventory", "TYPE":"machine"}
+plugin = {"VERSION": "1.13", "NAME" :"inventory", "TYPE":"machine"}
 
 @pluginprocess
 def action(xmppobject, action, sessionid, data, message, dataerreur, result):
@@ -81,6 +82,18 @@ def action(xmppobject, action, sessionid, data, message, dataerreur, result):
                     hive = registry_key.split('\\')[0].strip('"')
                     sub_key = registry_key.split('\\')[-1].strip('"')
                     path = registry_key.replace(hive+'\\', '').replace('\\'+sub_key, '').strip('"')
+                    if hive == 'HKEY_CURRENT_USER':
+                        if hasattr(xmppobject.config, 'current_user'):
+                            process = subprocess.Popen("wmic useraccount where name='%s' get sid" % xmppobject.config.current_user,
+                                                 shell=True,
+                                                 stdout=subprocess.PIPE,
+                                                 stderr=subprocess.STDOUT)
+                            output = process.stdout.readlines()
+                            sid = output[1].rstrip(' \t\n\r')
+                            hive = 'HKEY_USERS'
+                            path = sid+'\\'+path
+                        else:
+                            logging.log(DEBUGPULSEPLUGIN, "HKEY_CURRENT_USER hive defined but current_user config parameter is not")
                     logging.log(DEBUGPULSEPLUGIN, "hive: %s" % hive)
                     logging.log(DEBUGPULSEPLUGIN, "path: %s" % path)
                     logging.log(DEBUGPULSEPLUGIN, "sub_key: %s" % sub_key)

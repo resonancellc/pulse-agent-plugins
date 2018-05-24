@@ -1,4 +1,3 @@
 usr/lib/python2.7/dist-packages/pulse_xmpp_agent/pluginsrelay
 usr/lib/python2.7/dist-packages/pulse_xmpp_agent/descriptor_scheduler_relay
 var/lib/pulse2/clients/config/guacamoleconf.ini.in
-var/lib/pulse2/clients/config/inventory.ini
