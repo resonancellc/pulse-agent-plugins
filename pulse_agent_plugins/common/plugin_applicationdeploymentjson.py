@@ -168,7 +168,7 @@ def removeresource(datasend, objectxmpp, sessionid):
         datasendl['data'] = datasend
     else:
         datasendl = datasend
-    logging.getLogger().debug('restores ressourse : %s'%datasendl['data']['jidrelay'])
+    logging.getLogger().debug('restores ressource : %s'%datasendl['data']['jidrelay'])
     jidrs = JID(datasendl['data']['jidrelay'])
     jidr = "%s@%s"%(jidrs.user, jidrs.domain)
     if jidr != objectxmpp.boundjid.bare:
@@ -183,7 +183,7 @@ def removeresource(datasend, objectxmpp, sessionid):
                                 mtype = 'chat')
 #    else :
 #        resource = objectxmpp.checklevelcharge(-1)
-    objectxmpp.xmpplog('restores ressourse : %s'%datasendl['data']['jidrelay'], 
+    objectxmpp.xmpplog('restores ressource : %s'%datasendl['data']['jidrelay'],
                        type = 'deploy',
                        sessionname = sessionid,
                        priority = -1,
