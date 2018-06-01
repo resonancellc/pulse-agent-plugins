@@ -23,14 +23,15 @@ import logging
 import json
 import traceback
 import sys
+import socket
 
-plugin = {"VERSION": "1.0", "NAME" : "kiosk", "TYPE" : "machine"}
-
+plugin = {"VERSION": "1.1", "NAME" : "kiosk", "TYPE" : "machine"}
 
 def action(objectxmpp, action, sessionid, data, message, dataerreur):
     logging.getLogger().debug("=====================================================")
     logging.getLogger().debug(plugin)
-    logging.getLogger().debug("=====================================================")
+    logging.getLogger().debug("========ok=============================================")
+    
     datasend = {'action' : "result%s"%plugin['NAME'],
                 'data' :{'subaction' : 'test'},
                 'sessionid' : sessionid
@@ -44,6 +45,13 @@ def action(objectxmpp, action, sessionid, data, message, dataerreur):
         elif data['subaction'] == 'listpackage':
             #todo
             pass
+        elif data['subaction'] == 'initialisation_kiosk':
+            print "send to kiosk"
+            strjson = json.dumps(data['data'])
+            print strjson
+            print type(strjson)
+            send_kiosk_data(strjson , objectxmpp.config.kiosk_local_port)
+            pass
 
     except:
         traceback.print_exc(file=sys.stdout)
@@ -52,3 +60,21 @@ def action(objectxmpp, action, sessionid, data, message, dataerreur):
         objectxmpp.send_message(mto=message['from'],
                                 mbody=json.dumps(dataerreur),
                                 mtype='chat')
+
+
+
+def send_kiosk_data(datastrdata, port = 8766):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_address = ('localhost', port)
+    try:
+        sock.connect(server_address)
+        print "send message"
+        sock.sendall(datastrdata.encode('ascii'))
+        data = sock.recv(2048)
+        print ('received "%s"' % data)
+##  except Exception as e:
+##        print (str(e))
+##        print "erreur conncexion kiosk"
+    finally:
+        print ('closing socket')
+        sock.close()
