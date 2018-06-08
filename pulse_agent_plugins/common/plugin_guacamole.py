@@ -123,6 +123,9 @@ def action( xmppobject, action, sessionid, data, message, dataerreur ):
             if sys.platform.startswith('win'):
                 try:
                     program = os.path.join(os.environ["ProgramFiles"], 'TightVNC', 'tvnserver.exe')
+                    #select display for vnc
+                    cmd = """\"%s\" -controlservice -shareprimary"""%(program)
+                    simplecommand(cmd)
                     cmd = """\"%s\" -controlservice -connect localhost"""%(program)
                     simplecommand(cmd)
                 except Exception, e:
