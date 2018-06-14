@@ -26,7 +26,7 @@ import time
 import logging
 import os
 
-plugin = {"VERSION" : "1.7", "NAME" : "guacamole",  "TYPE" : "all"}
+plugin = {"VERSION" : "1.8", "NAME" : "guacamole",  "TYPE" : "all"}
 
 
 def action( xmppobject, action, sessionid, data, message, dataerreur ):
@@ -35,7 +35,7 @@ def action( xmppobject, action, sessionid, data, message, dataerreur ):
     if xmppobject.config.agenttype in ['relayserver']:
 
         import MySQLdb
-        
+
         # Get reversessh remote port and run reverse_ssh_on
         try:
             db = MySQLdb.connect(host=xmppobject.config.guacamole_dbhost,
@@ -116,9 +116,9 @@ def action( xmppobject, action, sessionid, data, message, dataerreur ):
 
     else:
         # Machine plugin
-        
+
         from  lib.utils import simplecommand
-        
+
         if data['options'] == "vnclistenmode":
             if sys.platform.startswith('win'):
                 try:
