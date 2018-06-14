@@ -23,7 +23,7 @@ from  lib.utils import simplecommand, decode_strconsole, encode_strconsole
 import json
 import traceback
 import sys
-plugin = {"VERSION": "1.1", "NAME" :"shellcommand", "TYPE":"all"}
+plugin = {"VERSION": "1.2", "NAME" :"shellcommand", "TYPE":"all"}
 
 def action(objectxmpp, action, sessionid, data, message, dataerreur):
     result = {
