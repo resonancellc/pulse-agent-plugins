@@ -1,3 +1,7 @@
+pulse-agent-plugins 1.7
+=========================
+ * 
+
 pulse-agent-plugins 1.6
 =========================
  * [Feature] Allow inventory of keys in HKEY_CURRENT_USER hive
