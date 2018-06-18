@@ -22,12 +22,17 @@
 
 import logging
 
-
-
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
-plugin = { "VERSION" : "1.3", "NAME" : "resultapplicationdeploymentjson", "TYPE" : "all" }
+
+plugin = { "VERSION" : "1.301", "NAME" : "resultapplicationdeploymentjson", "TYPE" : "all" }
 
 
 def action( objectxmpp, action, sessionid, data, message, dataerreur):
-    pass
+    logging.getLogger().debug("###################################################")
+    logging.getLogger().debug("call %s from %s"%(plugin, message['from']))
+    logging.getLogger().debug("###################################################")
+    if objectxmpp.session.isexist(sessionid):
+        logging.getLogger().debug("clear sessionid %s from %s"%(sessionid, message['from']))
+        objectxmpp.session.clearnoevent(sessionid)
+

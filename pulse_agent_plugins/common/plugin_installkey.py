@@ -18,17 +18,16 @@
 # along with Pulse 2; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA 02110-1301, USA.
+# file common/plugin_installkey.py
 
 import sys, os
-
-
 import logging
 from lib.utils import file_get_contents, file_put_contents_w_a
 
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
 
-plugin = { "VERSION" : "1.0", "NAME" : "installkey", "TYPE" : "all" }
+plugin = { "VERSION" : "1.1", "NAME" : "installkey", "TYPE" : "all" }
 
 def action( objectxmpp, action, sessionid, data, message, dataerreur):
     logging.getLogger().debug("###################################################")
@@ -60,11 +59,14 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         else:
             return
 
-
-
         if not data['key'] in authorized_keys_file:
+            #add en append la key dans le fichier
             file_put_contents_w_a( os.path.join('/', 'var', 'lib', 'pulse2', '.ssh', 'authorized_keys'), data['key'], "a" )
             logging.getLogger().debug("install key ARS [%s]"%message['from'])
+            if sessionid.startswith("command"):
+                notify = "Notify | QuickAction"
+            else:
+                notify = "Deployment | Cluster | Notify"
             objectxmpp.xmpplog( 'INSTALL key ARS %s on AM %s : %s'%(message['from'], objectxmpp.boundjid.bare),
                                 type = 'deploy',
                                 sessionname = sessionid,
@@ -73,13 +75,29 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                 who = objectxmpp.boundjid.bare,
                                 how = "",
                                 why = "",
-                                module = "Notify | QuickAction",
+                                module = notify,
                                 date = None ,
                                 fromuser = "",
                                 touser = "")
         else:
             logging.getLogger().warning("key ARS [%s] : is already installed."%message['from'])
-            pass
+            #if on veut que ce soit notifier dans le deployement
+            #if sessionid.startswith("command"):
+                #notify = "Notify | QuickAction"
+            #else:
+                #notify = "Deployment | Cluster | Notify"
+            #objectxmpp.xmpplog("key ARS [%s] : is already installed on AM %s."%(message['from'], objectxmpp.boundjid.bare),
+                                    #type = 'deploy',
+                                    #sessionname = sessionid,
+                                    #priority = -1,
+                                    #action = "",
+                                    #who = objectxmpp.boundjid.bare,
+                                    #how = "",
+                                    #why = "",
+                                    #module = notify,
+                                    #date = None ,
+                                    #fromuser = "",
+                                    #touser = "")
     else:
         logging.getLogger().debug("#######################################################")
         logging.getLogger().debug("##############AGENT RELAY SERVER KEY MACHINE###########")
@@ -106,10 +124,5 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                     'ret' : 255,
                     'base64' : False
         }
-       
-        
-        
+
         objectxmpp.send_message_agent( data['jidAM'], datasend, mtype = 'chat')
-         
-         
-         
