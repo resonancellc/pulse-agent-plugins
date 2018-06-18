@@ -37,7 +37,7 @@ plugins for pulse xmppmaster
 %_var/lib/pulse2/xmpp_basepluginscheduler
 %_var/lib/pulse2/clients/config/
 %_var/lib/pulse2/clients/config/inventory.ini.in
-##python2_sitelib/pulse_agent_plugins-1.?-py2.7.egg-info
+%python2_sitelib/pulse_agent_plugins-%{version}-py2.7.egg-info
 
 #--------------------------------------------------------------------
 
