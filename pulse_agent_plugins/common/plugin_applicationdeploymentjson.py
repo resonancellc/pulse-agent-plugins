@@ -1460,16 +1460,16 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                                 mbody = json.dumps(create_message_self_for_transfertfile(sessionid)),
                                                 mtype = 'chat')
                         else:
-                            ##undinstall keypublic on machine after transfert package
+                            ##uninstall keypublic on machine after transfert package
                             #keypublic = get_keypub_ssh()
-                            #undinstallkeypub = {
+                            #uninstallkeypub = {
                                                 #'action': "setkeypubliconauthorizedkeys",
                                                 #'sessionid': sessionid,
                                                 #'data' : {'keypub' : keypublic, 'install' : False},
                                                 #'ret' : 0,
                                                 #'base64' : False }
                             #objectxmpp.send_message(mto = data_in_session['jidmachine'],
-                                                #mbody = json.dumps(undinstallkeypub),
+                                                #mbody = json.dumps(uninstallkeypub),
                                                 #mtype = 'chat')
                             # Creation of the message from depoy to machine
                             logging.getLogger().debug("APPEL PLUGIN FOR DEPLOY ON MACHINE")
