@@ -18,6 +18,7 @@
 # along with Pulse 2; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA 02110-1301, USA.
+# file pulse_xmpp_agent/pluginsmachine/plugin_kiosk.py
 
 import logging
 import json
@@ -25,13 +26,13 @@ import traceback
 import sys
 import socket
 
-plugin = {"VERSION": "1.1", "NAME" : "kiosk", "TYPE" : "machine"}
+plugin = {"VERSION": "1.2", "NAME" : "kiosk", "TYPE" : "machine"}
 
 def action(objectxmpp, action, sessionid, data, message, dataerreur):
     logging.getLogger().debug("=====================================================")
     logging.getLogger().debug(plugin)
-    logging.getLogger().debug("========ok=============================================")
-    
+    logging.getLogger().debug("=====================================================")
+
     datasend = {'action' : "result%s"%plugin['NAME'],
                 'data' :{'subaction' : 'test'},
                 'sessionid' : sessionid
@@ -43,27 +44,24 @@ def action(objectxmpp, action, sessionid, data, message, dataerreur):
                                     mbody=json.dumps(datasend, sort_keys=True, indent=4),
                                     mtype='chat')
         elif data['subaction'] == 'listpackage':
-            #todo
+            # todo
             pass
         elif data['subaction'] == 'initialisation_kiosk':
+            #if len(data['data']) != 0:
             print "send to kiosk"
             strjson = json.dumps(data['data'])
-            print strjson
-            print type(strjson)
-            send_kiosk_data(strjson , objectxmpp.config.kiosk_local_port)
+            send_kiosk_data(strjson , objectxmpp.config.kiosk_local_port, objectxmpp, dataerreur, message)
             pass
 
-    except:
+    except Exception as e:
         traceback.print_exc(file=sys.stdout)
         dataerreur['ret'] = -255
-        dataerreur['data']['msg'] = "command Error\n %s"%data['cmd']
+        dataerreur['data']['msg'] = "plugin kiosk error on machine %s [%s]"%(objectxmpp.boundjid.bare, str(e))
         objectxmpp.send_message(mto=message['from'],
                                 mbody=json.dumps(dataerreur),
                                 mtype='chat')
 
-
-
-def send_kiosk_data(datastrdata, port = 8766):
+def send_kiosk_data(datastrdata, port = 8766, objectxmpp= None, dataerror = None, message = None):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_address = ('localhost', port)
     try:
@@ -72,9 +70,24 @@ def send_kiosk_data(datastrdata, port = 8766):
         sock.sendall(datastrdata.encode('ascii'))
         data = sock.recv(2048)
         print ('received "%s"' % data)
-##  except Exception as e:
-##        print (str(e))
-##        print "erreur conncexion kiosk"
+    except Exception as e:
+        dataerror['ret'] = -255
+        if not "Errno 111" in str(e):
+            traceback.print_exc(file=sys.stdout)
+            logging.getLogger().error("Kiosk [%s]"%str(e))
+            dataerror['data']['msg'] = "plugin kiosk error on machine %s : [%s]"%(objectxmpp.boundjid.bare, str(e))
+            objectxmpp.send_message(mto=message['from'],
+                                    mbody=json.dumps(dataerror),
+                                    mtype='chat')
+        else :
+            logging.getLogger().warning("Kiosk is not listen: verify presence kiosk")
+            msg = "Kiosk is not listen on machine %s : [%s]\nverrify presence kiosk"%(objectxmpp.boundjid.bare, str(e))
+            if objectxmpp is not None and dataerror is not None and message is not None:
+                dataerror['ret'] = -255
+                dataerror['data']['msg'] = msg
+                objectxmpp.send_message(mto=message['from'],
+                                        mbody=json.dumps(dataerror),
+                                        mtype='chat')
+
     finally:
-        print ('closing socket')
         sock.close()

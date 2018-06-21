@@ -26,7 +26,7 @@ from  lib.utils import pluginprocess, install_or_uninstall_keypub_authorized_key
 import logging
 
 DEBUGPULSEPLUGIN = 25
-plugin = { "VERSION" : "1.1", "NAME" : "setkeypubliconauthorizedkeys", "TYPE" : "machine" }
+plugin = { "VERSION" : "1.2", "NAME" : "setkeypubliconauthorizedkeys", "TYPE" : "machine" }
 """
     this plugin install la key from ARS sur AM for the packages transfert in mode push
 """
