@@ -96,7 +96,7 @@ def action( xmppobject, action, sessionid, data, message, dataerreur ):
         if data['cux_type'] == 'VNC':
             # Wait x seconds until tunnel is established and guacamole is ready
             # 5 seconds for the reversessh connection + 2 seconds for the guacamole connection
-            time.sleep(7)
+            time.sleep(10)
 
             # Ask machine plugin to start VNC connection
             datavnc = {
@@ -122,7 +122,6 @@ def action( xmppobject, action, sessionid, data, message, dataerreur ):
         if data['options'] == "vnclistenmode":
             if sys.platform.startswith('win'):
                 try:
-                    time.sleep(3)
                     logging.getLogger().info("start VNC listener")
                     program = os.path.join(os.environ["ProgramFiles"], 'TightVNC', 'tvnserver.exe')
                     #select display for vnc
