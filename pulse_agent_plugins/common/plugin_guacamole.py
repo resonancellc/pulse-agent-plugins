@@ -26,7 +26,7 @@ import time
 import logging
 import os
 
-plugin = {"VERSION" : "1.8", "NAME" : "guacamole",  "TYPE" : "all"}
+plugin = {"VERSION" : "1.9", "NAME" : "guacamole",  "TYPE" : "all"}
 
 
 def action( xmppobject, action, sessionid, data, message, dataerreur ):
