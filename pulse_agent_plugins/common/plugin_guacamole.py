@@ -26,7 +26,7 @@ import time
 import logging
 import os
 
-plugin = {"VERSION" : "1.8", "NAME" : "guacamole",  "TYPE" : "all"}
+plugin = {"VERSION" : "1.9", "NAME" : "guacamole",  "TYPE" : "all"}
 
 
 def action( xmppobject, action, sessionid, data, message, dataerreur ):
@@ -122,8 +122,12 @@ def action( xmppobject, action, sessionid, data, message, dataerreur ):
         if data['options'] == "vnclistenmode":
             if sys.platform.startswith('win'):
                 try:
+                    time.sleep(3)
+                    logging.getLogger().info("start VNC listener")
                     program = os.path.join(os.environ["ProgramFiles"], 'TightVNC', 'tvnserver.exe')
                     #select display for vnc
+                    cmd = """\"%s\" -controlservice -disconnectall"""%(program)
+                    simplecommand(cmd)
                     cmd = """\"%s\" -controlservice -shareprimary"""%(program)
                     simplecommand(cmd)
                     cmd = """\"%s\" -controlservice -connect localhost"""%(program)
