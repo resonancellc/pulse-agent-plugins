@@ -60,7 +60,7 @@ def action(objectxmpp, action, sessionid, data, message, dataerreur):
         elif data['subaction'] == "profiles_updated":
             logging.getLogger().info("send updated profiles to kiosk")
             strjson = json.dumps(data['data'])
-            send_kiosk_data(strjson , objectxmpp.config.kiosk_local_port, objectxmpp, dataerreur, message)
+            send_kiosk_data(strjson, objectxmpp.config.kiosk_local_port, objectxmpp, dataerreur, message)
             pass
 
     except Exception as e:
