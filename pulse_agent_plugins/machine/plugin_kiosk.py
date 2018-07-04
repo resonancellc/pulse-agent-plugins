@@ -26,7 +26,7 @@ import traceback
 import sys
 import socket
 
-plugin = {"VERSION": "1.2", "NAME" : "kiosk", "TYPE" : "machine"}
+plugin = {"VERSION": "1.3", "NAME" : "kiosk", "TYPE" : "machine"}
 
 def action(objectxmpp, action, sessionid, data, message, dataerreur):
     logging.getLogger().debug("=====================================================")
@@ -49,6 +49,11 @@ def action(objectxmpp, action, sessionid, data, message, dataerreur):
         elif data['subaction'] == 'initialisation_kiosk':
             #if len(data['data']) != 0:
             print "send to kiosk"
+            strjson = json.dumps(data['data'])
+            send_kiosk_data(strjson , objectxmpp.config.kiosk_local_port, objectxmpp, dataerreur, message)
+            pass
+        elif data['subaction'] == "profiles_updated":
+            logging.getLogger().info("send updated profiles to kiosk")
             strjson = json.dumps(data['data'])
             send_kiosk_data(strjson , objectxmpp.config.kiosk_local_port, objectxmpp, dataerreur, message)
             pass
