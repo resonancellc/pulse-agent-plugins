@@ -30,7 +30,7 @@ from time import sleep
 import traceback
 from lib.utils import file_put_contents, file_get_contents
 from lib.update_remote_agent import Update_Remote_Agent
-plugin={"VERSION": "1.0", "NAME" : "updateagent", "TYPE" : "all", "waittingmax" : 35, "waittingmin" : 5}
+plugin={"VERSION": "1.001", "NAME" : "updateagent", "TYPE" : "all", "waittingmax" : 35, "waittingmin" : 5}
 
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
@@ -43,9 +43,11 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         if data['subaction'] == "descriptor":
             difference = { }
             sublibdifference = { }
+            file_put_contents(os.path.join(objectxmpp.pathagent, "BOOL_UPDATE_AGENT"),"use file boolean update. enable verify update.")
             if 'version' in data['descriptoragent']:
                 #copy version agent master to image
                 file_put_contents(os.path.join(objectxmpp.img_agent, "agentversion"),data['descriptoragent']['version'])
+                file_put_contents(os.path.join(objectxmpp.pathagent, "agentversion"),data['descriptoragent']['version'])
             #genere
             descriptorimage = Update_Remote_Agent(objectxmpp.img_agent)
             objectxmpp.descriptor_master = data['descriptoragent']
@@ -56,29 +58,30 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             difference['script_agent']= search_diff_agentversion(objectxmpp,data['descriptoragent']['script_agent'], descriptormachine['script_agent'] )
             sublibdifference ['program_agent']=search_filesupp_agentversion(objectxmpp,descriptormachine['program_agent'] ,data['descriptoragent']['program_agent'])
             sublibdifference ['lib_agent']=search_filesupp_agentversion(objectxmpp,descriptormachine['lib_agent'] ,data['descriptoragent']['lib_agent'])
-            sublibdifference ['script_agent']=search_filesupp_agentversion(objectxmpp,descriptormachine['script_agent'] ,data['descriptoragent']['script_agent'])
-
+            sublibdifference ['script_agent'] = search_filesupp_agentversion(objectxmpp,descriptormachine['script_agent'] ,data['descriptoragent']['script_agent'])
+            # attente aleatoire de quelques minutes avant de demander la mise à jour des agents
             try :
-                #todo send message only files for updating.
-
-                # attente aleatoire de quelques minutes avant de demander la mise à jour des agents
-                sleep(randint(plugin['waittingmin'],plugin['waittingmax']))
-                # demande de mise à jour.
-                msgupdate_me = { 'action': "result%s"%action,
-                                  'sessionid': sessionid,
-                                  'data' :  { "subaction" : "update_me",
-                                               "descriptoragent" : difference },
-                                  'ret' : 0,
-                                  'base64' : False }
-                # renvoi descriptor pour demander la mise a jour
-                objectxmpp.send_message(mto="master@pulse/MASTER",
-                                mbody=json.dumps(msgupdate_me),
-                                mtype='chat')
-                logger.debug("to updating files %s"%json.dumps(difference, indent = 4))
-                logger.debug("to deleting files %s"%json.dumps(sublibdifference, indent = 4))
-                delete_file_image(objectxmpp, sublibdifference)
-                descriptorimage = Update_Remote_Agent(objectxmpp.img_agent)
-                return
+                if len(difference['program_agent']) !=0 or len(difference['lib_agent']) !=0 or len(difference['script_agent']) !=0:
+                    #sleep(randint(plugin['waittingmin'],plugin['waittingmax']))
+                    # demande de mise à jour.
+                    #todo send message only files for updating.
+                    msgupdate_me = { 'action': "result%s"%action,
+                                    'sessionid': sessionid,
+                                    'data' :  { "subaction" : "update_me",
+                                                "descriptoragent" : difference },
+                                    'ret' : 0,
+                                    'base64' : False }
+                    # renvoi descriptor pour demander la mise a jour
+                    objectxmpp.send_message(mto="master@pulse/MASTER",
+                                    mbody=json.dumps(msgupdate_me),
+                                    mtype='chat')
+                    logger.debug("to updating files %s"%json.dumps(difference, indent = 4))
+                    logger.debug("to deleting files %s"%json.dumps(sublibdifference, indent = 4))
+                    delete_file_image(objectxmpp, sublibdifference)
+                    descriptorimage = Update_Remote_Agent(objectxmpp.img_agent)
+                    return
+                else:
+                    return
             except Exception as e:
                 logger.error(str(e))
                 traceback.print_exc(file=sys.stdout)
