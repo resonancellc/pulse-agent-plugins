@@ -27,7 +27,7 @@ import base64
 from random import randint
 from time import sleep
 import traceback
-from utils import file_put_contents, file_get_contents
+from lib.utils import file_put_contents, file_get_contents
 from lib.update_remote_agent import Update_Remote_Agent
 plugin={"VERSION": "1.0", "NAME" : "updateagent", "TYPE" : "all", "waittingmax" : 5, "waittingmin" : 1}
 
