@@ -18,6 +18,7 @@
 # along with Pulse 2; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA 02110-1301, USA.
+# file : /common/plugin_updateagent.py
 import os
 import sys
 import logging
@@ -29,19 +30,15 @@ from time import sleep
 import traceback
 from lib.utils import file_put_contents, file_get_contents
 from lib.update_remote_agent import Update_Remote_Agent
-plugin={"VERSION": "1.0", "NAME" : "updateagent", "TYPE" : "all", "waittingmax" : 5, "waittingmin" : 1}
+plugin={"VERSION": "1.0", "NAME" : "updateagent", "TYPE" : "all", "waittingmax" : 35, "waittingmin" : 5}
 
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
-
 
 def action( objectxmpp, action, sessionid, data, message, dataerreur):
     logger.debug("###################################################")
     logger.debug("call %s from %s"%(plugin, message['from']))
     logger.debug("###################################################")
-    #print json.dumps(data, indent = 4)
-    #print objectxmpp.Update_Remote_Agentlist.md5_descriptor_agent_to_string()
-
     if "subaction" in data :
         if data['subaction'] == "descriptor":
             difference = { }
@@ -60,10 +57,13 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             sublibdifference ['program_agent']=search_filesupp_agentversion(objectxmpp,descriptormachine['program_agent'] ,data['descriptoragent']['program_agent'])
             sublibdifference ['lib_agent']=search_filesupp_agentversion(objectxmpp,descriptormachine['lib_agent'] ,data['descriptoragent']['lib_agent'])
             sublibdifference ['script_agent']=search_filesupp_agentversion(objectxmpp,descriptormachine['script_agent'] ,data['descriptoragent']['script_agent'])
-            # attente aleatoire de quelques minutes avant de demander la mise à jour des agents
-            sleep(randint(plugin['waittingmin'],plugin['waittingmax']))
-            # demande de mise à jour.
+
             try :
+                #todo send message only files for updating.
+
+                # attente aleatoire de quelques minutes avant de demander la mise à jour des agents
+                sleep(randint(plugin['waittingmin'],plugin['waittingmax']))
+                # demande de mise à jour.
                 msgupdate_me = { 'action': "result%s"%action,
                                   'sessionid': sessionid,
                                   'data' :  { "subaction" : "update_me",
@@ -74,14 +74,8 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                 objectxmpp.send_message(mto="master@pulse/MASTER",
                                 mbody=json.dumps(msgupdate_me),
                                 mtype='chat')
-                #print "descriptor from master"
-                #print json.dumps(objectxmpp.descriptor_master, indent = 4)
-                #print "descriptor from image"
-                #print descriptorimage.md5_descriptor_agent_to_string()
-                #print "difference"
-                #print json.dumps(difference, indent = 4)
-                #print "file a supprimer"
-                #print json.dumps(sublibdifference, indent = 4)
+                logger.debug("to updating files %s"%json.dumps(difference, indent = 4))
+                logger.debug("to deleting files %s"%json.dumps(sublibdifference, indent = 4))
                 delete_file_image(objectxmpp, sublibdifference)
                 descriptorimage = Update_Remote_Agent(objectxmpp.img_agent)
                 return
@@ -93,9 +87,6 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                 logger.error("update agent install lib name missing")
                 return
             else:
-                print data['namescript']
-                #install_script_in_image_agent(data['namescript'], "install_lib_agent")
-                # copy install fichier de conf
                 content = zlib.decompress(base64.b64decode(data['content']))
                 dump_file_in_img(objectxmpp, data['namescript'], content, "lib_agent")
         elif data['subaction'] == "install_program_agent":
@@ -103,9 +94,6 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                 logger.error("update agent install program name missing")
                 return
             else:
-                print data['namescript']
-                #install_script_in_image_agent(data['namescript'], "install_lib_agent")
-                # copy install fichier de conf
                 content = zlib.decompress(base64.b64decode(data['content']))
                 dump_file_in_img(objectxmpp, data['namescript'], content, "program_agent")
         elif data['subaction'] == "install_script_agent":
@@ -113,7 +101,6 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                 logger.error("updateagent install script name missing")
                 return
             else:
-                print data['namescript']
                 content = zlib.decompress(base64.b64decode(data['content']))
                 dump_file_in_img(objectxmpp, data['namescript'], content, "script_agent")
 
@@ -121,25 +108,34 @@ def reinstall_agent_with_image_agent_version_master(objectxmpp):
     newdescriptorimage = Update_Remote_Agent(objectxmpp.img_agent)
     if sys.platform.startswith('win'):
         for fichier in newdescriptorimage.get_md5_descriptor_agent()['program_agent']:
-            os.system('copy  %s %s'%(os.path.join(objectxmpp.img_agent, fichier), os.path.join(objectxmpp.pathagent, fichier), fichier))
-        os.system('copy  %s %s'%(os.path.join(objectxmpp.img_agent, agentversion), os.path.join(objectxmpp.pathagent, agentversion)))
+            os.system('copy  %s %s'%(os.path.join(objectxmpp.img_agent, fichier),
+                                     os.path.join(objectxmpp.pathagent, fichier)))
+            logger.debug('install program agent  %s to %s'%(os.path.join(objectxmpp.img_agent, fichier),
+                                                            os.path.join(objectxmpp.pathagent)))
+        os.system('copy  %s %s'%(os.path.join(objectxmpp.img_agent, "agentversion"),
+                                 os.path.join(objectxmpp.pathagent, "agentversion")))
         for fichier in newdescriptorimage.get_md5_descriptor_agent()['lib_agent']:
-            os.system('copy  %s %s'%(os.path.join(objectxmpp.img_agent, "lib", fichier), os.path.join(objectxmpp.pathagent, "lib", fichier), fichier))
+            os.system('copy  %s %s'%(os.path.join(objectxmpp.img_agent, "lib", fichier),
+                                     os.path.join(objectxmpp.pathagent, "lib", fichier)))
+            logger.debug('install lib agent  %s to %s'%(os.path.join(objectxmpp.img_agent, "lib", fichier),
+                                                        os.path.join(objectxmpp.pathagent, "lib", fichier)))
         for fichier in newdescriptorimage.get_md5_descriptor_agent()['script_agent']:
-            os.system('copy  %s %s'%(os.path.join(objectxmpp.img_agent, "script", fichier), os.path.join(objectxmpp.pathagent, "script", fichier), fichier))
+            os.system('copy  %s %s'%(os.path.join(objectxmpp.img_agent, "script", fichier),
+                                     os.path.join(objectxmpp.pathagent, "script", fichier)))
+            logger.debug('install script agent %s to %s'%(os.path.join(objectxmpp.img_agent, "script", fichier),
+                                                          os.path.join(objectxmpp.pathagent, "script", fichier)))
         #todo base de reg install version
     elif sys.platform.startswith('linux') or sys.platform.startswith('darwin'):
-        #os.system('cp  %s/*.py %s'%(objectxmpp.img_agent, objectxmpp.pathagent))
-        #os.system('cp  %s/script/* %s/script/'%(objectxmpp.img_agent, objectxmpp.pathagent))
-        #os.system('cp  %s/lib/*.py %s/lib/'%(objectxmpp.img_agent, objectxmpp.pathagent))
-        #os.system('cp  %s/agentversion %s/agentversion'%(objectxmpp.img_agent, objectxmpp.pathagent))
-        print('cp  %s/*.py %s'%(objectxmpp.img_agent, objectxmpp.pathagent))
-        print('cp  %s/script/* %s/script/'%(objectxmpp.img_agent, objectxmpp.pathagent))
-        print('cp  %s/lib/*.py %s/lib/'%(objectxmpp.img_agent, objectxmpp.pathagent))
-        print('cp  %s/agentversion %s/agentversion'%(objectxmpp.img_agent, objectxmpp.pathagent))
+        os.system('cp  %s/*.py %s'%(objectxmpp.img_agent, objectxmpp.pathagent))
+        os.system('cp  %s/script/* %s/script/'%(objectxmpp.img_agent, objectxmpp.pathagent))
+        os.system('cp  %s/lib/*.py %s/lib/'%(objectxmpp.img_agent, objectxmpp.pathagent))
+        os.system('cp  %s/agentversion %s/agentversion'%(objectxmpp.img_agent, objectxmpp.pathagent))
+        logger.debug('cp  %s/*.py %s'%(objectxmpp.img_agent, objectxmpp.pathagent))
+        logger.debug('cp  %s/script/* %s/script/'%(objectxmpp.img_agent, objectxmpp.pathagent))
+        logger.debug('cp  %s/lib/*.py %s/lib/'%(objectxmpp.img_agent, objectxmpp.pathagent))
+        logger.debug('cp  %s/agentversion %s/agentversion'%(objectxmpp.img_agent, objectxmpp.pathagent))
     else: 
         logger.error("reinstall agent copy file error os missing")
-
 
 def dump_file_in_img(objectxmpp, namescript, content, typescript):
     if typescript == "program_agent":
@@ -170,12 +166,10 @@ def search_diff_agentversion(objectxmpp, frombase, frommachine):
     listdifference = []
     listmissing = []
     for i in frombase:
-        print "traite %s : "%i
         if i in frommachine:
             # fichiers des 2 cotes.
             if frommachine[i] != frombase[i]:
                 listdifference.append(i)
-                print "add : %s "%i
         else:
             listmissing.append(i)
     listdifference.extend(listmissing)
