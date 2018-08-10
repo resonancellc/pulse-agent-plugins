@@ -30,6 +30,8 @@ from time import sleep
 import traceback
 from lib.utils import file_put_contents, file_get_contents
 from lib.update_remote_agent import Update_Remote_Agent
+import _winreg
+
 plugin={"VERSION": "1.001", "NAME" : "updateagent", "TYPE" : "all", "waittingmax" : 35, "waittingmin" : 5}
 
 logger = logging.getLogger()
@@ -117,6 +119,18 @@ def reinstall_agent_with_image_agent_version_master(objectxmpp):
                                                             os.path.join(objectxmpp.pathagent)))
         os.system('copy  %s %s'%(os.path.join(objectxmpp.img_agent, "agentversion"),
                                  os.path.join(objectxmpp.pathagent, "agentversion")))
+        agentversion = os.path.join(objectxmpp.pathagent, "agentversion")
+        key = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE,
+                              "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Pulse Agent\\",
+                              0 ,
+                              _winreg.KEY_SET_VALUE | _winreg.KEY_WOW64_64KEY)
+        _winreg.SetValueEx ( key, 
+                            'DisplayVersion'  ,
+                            0,
+                            _winreg.REG_SZ,
+                            file_get_contents(os.path.join(objectxmpp.img_agent, "agentversion")))
+        _winreg.CloseKey(key)
+
         for fichier in newdescriptorimage.get_md5_descriptor_agent()['lib_agent']:
             os.system('copy  %s %s'%(os.path.join(objectxmpp.img_agent, "lib", fichier),
                                      os.path.join(objectxmpp.pathagent, "lib", fichier)))
