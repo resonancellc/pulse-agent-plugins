@@ -4,7 +4,7 @@
 
 Summary:	Pulse Agent Plugins
 Name:		pulse-agent-plugins
-Version:	1.7
+Version:	1.8
 %if ! %use_git
 Release:        20%{?dist}
 %else

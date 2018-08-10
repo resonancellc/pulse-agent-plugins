@@ -22,7 +22,7 @@
 
 import logging
 import os
-plugin = {"VERSION" : "1.0", "NAME" : "force_setup_agent",  "TYPE" : "all"}
+plugin = {"VERSION" : "1.1", "NAME" : "force_setup_agent",  "TYPE" : "all"}
 
 
 def action( objectxmpp, action, sessionid, data, message, dataerreur):
@@ -30,6 +30,8 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
     logging.getLogger().debug("call %s from %s"%(plugin,message['from']))
     logging.getLogger().debug("###################################################")
     namefilebool = os.path.join(os.path.dirname(os.path.realpath(__file__)),"..", "BOOLCONNECTOR")
-    fichier= open(namefilebool,"w")
-    fichier.close()
-    
+    file= open(namefilebool,"w")
+    file.close()
+    force_reconfiguration = os.path.join(os.path.dirname(os.path.realpath(__file__)),"..", "action_force_reconfiguration")
+    file= open(force_reconfiguration,"w")
+    file.close()
