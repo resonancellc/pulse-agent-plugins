@@ -30,9 +30,8 @@ from time import sleep
 import traceback
 from lib.utils import file_put_contents, file_get_contents
 from lib.update_remote_agent import Update_Remote_Agent
-import _winreg
 
-plugin={"VERSION": "1.001", "NAME" : "updateagent", "TYPE" : "all", "waittingmax" : 35, "waittingmin" : 5}
+plugin={"VERSION": "1.2", "NAME" : "updateagent", "TYPE" : "all", "waittingmax" : 35, "waittingmin" : 5}
 
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
@@ -112,6 +111,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
 def reinstall_agent_with_image_agent_version_master(objectxmpp):
     newdescriptorimage = Update_Remote_Agent(objectxmpp.img_agent)
     if sys.platform.startswith('win'):
+        import _winreg
         for fichier in newdescriptorimage.get_md5_descriptor_agent()['program_agent']:
             os.system('copy  %s %s'%(os.path.join(objectxmpp.img_agent, fichier),
                                      os.path.join(objectxmpp.pathagent, fichier)))
