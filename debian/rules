@@ -28,6 +28,8 @@ build:
 	mkdir -p var/lib/pulse2/clients/config
 	cp pulse_agent_plugins/config/guacamoleconf.ini.in var/lib/pulse2/clients/config
 	cp pulse_agent_plugins/config/inventory.ini.in var/lib/pulse2/clients/config
+	rm -fv var/lib/pulse2/xmpp_baseplugin/plugin_updateagent.py
+
 clean:
 	dh_testdir
 	dh_testroot
