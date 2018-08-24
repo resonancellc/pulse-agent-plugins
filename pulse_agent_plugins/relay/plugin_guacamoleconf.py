@@ -26,7 +26,7 @@ import traceback
 from random import randint
 import socket
 
-plugin = {"VERSION": "1.7", "NAME" :"guacamoleconf", "TYPE":"relayserver"}
+plugin = {"VERSION": "1.8", "NAME" :"guacamoleconf", "TYPE":"relayserver"}
 
 def insertprotocole(protocole, hostname):
     return """INSERT INTO guacamole_connection (connection_name, protocol) VALUES ( '%s_%s', '%s');"""%(protocole.upper(), hostname, protocole.lower())
@@ -95,27 +95,17 @@ def action(objetxmpp, action, sessionid, data, message, dataerreur, result):
                 # Machine is not reachable. We will need a reversessh connection
                 hostname = 'localhost'
                 port = randint(49152, 65535)
-            if proto.upper() == 'VNC':
-                # Specific VNC case: we will use reversessh tunnel and listener in all cases
-                hostname = 'localhost'
-                port = randint(49152, 65535)
-                listen_timeout = 50000
-                reverse_connect = 'true'
+                if proto.upper() == 'VNC':
+                    # We need additional options for reverse VNC
+                    listen_timeout = 50000
+                    reverse_connect = 'true'
             sock.close()
             cursor.execute(insertparameter(result['data']['connection'][proto.upper()], 'hostname', hostname))
-            db.commit()
             cursor.execute(insertparameter(result['data']['connection'][proto.upper()], 'port', port))
-            db.commit()
             cursor.execute(insertparameter(result['data']['connection'][proto.upper()], 'color-depth', '24'))
-            db.commit()
             try:
                 cursor.execute(insertparameter(result['data']['connection'][proto.upper()], 'listen-timeout', listen_timeout))
-                db.commit()
-            except NameError:
-                pass
-            try:
                 cursor.execute(insertparameter(result['data']['connection'][proto.upper()], 'reverse-connect', reverse_connect))
-                db.commit()
             except NameError:
                 pass
     except MySQLdb.Error, e:
