@@ -26,7 +26,7 @@ import traceback
 from random import randint
 import socket
 
-plugin = {"VERSION": "1.9", "NAME" :"guacamoleconf", "TYPE":"relayserver"}
+plugin = {"VERSION": "1.10", "NAME" :"guacamoleconf", "TYPE":"relayserver"}
 
 def insertprotocole(protocole, hostname):
     return """INSERT INTO guacamole_connection (connection_name, protocol) VALUES ( '%s_%s', '%s');"""%(protocole.upper(), hostname, protocole.lower())
@@ -90,24 +90,24 @@ def action(objetxmpp, action, sessionid, data, message, dataerreur, result):
                 sock.connect((data['machine_ip'], int(data['remoteservice'][proto])))
                 # Machine is directly reachable. We will not need a reversessh connection
                 hostname = data['machine_ip']
+                cursor.execute(insertparameter(result['data']['connection'][proto.upper()], 'hostname', hostname))
                 port = data['remoteservice'][proto]
+                cursor.execute(insertparameter(result['data']['connection'][proto.upper()], 'port', port))
             except socket.error:
                 # Machine is not reachable. We will need a reversessh connection
                 hostname = 'localhost'
+                cursor.execute(insertparameter(result['data']['connection'][proto.upper()], 'hostname', hostname))
                 port = randint(49152, 65535)
+                cursor.execute(insertparameter(result['data']['connection'][proto.upper()], 'port', port))
                 if proto.upper() == 'VNC':
                     # We need additional options for reverse VNC
                     listen_timeout = 50000
+                    cursor.execute(insertparameter(result['data']['connection'][proto.upper()], 'listen-timeout', listen_timeout))
                     reverse_connect = 'true'
+                    cursor.execute(insertparameter(result['data']['connection'][proto.upper()], 'reverse-connect', reverse_connect))
             sock.close()
-            cursor.execute(insertparameter(result['data']['connection'][proto.upper()], 'hostname', hostname))
-            cursor.execute(insertparameter(result['data']['connection'][proto.upper()], 'port', port))
+
             cursor.execute(insertparameter(result['data']['connection'][proto.upper()], 'color-depth', '24'))
-            try:
-                cursor.execute(insertparameter(result['data']['connection'][proto.upper()], 'listen-timeout', listen_timeout))
-                cursor.execute(insertparameter(result['data']['connection'][proto.upper()], 'reverse-connect', reverse_connect))
-            except NameError:
-                pass
             # Commit our queries
             db.commit()
 
