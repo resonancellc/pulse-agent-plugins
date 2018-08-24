@@ -26,7 +26,7 @@ import time
 import logging
 import os
 
-plugin = {"VERSION" : "1.9", "NAME" : "guacamole",  "TYPE" : "all"}
+plugin = {"VERSION" : "1.10", "NAME" : "guacamole",  "TYPE" : "all"}
 
 
 def action( xmppobject, action, sessionid, data, message, dataerreur ):
@@ -93,7 +93,7 @@ def action( xmppobject, action, sessionid, data, message, dataerreur ):
                     mbody = json.dumps(datareversessh),
                     mtype = 'chat')
 
-        if data['cux_type'] == 'VNC':
+        if data['cux_type'] == 'VNC' and hostname == 'localhost':
             # Wait x seconds until tunnel is established and guacamole is ready
             # 5 seconds for the reversessh connection + 2 seconds for the guacamole connection
             time.sleep(10)
