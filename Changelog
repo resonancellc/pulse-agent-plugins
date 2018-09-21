@@ -1,14 +1,16 @@
+* [BUGFIX] Fix setup of guacamole connections
+
 pulse-agent-plugins 1.8
 =========================
 * [FEATURE] Force reconfiguration of agent
-* [BUGFIX] Ensure VNC listener start after guacamole
+* [BUGFIX]  Ensure VNC listener start after guacamole
 
 pulse-agent-plugins 1.7
 =========================
 * [FEATURE] Improve execution of commands by using synchronous operations
 * [FEATURE] First version of Pulse Kiosk
-* [BUGFIX] Fix encoding for remote console
-* [BUGFIX] Use first display for clients with more than one display
+* [BUGFIX]  Fix encoding for remote console
+* [BUGFIX]  Use first display for clients with more than one display
 
 pulse-agent-plugins 1.6
 =========================
