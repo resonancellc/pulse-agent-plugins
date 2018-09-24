@@ -8,3 +8,11 @@ guacamole_dbpasswd = @@PLUGIN_GUACAMOLE_DBPASSWD@@
 
 # Define protocols needed
 #guacamole_protocols = rdp ssh vnc
+
+# Protocol options
+# https://guacamole.apache.org/doc/gug/configuring-guacamole.html
+# Prefix option with protocol_ to define it
+# eg. rdp_server-layout = en-us-qwerty
+rdp_server-layout = fr-fr-azerty
+rdp_color-depth = 24
+vnc_color-depth = 24

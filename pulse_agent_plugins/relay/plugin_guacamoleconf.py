@@ -26,7 +26,7 @@ import traceback
 from random import randint
 import socket
 
-plugin = {"VERSION": "1.10", "NAME" :"guacamoleconf", "TYPE":"relayserver"}
+plugin = {"VERSION": "1.11", "NAME" :"guacamoleconf", "TYPE":"relayserver"}
 
 def insertprotocole(protocole, hostname):
     return """INSERT INTO guacamole_connection (connection_name, protocol) VALUES ( '%s_%s', '%s');"""%(protocole.upper(), hostname, protocole.lower())
@@ -107,7 +107,11 @@ def action(objetxmpp, action, sessionid, data, message, dataerreur, result):
                     cursor.execute(insertparameter(result['data']['connection'][proto.upper()], 'reverse-connect', reverse_connect))
             sock.close()
 
-            cursor.execute(insertparameter(result['data']['connection'][proto.upper()], 'color-depth', '24'))
+            # Options specific to a protocol
+            for option in objetxmpp.config.__dict__.keys():
+                if option.startswith(proto.lower()):
+                    cursor.execute(insertparameter(result['data']['connection'][proto.upper()], option[4:], getattr(objetxmpp.config,option)))
+
             # Commit our queries
             db.commit()
 
