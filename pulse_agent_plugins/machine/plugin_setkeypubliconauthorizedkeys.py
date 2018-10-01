@@ -20,7 +20,12 @@
 # MA 02110-1301, USA.
 
 
-from  lib.utils import pluginprocess, install_or_uninstall_keypub_authorized_keys
+
+
+try:
+    from  lib.utils import pluginprocess, install_or_uninstall_keypub_authorized_keys
+except ImportError:
+    from  lib.utils import pluginprocess, install_or_undinstall_keypub_authorized_keys as install_or_uninstall_keypub_authorized_keys
 
 
 import logging

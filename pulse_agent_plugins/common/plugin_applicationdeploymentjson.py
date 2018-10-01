@@ -20,7 +20,7 @@
 # MA 02110-1301, USA.
 # file  plugin_applicationdeploymentjson.py
 
-
+import base64
 import json
 import sys, os
 from lib.managepackage import managepackage, search_list_of_deployment_packages
@@ -30,7 +30,7 @@ import logging
 import pycurl
 import platform
 #from lib.utils import save_back_to_deploy, cleanbacktodeploy, simplecommandstr, get_keypub_ssh
-from lib.utils import save_back_to_deploy, cleanbacktodeploy, simplecommandstr
+from lib.utils import save_back_to_deploy, cleanbacktodeploy, simplecommandstr, isBase64
 import copy
 import traceback
 from sleekxmpp.xmlstream import  JID
@@ -38,7 +38,7 @@ import time
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
 
-plugin = {"VERSION" : "2.907", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
+plugin = {"VERSION" : "3.01", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
 
 
 """
@@ -204,7 +204,20 @@ def initialisesequence(datasend, objectxmpp, sessionid ):
         objectxmpp.session.createsessiondatainfo(sessionid,  datasession = datasend['data'], timevalid = 10)
         logging.getLogger().debug("update object backtodeploy")
 
-    logging.getLogger().debug("start call gracet")
+    logging.getLogger().debug("start call gracet (initiation)")
+    objectxmpp.xmpplog('START DEPLOY AFTER TRANSFERT FILES : %s'%datasend['data']['name'],
+                        type = 'deploy',
+                        sessionname = sessionid,
+                        priority = -1,
+                        action = "",
+                        who = objectxmpp.boundjid.bare,
+                        how = "",
+                        why = "",
+                        module = "Deployment| Notify | Execution | Scheduled",
+                        date = None ,
+                        fromuser = datasend['data']['advanced']['login'],
+                        touser = "")
+    logging.getLogger().debug("start call gracet (initiation)")
     objectxmpp.xmpplog('START DEPLOY AFTER TRANSFERT FILES : %s'%datasend['data']['name'],
                         type = 'deploy',
                         sessionname = sessionid,
@@ -218,8 +231,43 @@ def initialisesequence(datasend, objectxmpp, sessionid ):
                         fromuser = datasend['data']['advanced']['login'],
                         touser = "")
     logging.getLogger().debug("start call gracet")
+    if 'data' in datasend and \
+                'descriptor' in datasend['data'] and \
+                'path' in datasend['data'] and \
+                "info" in datasend['data']['descriptor'] and \
+                "launcher" in  datasend['data']['descriptor']['info']:
+        try:
+            id_package = os.path.basename(datasend['data']['path'])
+            if id_package != "":
+                name = datasend['data']['name']
+                commandlauncher = base64.b64decode(datasend['data']['descriptor']['info']['launcher'])
+                objectxmpp.infolauncherkiook.set_cmd_launch(id_package, commandlauncher)
+                #addition correspondance name et idpackage.
+                if name != "":
+                    objectxmpp.infolauncherkiook.set_ref_package_for_name(name, id_package)
+                    objectxmpp.xmpplog("launcher command for kiosk [%s] - [%s] -> [%s]"%(commandlauncher, name, id_package),
+                                type = 'deploy',
+                                sessionname = datasend['sessionid'],
+                                priority = -1,
+                                action = "",
+                                who = objectxmpp.boundjid.bare,
+                                how = "",
+                                why = "",
+                                module = "Deployment | Kiosk",
+                                date = None ,
+                                fromuser = str(datasend['data']['advanced']['login']),
+                                touser = "")
+                else:
+                    logging.getLogger().warning("nanme missing for info launcher command of kiosk")
+            else:
+                logging.getLogger().warning("id package missing for info launcher command of kiosk")
+        except:
+            logging.getLogger().error("launcher command of kiosk")
+            traceback.print_exc(file=sys.stdout)
+    else:
+        logging.getLogger().warning("launcher command missing for kiosk")
     grafcet(objectxmpp, datasend)
-    logging.getLogger().debug("outing graphcet phase1")
+    logging.getLogger().debug("outing graphcet end initiation")
 
 def curlgetdownloadfile( destfile, urlfile, insecure = True, limit_rate_ko= None):
     # As long as the file is opened in binary mode, both Python 2 and Python 3

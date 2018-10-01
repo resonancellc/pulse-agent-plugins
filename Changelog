@@ -1,5 +1,6 @@
 pulse-agent-plugins 1.8
 =========================
+* [FEATURE] Force reconfiguration of agent
 * [BUGFIX] Ensure VNC listener start after guacamole
 
 pulse-agent-plugins 1.7
