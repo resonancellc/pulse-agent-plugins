@@ -98,3 +98,6 @@ mkdir -p %buildroot%_var/lib/pulse2/xmpp_basepluginscheduler
 mkdir -p %buildroot%_var/lib/pulse2/clients/config
 cp pulse_agent_plugins/config/guacamoleconf.ini.in %buildroot%_var/lib/pulse2/clients/config
 cp pulse_agent_plugins/config/inventory.ini.in %buildroot%_var/lib/pulse2/clients/config
+
+rm -fv %buildroot%_var/lib/pulse2/xmpp_baseplugin/plugin_updateagent.py
+

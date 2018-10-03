@@ -26,7 +26,7 @@ import traceback
 from random import randint
 import socket
 
-plugin = {"VERSION": "1.7", "NAME" :"guacamoleconf", "TYPE":"relayserver"}
+plugin = {"VERSION": "1.12", "NAME" :"guacamoleconf", "TYPE":"relayserver"}
 
 def insertprotocole(protocole, hostname):
     return """INSERT INTO guacamole_connection (connection_name, protocol) VALUES ( '%s_%s', '%s');"""%(protocole.upper(), hostname, protocole.lower())
@@ -90,34 +90,37 @@ def action(objetxmpp, action, sessionid, data, message, dataerreur, result):
                 sock.connect((data['machine_ip'], int(data['remoteservice'][proto])))
                 # Machine is directly reachable. We will not need a reversessh connection
                 hostname = data['machine_ip']
+                cursor.execute(insertparameter(result['data']['connection'][proto.upper()], 'hostname', hostname))
                 port = data['remoteservice'][proto]
+                cursor.execute(insertparameter(result['data']['connection'][proto.upper()], 'port', port))
             except socket.error:
                 # Machine is not reachable. We will need a reversessh connection
                 hostname = 'localhost'
+                cursor.execute(insertparameter(result['data']['connection'][proto.upper()], 'hostname', hostname))
                 port = randint(49152, 65535)
-            if proto.upper() == 'VNC':
-                # Specific VNC case: we will use reversessh tunnel and listener in all cases
-                hostname = 'localhost'
-                port = randint(49152, 65535)
-                listen_timeout = 50000
-                reverse_connect = 'true'
+                cursor.execute(insertparameter(result['data']['connection'][proto.upper()], 'port', port))
+                if proto.upper() == 'VNC':
+                    # We need additional options for reverse VNC
+                    listen_timeout = 50000
+                    cursor.execute(insertparameter(result['data']['connection'][proto.upper()], 'listen-timeout', listen_timeout))
+                    reverse_connect = 'true'
+                    cursor.execute(insertparameter(result['data']['connection'][proto.upper()], 'reverse-connect', reverse_connect))
             sock.close()
-            cursor.execute(insertparameter(result['data']['connection'][proto.upper()], 'hostname', hostname))
+
+            # Options specific to a protocol
+            for option in objetxmpp.config.__dict__.keys():
+                if option.startswith(proto.lower()):
+                    if option == 'ssh_keyfile':
+                        # specific processing for ssh key
+                        with open(objetxmpp.config.ssh_keyfile, 'r') as keyfile:
+                            keydata=keyfile.read()
+                        cursor.execute(insertparameter(result['data']['connection'][proto.upper()], 'private-key', keydata))
+                    else:
+                        cursor.execute(insertparameter(result['data']['connection'][proto.upper()], option[4:], getattr(objetxmpp.config,option)))
+
+            # Commit our queries
             db.commit()
-            cursor.execute(insertparameter(result['data']['connection'][proto.upper()], 'port', port))
-            db.commit()
-            cursor.execute(insertparameter(result['data']['connection'][proto.upper()], 'color-depth', '24'))
-            db.commit()
-            try:
-                cursor.execute(insertparameter(result['data']['connection'][proto.upper()], 'listen-timeout', listen_timeout))
-                db.commit()
-            except NameError:
-                pass
-            try:
-                cursor.execute(insertparameter(result['data']['connection'][proto.upper()], 'reverse-connect', reverse_connect))
-                db.commit()
-            except NameError:
-                pass
+
     except MySQLdb.Error, e:
         db.close()
         dataerreur['data']['msg'] = "MySQL Error: %s" % str(e)
