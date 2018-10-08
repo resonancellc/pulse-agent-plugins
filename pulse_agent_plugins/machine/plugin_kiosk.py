@@ -139,18 +139,20 @@ def associate_launchers_to_datas(data):
     Returns:
         data dict
     """
-    kioskdb = manageskioskdb()
-    for package in data:
-        launcher = kioskdb.get_cmd_launch(package['uuid'])
 
-        if "Launch" in package['action']:
-            # If no launcher in database
-            if launcher is None or launcher == "":
-                # Remove the Launch button
-                package['action'].remove("Launch")
+    kioskdb = manageskioskdb()
+    if "packages_list" in data:
+        for package in data["packages_list"]:
+            launcher = kioskdb.get_cmd_launch(package['uuid'])
+
+            if "Launch" in package['action']:
+                # If no launcher in database
+                if launcher is None or launcher == "":
+                    # Remove the Launch button
+                    package['action'].remove("Launch")
+                else:
+                    package['launcher'] = launcher
             else:
-                package['launcher'] = launcher
-        else:
-            pass
+                pass
 
     return data
