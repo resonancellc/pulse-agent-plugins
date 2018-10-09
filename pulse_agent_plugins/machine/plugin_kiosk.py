@@ -106,6 +106,7 @@ def send_kiosk_data(datastrdata, port = 8766, objectxmpp= None, dataerror = None
             sock.sendall(datastrdata.encode('ascii'))
             data = sock.recv(2048)
             print ('received "%s"' % data)
+            objectxmpp.kiosk_presence == "True"
         except Exception as e:
             dataerror['ret'] = -255
             if not "Errno 111" in str(e):
@@ -115,6 +116,7 @@ def send_kiosk_data(datastrdata, port = 8766, objectxmpp= None, dataerror = None
                 objectxmpp.send_message(mto=message['from'],
                                         mbody=json.dumps(dataerror),
                                         mtype='chat')
+                objectxmpp.kiosk_presence == "False"
 
             else :
                 logging.getLogger().warning("Kiosk is not listen: verify presence kiosk")
@@ -125,8 +127,12 @@ def send_kiosk_data(datastrdata, port = 8766, objectxmpp= None, dataerror = None
                     objectxmpp.send_message(mto=message['from'],
                                             mbody=json.dumps(dataerror),
                                             mtype='chat')
+                    objectxmpp.kiosk_presence == "False"
     except Exception as e:
         logging.getLogger().error("Socket to kiosk can't be established")
+        if objectxmpp is not None:
+            objectxmpp.kiosk_presence == "False"
+
     finally:
         sock.close()
 
