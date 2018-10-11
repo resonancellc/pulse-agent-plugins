@@ -38,7 +38,7 @@ import time
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
 
-plugin = {"VERSION" : "3.01", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
+plugin = {"VERSION" : "3.02", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
 
 
 """
@@ -1088,8 +1088,37 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                 except  Exception as e:
                     print str(e)
                     traceback.print_exc(file=sys.stdout)
-                    #return
-                objectxmpp.managefifo.setfifo(data)
+
+                if 'spooling' in data["descriptor"]["info"]\
+                    and data["descriptor"]["info"]['spooling'] == 'high':
+                    objectxmpp.managefifo.setfifo(data, 'high')
+                    objectxmpp.xmpplog('spooling the deployment high priority',
+                                        type = 'deploy',
+                                        sessionname = sessionid,
+                                        priority = -1,
+                                        action = "",
+                                        who = objectxmpp.boundjid.bare,
+                                        how = "",
+                                        why = "",
+                                        module = "Deployment | Transfert | Notify",
+                                        date = None ,
+                                        fromuser = data['login'],
+                                        touser = "")
+                else:
+                    objectxmpp.managefifo.setfifo(data)
+                    objectxmpp.xmpplog('spooling the deployment ordinary priority',
+                                        type = 'deploy',
+                                        sessionname = sessionid,
+                                        priority = -1,
+                                        action = "",
+                                        who = objectxmpp.boundjid.bare,
+                                        how = "",
+                                        why = "",
+                                        module = "Deployment | Transfert | Notify",
+                                        date = None ,
+                                        fromuser = data['login'],
+                                        touser = "")
+
                 takeresource(data, objectxmpp, sessionid)
                 objectxmpp.xmpplog('spooling the deployment %s'%sessionid,
                                     type = 'deploy',
