@@ -1,6 +1,4 @@
-* [FEATURE] Manage guacamole options such as server-layout and color-depth
-* [FEATURE] Auto-login to ssh console
-* [BUGFIX]  Fix setup of guacamole connections
+* [BUGFIX] Fix setup of guacamole connections
 
 pulse-agent-plugins 1.8
 =========================
