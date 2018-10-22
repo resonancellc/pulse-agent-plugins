@@ -25,14 +25,24 @@ import logging
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
 
-plugin = { "VERSION" : "1.301", "NAME" : "resultapplicationdeploymentjson", "TYPE" : "all" }
+plugin = { "VERSION" : "1.304", "NAME" : "resultapplicationdeploymentjson", "TYPE" : "all" }
 
 
 def action( objectxmpp, action, sessionid, data, message, dataerreur):
-    logging.getLogger().debug("###################################################")
-    logging.getLogger().debug("call %s from %s"%(plugin, message['from']))
-    logging.getLogger().debug("###################################################")
-    if objectxmpp.session.isexist(sessionid):
-        logging.getLogger().debug("clear sessionid %s from %s"%(sessionid, message['from']))
-        objectxmpp.session.clearnoevent(sessionid)
+    logger.debug("###################################################")
+    logger.debug("call %s from %s"%(plugin, message['from']))
+    logger.debug("###################################################")
+
+    if 'endtransfert' in data:
+        try:
+            objectxmpp.session.resource.discard(sessionid)
+            objectxmpp.session.currentresource.discard(sessionid)
+            logger.debug("free ressource transfert from %s"%message['from'])
+        except Exception as e:
+            logger.error("%s"%str(e))
+            pass
+    else:
+        if objectxmpp.session.isexist(sessionid):
+            logging.getLogger().debug("clear sessionid %s from %s"%(sessionid, message['from']))
+            objectxmpp.session.clearnoevent(sessionid)
 
