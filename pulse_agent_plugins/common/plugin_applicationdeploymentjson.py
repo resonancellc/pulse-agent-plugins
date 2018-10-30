@@ -38,7 +38,7 @@ import time
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
 
-plugin = {"VERSION" : "3.02", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
+plugin = {"VERSION" : "3.03", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
 
 
 """
@@ -201,7 +201,7 @@ def initialisesequence(datasend, objectxmpp, sessionid ):
     datasend['data']['stepcurrent'] = 0 #step initial
     if not objectxmpp.session.isexist(sessionid):
         logging.getLogger().debug("creation session %s"%sessionid)
-        objectxmpp.session.createsessiondatainfo(sessionid,  datasession = datasend['data'], timevalid = 10)
+        objectxmpp.session.createsessiondatainfo(sessionid,  datasession = datasend['data'], timevalid = 180)
         logging.getLogger().debug("update object backtodeploy")
 
     logging.getLogger().debug("start call gracet (initiation)")
@@ -1078,7 +1078,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                         touser = "")
 
             try:
-                objectxmpp.xmpplog('configuration concurrent deployments is %s  nb resource local %s'%(objectxmpp.config.concurrentdeployments,len(objectxmpp.session.resource)),
+                objectxmpp.xmpplog("Spooling resource %s > concurent %s"%(len(objectxmpp.session.resource), objectxmpp.config.concurrentdeployments),
                                             type = 'deploy',
                                             sessionname = sessionid,
                                             priority = -1,
@@ -1090,10 +1090,15 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                             date = None ,
                                             fromuser = data['login'],
                                             touser = "")
+ 
+                objectxmpp.session.resource.add(sessionid)
+                if not objectxmpp.session.isexist(sessionid):
+                    logging.getLogger().debug("creation session %s"%sessionid)
+                    objectxmpp.session.createsessiondatainfo(sessionid,  datasession = data, timevalid = 180)
 
-                #objectxmpp.session.resource.add(sessionid)
                 if len(objectxmpp.session.resource) > objectxmpp.config.concurrentdeployments:
                     objectxmpp.levelcharge = objectxmpp.levelcharge + 1
+
                     data["differed"] = True
                     data["sessionid"] = sessionid
                     data["action"] = action
@@ -1251,14 +1256,14 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     mtype = 'chat')
             if not objectxmpp.session.isexist(sessionid):
                 logging.getLogger().debug("creation session %s"%sessionid)
-                objectxmpp.session.createsessiondatainfo(sessionid,  datasession = transfertdeploy, timevalid = 15)
+                objectxmpp.session.createsessiondatainfo(sessionid,  datasession = transfertdeploy, timevalid = 180)
         else:
             # mode push ARS to AM
             # UPLOAD FILE PACKAGE to MACHINE, all dependency
             # We are in the case where it is necessary to install all the packages for the deployment, dependency included
             if not objectxmpp.session.isexist(sessionid):
                 logging.getLogger().debug("creation session %s"%sessionid)
-                objectxmpp.session.createsessiondatainfo(sessionid,  datasession = data, timevalid = 15)
+                objectxmpp.session.createsessiondatainfo(sessionid,  datasession = data, timevalid = 180)
                 if 'methodetransfert' in data and data['methodetransfert'] == "pushrsync":
                     # installkey sur agent machine authorized_keys
                     logging.getLogger().debug("Install key ARS in authorized_keys on agent machine")
