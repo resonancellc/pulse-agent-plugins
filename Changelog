@@ -1,3 +1,10 @@
+pulse-agent-plugins 1.9
+=========================
+* [FEATURE] Allow all options of Guacamole in Pulse
+* [FEATURE] Auto configure SSH connection in Guacamole
+* [FEATURE] Allow a deployment to be spooled in priority
+* [BUGFIX] Do not use reverse connection in Guacamole if Pulse can contact machine
+
 pulse-agent-plugins 1.8
 =========================
 * [FEATURE] Force reconfiguration of agent
