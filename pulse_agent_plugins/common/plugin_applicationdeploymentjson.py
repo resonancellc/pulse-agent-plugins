@@ -38,7 +38,7 @@ import time
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
 
-plugin = {"VERSION" : "3.01", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
+plugin = {"VERSION" : "3.03", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
 
 
 """
@@ -201,7 +201,7 @@ def initialisesequence(datasend, objectxmpp, sessionid ):
     datasend['data']['stepcurrent'] = 0 #step initial
     if not objectxmpp.session.isexist(sessionid):
         logging.getLogger().debug("creation session %s"%sessionid)
-        objectxmpp.session.createsessiondatainfo(sessionid,  datasession = datasend['data'], timevalid = 10)
+        objectxmpp.session.createsessiondatainfo(sessionid,  datasession = datasend['data'], timevalid = 180)
         logging.getLogger().debug("update object backtodeploy")
 
     logging.getLogger().debug("start call gracet (initiation)")
@@ -1077,33 +1077,62 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                         fromuser = data['login'],
                                         touser = "")
 
-            if objectxmpp.session.len() > objectxmpp.config.concurrentdeployments:
-                objectxmpp.levelcharge = objectxmpp.levelcharge + 1
+            try:
+                objectxmpp.xmpplog("Spooling resource %s > concurent %s"%(len(objectxmpp.session.resource), objectxmpp.config.concurrentdeployments),
+                                            type = 'deploy',
+                                            sessionname = sessionid,
+                                            priority = -1,
+                                            action = "",
+                                            who = objectxmpp.boundjid.bare,
+                                            how = "",
+                                            why = "",
+                                            module = "Deployment | Transfert | Notify",
+                                            date = None ,
+                                            fromuser = data['login'],
+                                            touser = "")
+ 
+                objectxmpp.session.resource.add(sessionid)
+                if not objectxmpp.session.isexist(sessionid):
+                    logging.getLogger().debug("creation session %s"%sessionid)
+                    objectxmpp.session.createsessiondatainfo(sessionid,  datasession = data, timevalid = 180)
 
-                data["differed"] = True
-                data["sessionid"] = sessionid
-                data["action"] = action
-                try:
-                    del data["descriptor"]["metaparameter"]
-                except  Exception as e:
-                    print str(e)
-                    traceback.print_exc(file=sys.stdout)
-                    #return
-                objectxmpp.managefifo.setfifo(data)
-                takeresource(data, objectxmpp, sessionid)
-                objectxmpp.xmpplog('spooling the deployment %s'%sessionid,
-                                    type = 'deploy',
-                                    sessionname = sessionid,
-                                    priority = -1,
-                                    action = "",
-                                    who = objectxmpp.boundjid.bare,
-                                    how = "",
-                                    why = "",
-                                    module = "Deployment | Transfert | Notify",
-                                    date = None ,
-                                    fromuser = data['login'],
-                                    touser = "")
-                return
+                if len(objectxmpp.session.resource) > objectxmpp.config.concurrentdeployments:
+                    objectxmpp.levelcharge = objectxmpp.levelcharge + 1
+
+                    data["differed"] = True
+                    data["sessionid"] = sessionid
+                    data["action"] = action
+                    try:
+                        del data["descriptor"]["metaparameter"]
+                    except  Exception as e:
+                        print str(e)
+                        traceback.print_exc(file=sys.stdout)
+                    msglevelspoolig = ""
+                    if 'spooling' in data["descriptor"]["info"]\
+                        and data["descriptor"]["info"]['spooling'] == 'high':
+                        objectxmpp.managefifo.setfifo(data, 'high')
+                        msglevelspoolig = 'spooling the deployment %s (high priority)'%sessionid
+                    else:
+                        objectxmpp.managefifo.setfifo(data)
+                        msglevelspoolig = 'spooling the deployment %s (ordinary priority)'%sessionid
+                    if msglevelspoolig != "":
+                        objectxmpp.xmpplog(msglevelspoolig,
+                                            type = 'deploy',
+                                            sessionname = sessionid,
+                                            priority = -1,
+                                            action = "",
+                                            who = objectxmpp.boundjid.bare,
+                                            how = "",
+                                            why = "",
+                                            module = "Deployment | Transfert | Notify",
+                                            date = None ,
+                                            fromuser = data['login'],
+                                            touser = "")
+                    takeresource(data, objectxmpp, sessionid)
+                    return
+            except Exception as e:
+                logging.getLogger().debug("%s"%str(e))
+                pass
 
         # Start deploiement
         if 'differed' in data:
@@ -1227,14 +1256,14 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     mtype = 'chat')
             if not objectxmpp.session.isexist(sessionid):
                 logging.getLogger().debug("creation session %s"%sessionid)
-                objectxmpp.session.createsessiondatainfo(sessionid,  datasession = transfertdeploy, timevalid = 15)
+                objectxmpp.session.createsessiondatainfo(sessionid,  datasession = transfertdeploy, timevalid = 180)
         else:
             # mode push ARS to AM
             # UPLOAD FILE PACKAGE to MACHINE, all dependency
             # We are in the case where it is necessary to install all the packages for the deployment, dependency included
             if not objectxmpp.session.isexist(sessionid):
                 logging.getLogger().debug("creation session %s"%sessionid)
-                objectxmpp.session.createsessiondatainfo(sessionid,  datasession = data, timevalid = 15)
+                objectxmpp.session.createsessiondatainfo(sessionid,  datasession = data, timevalid = 180)
                 if 'methodetransfert' in data and data['methodetransfert'] == "pushrsync":
                     # installkey sur agent machine authorized_keys
                     logging.getLogger().debug("Install key ARS in authorized_keys on agent machine")
@@ -1543,4 +1572,4 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                                     mbody = json.dumps(datasend),
                                                     mtype = 'chat')
                             if objectxmpp.session.isexist(sessionid):
-                                    objectxmpp.session.clearnoevent(sessionid)
+                                objectxmpp.session.clearnoevent(sessionid)
