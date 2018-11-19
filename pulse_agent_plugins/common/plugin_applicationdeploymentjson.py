@@ -38,7 +38,7 @@ import time
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
 
-plugin = {"VERSION" : "3.04", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
+plugin = {"VERSION" : "3.05", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
 
 
 """
@@ -1111,9 +1111,9 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                             touser = "")
  
                 objectxmpp.session.resource.add(sessionid)
-                if not objectxmpp.session.isexist(sessionid):
-                    logger.debug("creation session %s"%sessionid)
-                    objectxmpp.session.createsessiondatainfo(sessionid,  datasession = data, timevalid = 180)
+                #if not objectxmpp.session.isexist(sessionid):
+                    #logger.debug("creation session %s"%sessionid)
+                    #objectxmpp.session.createsessiondatainfo(sessionid,  datasession = data, timevalid = 180)
 
                 if len(objectxmpp.session.resource) > objectxmpp.config.concurrentdeployments:
                     objectxmpp.levelcharge = objectxmpp.levelcharge + 1
