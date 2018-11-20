@@ -218,19 +218,6 @@ def initialisesequence(datasend, objectxmpp, sessionid ):
                         fromuser = datasend['data']['advanced']['login'],
                         touser = "")
     logger.debug("start call gracet (initiation)")
-    objectxmpp.xmpplog('START DEPLOY AFTER TRANSFERT FILES : %s'%datasend['data']['name'],
-                        type = 'deploy',
-                        sessionname = sessionid,
-                        priority = -1,
-                        action = "",
-                        who = objectxmpp.boundjid.bare,
-                        how = "",
-                        why = "",
-                        module = "Deployment| Notify | Execution | Scheduled",
-                        date = None ,
-                        fromuser = datasend['data']['advanced']['login'],
-                        touser = "")
-    logger.debug("start call gracet")
     if 'data' in datasend and \
                 'descriptor' in datasend['data'] and \
                 'path' in datasend['data'] and \
