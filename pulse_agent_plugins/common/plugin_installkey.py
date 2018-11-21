@@ -20,7 +20,8 @@
 # MA 02110-1301, USA.
 # file common/plugin_installkey.py
 
-import sys, os
+import sys
+import os
 import logging
 from lib.utils import file_get_contents, file_put_contents_w_a, simplecommand, encode_strconsole, decode_strconsole, file_put_contents
 import json
@@ -28,7 +29,7 @@ import json
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
 
-plugin = { "VERSION" : "1.2", "NAME" : "installkey", "TYPE" : "all" }
+plugin = { "VERSION" : "1.3", "NAME" : "installkey", "TYPE" : "all" }
 
 def action( objectxmpp, action, sessionid, data, message, dataerreur):
     logging.getLogger().debug("###################################################")
@@ -51,7 +52,8 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             return
         #install keypub on AM
         if sys.platform.startswith('linux'):
-            import pwd, grp
+            import pwd
+            import grp
             #verify compte pulse exist
             try:
                 uid = pwd.getpwnam("pulse").pw_uid
