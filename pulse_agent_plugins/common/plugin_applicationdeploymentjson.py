@@ -38,7 +38,7 @@ import time
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
 
-plugin = {"VERSION" : "3.06", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
+plugin = {"VERSION" : "3.07", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
 
 
 """
@@ -1109,7 +1109,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                     try:
                         del data["descriptor"]["metaparameter"]
                     except  Exception as e:
-                        print str(e)
+                        logger.warning(str(e))
                         traceback.print_exc(file=sys.stdout)
                     msglevelspoolig = ""
                     if 'spooling' in data["descriptor"]["info"]\
@@ -1405,12 +1405,12 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                 data_in_session['limit_rate_ko'] != "" and\
                                     int(data_in_session['limit_rate_ko']) > 0:
                                 cmdpre = "scp -C -r -l %s "%(int(data_in_session['limit_rate_ko']) * 8)
-                                cmdrsyn = "rsync --delete -z --bwlimit=%s "%(int(data_in_session['limit_rate_ko']) * 8)
+                                cmdrsyn = "rsync -z --bwlimit=%s "%(int(data_in_session['limit_rate_ko']) * 8)
 
                                 msg = "push transfert package :%s to %s <span style='font-weight: bold;color : orange;'> [transfert rate %s ko]</span>"%(data_in_session['name'],data_in_session['jidmachine'], data_in_session['limit_rate_ko'])
                             else:
                                 cmdpre = "scp -C -r "
-                                cmdrsyn = "rsync --delete -z "
+                                cmdrsyn = "rsync -z "
                                 msg = "push transfert package :%s to %s"%(data_in_session['name'],data_in_session['jidmachine'])
                             optionscp = "-o IdentityFile=/root/.ssh/id_rsa "\
                                      "-o StrictHostKeyChecking=no "\
@@ -1419,16 +1419,32 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                      "-o PasswordAuthentication=no "\
                                      "-o ServerAliveInterval=10 "\
                                      "-o CheckHostIP=no "\
+                                     "-o LogLevel=ERROR "\
                                      "-o ConnectTimeout=10 "\
                                         "%s %s@%s:\"\\\"%s\\\"\""%( pathin,
                                                         "pulse",
                                                         data_in_session['ipmachine'],
                                                         data_in_session['folders_packages'])
 
-                            optionrsync = " -e \"ssh -o IdentityFile=/root/.ssh/id_rsa -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o Batchmode=yes -o PasswordAuthentication=no -o ServerAliveInterval=10 -o CheckHostIP=no -o ConnectTimeout=10\"   -av %s/ %s@%s:\"%s/\""%(pathin, "pulse", data_in_session['ipmachine'], os.path.join(data_in_session['folders_packages'],packuuid))
+                            if data_in_session['folders_packages'].lower().startswith('c:') or data_in_session['folders_packages'][1] == ":" :
+                                pathnew =  data_in_session['folders_packages'][2:]
+                                pathnew = "../../../../" + pathnew.replace("\\","/") + packuuid + "/"
+                            else:
+                                pathnew = data_in_session['folders_packages'] + packuuid + "/"
+                            pathnew = pathnew.replace("//","/")
+                            optionrsync = " -e \"ssh -o IdentityFile=/root/.ssh/id_rsa "\
+                                            "-o UserKnownHostsFile=/dev/null "\
+                                            "-o StrictHostKeyChecking=no "\
+                                            "-o Batchmode=yes "\
+                                            "-o PasswordAuthentication=no "\
+                                            "-o ServerAliveInterval=10 "\
+                                            "-o CheckHostIP=no "\
+                                            "-o LogLevel=ERROR "\
+                                            "-o ConnectTimeout=10\" "\
+                                            "-av %s/ %s@%s:\"%s\""%(pathin,"pulse",data_in_session['ipmachine'],pathnew)
                             cmdscp = cmdpre + optionscp
                             cmdrsyn = cmdrsyn + optionrsync
-                            logger.debug("tranfert cmd :\n %s"%cmdrsyn)
+
                             if not os.path.isdir(data_in_session['path']):
                                 objectxmpp.xmpplog('<span style="color: red;";>ERROR transfert [Package Server does not have this package %s]</span>'%data_in_session['path'],
                                                 type = 'deploy',
@@ -1478,10 +1494,23 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                             #push transfert
                             takeresource(data_in_session, objectxmpp, sessionid)
                             if objectxmpp.config.pushmethod == "scp":
-                                obcmd = simplecommandstr(cmdscp)
+                                cmdexec = cmdscp
                             else:
-                                obcmd = simplecommandstr(cmdrsyn)
-
+                                cmdexec = cmdrsyn
+                            logger.debug("tranfert cmd :\n %s"%cmdexec)
+                            objectxmpp.xmpplog( "cmd : <span style=\"font-weight: bold;font-style: italic; color: blue;\">" + cmdexec + "</span>",
+                                                type = 'deploy',
+                                                sessionname = sessionid,
+                                                priority = -1,
+                                                action = "",
+                                                who = objectxmpp.boundjid.bare,
+                                                how = "",
+                                                why = "",
+                                                module = "Deployment | Error | Download | Transfert",
+                                                date = None ,
+                                                fromuser = data_in_session['login'],
+                                                touser = "")
+                            obcmd = simplecommandstr(cmdexec)
                             objectxmpp.xmpplog( msg,
                                                 type = 'deploy',
                                                 sessionname = sessionid,
