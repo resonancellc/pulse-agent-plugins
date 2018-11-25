@@ -82,18 +82,18 @@ def scpfile(scr, dest,  objectxmpp, reverbool=False):
                     "-o CheckHostIP=no "\
                     "-o ConnectTimeout=10 "
     cmdpre =  "%s %s %s"%(cmdpre, scr, dest)
-    objectxmpp.xmpplog( 'cmd : ' + cmdpre,
-                                type = 'noset',
-                                sessionname = sessionid,
-                                priority = -1,
-                                action = "",
-                                who = objectxmpp.boundjid.bare,
-                                how = "",
-                                why = "",
-                                module = "Notify | Download | Transfertfile",
-                                date = None ,
-                                fromuser = "",
-                                touser = "")
+    #objectxmpp.xmpplog( 'cmd : ' + cmdpre,
+    #                            type = 'noset',
+    #                            sessionname = sessionid,
+    #                            priority = -1,
+    #                            action = "",
+    #                            who = objectxmpp.boundjid.bare,
+    #                            how = "",
+    #                            why = "",
+    #                            module = "Notify | Download | Transfertfile",
+    #                            date = None ,
+    #                            fromuser = "",
+    #                            touser = "")
     return cmdpre
 
 def action( objectxmpp, action, sessionid, data, message, dataerreur):
