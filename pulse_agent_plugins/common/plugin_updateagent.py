@@ -26,7 +26,6 @@ import json
 import zlib
 import base64
 from random import randint
-from time import sleep
 import traceback
 from lib.utils import file_put_contents, file_get_contents
 from lib.update_remote_agent import Update_Remote_Agent
@@ -63,7 +62,6 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             # attente aleatoire de quelques minutes avant de demander la mise à jour des agents
             try :
                 if len(difference['program_agent']) !=0 or len(difference['lib_agent']) !=0 or len(difference['script_agent']) !=0:
-                    #sleep(randint(plugin['waittingmin'],plugin['waittingmax']))
                     # demande de mise à jour.
                     #todo send message only files for updating.
                     msgupdate_me = { 'action': "result%s"%action,
