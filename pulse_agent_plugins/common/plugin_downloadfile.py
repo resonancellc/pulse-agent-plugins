@@ -57,7 +57,7 @@ def create_path(type ="windows", host="", ipordomain="", path=""):
         else:
             return "\"%s\""%(path)
 
-def scpfile(scr, dest,  objectxmpp, reverbool=False):
+def scpfile(scr, dest,  objectxmpp, sessionid, reverbool=False):
     if reverbool:
         # version fichier de configuration.
         cmdpre = "scp -C -rp3 -F %s "\
@@ -82,18 +82,18 @@ def scpfile(scr, dest,  objectxmpp, reverbool=False):
                     "-o CheckHostIP=no "\
                     "-o ConnectTimeout=10 "
     cmdpre =  "%s %s %s"%(cmdpre, scr, dest)
-    #objectxmpp.xmpplog( 'cmd : ' + cmdpre,
-    #                            type = 'noset',
-    #                            sessionname = sessionid,
-    #                            priority = -1,
-    #                            action = "",
-    #                            who = objectxmpp.boundjid.bare,
-    #                            how = "",
-    #                            why = "",
-    #                            module = "Notify | Download | Transfertfile",
-    #                            date = None ,
-    #                            fromuser = "",
-    #                            touser = "")
+    objectxmpp.xmpplog( 'cmd : ' + cmdpre,
+                               type = 'noset',
+                               sessionname = sessionid,
+                               priority = -1,
+                               action = "",
+                               who = objectxmpp.boundjid.bare,
+                               how = "",
+                               why = "",
+                               module = "Notify | Download | Transfertfile",
+                               date = None ,
+                               fromuser = "",
+                               touser = "")
     return cmdpre
 
 def action( objectxmpp, action, sessionid, data, message, dataerreur):
@@ -155,9 +155,8 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                        ipordomain=data['ipmaster'],
                        path=data['path_dest_master'])
     if reversessh == False:
-        command = scpfile(source, dest, objectxmpp)
+        command = scpfile(source, dest, objectxmpp, sessionid)
     else:
-
         datareversessh = {
             'action': 'reverse_ssh_on',
             'sessionid': sessionid,
@@ -181,6 +180,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         command = scpfile(source,
                           dest,
                           objectxmpp,
+                          sessionid,
                           reverbool = True)
 
         time.sleep(paramglobal['timeupreverssh'])
