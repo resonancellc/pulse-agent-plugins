@@ -270,7 +270,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                             touser = "")
         z = simplecommand(cmd)
         if z['code'] == 0:
-            objectxmpp.xmpplog( 'result transfert : ' + z['result'],
+            objectxmpp.xmpplog( 'result transfert : ' + '\n'.join(z['result']),
                                 type = 'noset',
                                 sessionname = sessionid,
                                 priority = -1,
