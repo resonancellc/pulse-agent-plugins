@@ -133,7 +133,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
 
     if reversessh == False:
         if str(data['osmachine']).startswith('Linux') or str(data['osmachine']).startswith('darwin'):
-            source = create_path(type = "linux", host = "root", ipordomain=data['ipmachine'], path = r'%s'%data['path_src_machine'])
+            source = create_path(type = "linux", host = "pulse", ipordomain=data['ipmachine'], path = r'%s'%data['path_src_machine'])
         else:
             source = create_path(type = "windows", host = "pulse", ipordomain = data['ipmachine'], path = r'%s'%data['path_src_machine'])
 
@@ -142,7 +142,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         file_put_contents(paramglobal['filetmpconfigssh'],  cretefileconfigrescp)
     else:
         if str(data['osmachine']).startswith('Linux') or str(data['osmachine']).startswith('darwin'):
-            source = create_path(type = "linux", host = "root", ipordomain="localhost", path = r'%s'%data['path_src_machine'])
+            source = create_path(type = "linux", host = "pulse", ipordomain="localhost", path = r'%s'%data['path_src_machine'])
         else:
             source = create_path(type = "windows", host = "pulse", ipordomain = "localhost", path = r'%s'%data['path_src_machine'])
 
