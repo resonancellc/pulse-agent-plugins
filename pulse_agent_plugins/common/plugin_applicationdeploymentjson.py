@@ -1290,7 +1290,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                 askinfo( data['jidmachine'],
                         sessionid,
                         objectxmpp,
-                        informationasking = ['folders_packages'],
+                        informationasking = ['folders_packages', 'os'],
                         replyaction = action)
             else:
                 # The session exists
@@ -1307,13 +1307,27 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                         #data_in_session['keyinstall'] = True
                         #objsession.setdatasession(data_in_session)
 
-                    if 'actiontype' in data and 'folders_packages' in data and data['actiontype'] == 'requestinfo' :
-                        logger.debug("folders_packages")
-                        data_in_session['folders_packages'] = data['folders_packages']
+                    if 'actiontype' in data and data['actiontype'] == 'requestinfo' :
+                        if 'folders_packages' in data :
+                            data_in_session['folders_packages'] = data['folders_packages']
+                            logger.debug("folders_packages client machine %s"%data_in_session['folders_packages'])
+                        if 'os' in data:
+                            logger.debug("folders_packages")
+                            data_in_session['os'] = data['os']
+                            logger.debug("os client machine %s"%data_in_session['os'])
+                            data_in_session['os_version'] = data['os_version']
+                            #set  user ssh
+                            if data_in_session['os'].startswith('linux'):
+                                data_in_session['userssh'] = "pulseuser"
+                            elif data_in_session['os'].startswith('win'):
+                                data_in_session['userssh'] = "pulse"
+                            elif data_in_session['os'].startswith('darwin'):
+                                data_in_session['userssh'] = "pulse"
+                        # information set in session data
                         objsession.setdatasession(data_in_session)
 
                     # We verify that we have all the information for the deployment
-                    if 'folders_packages' in data_in_session and data_in_session['folders_packages'] == "":
+                    if not 'folders_packages' in data_in_session or not 'os' in data_in_session:
                         # termine deploy on error
                         # We do not know folders_packages
                         logger.debug("SORRY DEPLOY TERMINATE FOLDERS_PACKAGE MISSING")
