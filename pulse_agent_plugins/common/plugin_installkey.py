@@ -29,7 +29,7 @@ import json
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
 
-plugin = { "VERSION" : "1.3", "NAME" : "installkey", "TYPE" : "all" }
+plugin = { "VERSION" : "1.4", "NAME" : "installkey", "TYPE" : "all" }
 
 def action( objectxmpp, action, sessionid, data, message, dataerreur):
     logging.getLogger().debug("###################################################")
@@ -56,16 +56,16 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             import grp
             #verify compte pulse exist
             try:
-                uid = pwd.getpwnam("pulse").pw_uid
-                gid = grp.getgrnam("pulse").gr_gid
+                uid = pwd.getpwnam("pulseuser").pw_uid
+                gid = grp.getgrnam("pulseuser").gr_gid
                 gidroot = grp.getgrnam("root").gr_gid
             except:
                 #le compte n'existe pas
-                result = simplecommand(encode_strconsole("useradd pulse --home /var/lib/pulse2/ --shell /bin/rbash"))
-                uid = pwd.getpwnam("pulse").pw_uid
-                gid = grp.getgrnam("pulse").gr_gid
+                result = simplecommand(encode_strconsole("useradd pulseuser --home /var/lib/pulse2/ --create-home --shell /bin/rbash --system --user-group --disabled-password"))
+                uid = pwd.getpwnam("pulseuser").pw_uid
+                gid = grp.getgrnam("pulseuser").gr_gid
                 gidroot = grp.getgrnam("root").gr_gid
-            authorized_keys_path = os.path.join('/', 'var', 'lib', 'pulse2', '.ssh', 'authorized_keys')
+            authorized_keys_path = os.path.join(os.path.expanduser('~pulseuser'), '.ssh', 'authorized_keys')
             if not os.path.isdir(os.path.dirname(authorized_keys_path)):
                 os.makedirs(os.path.dirname(authorized_keys_path), 0700)
             if not os.path.isfile(authorized_keys_path):
@@ -73,7 +73,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             os.chown(os.path.dirname(authorized_keys_path), uid, gid)
             os.chown(authorized_keys_path, uid, gid)
             os.chown(authorized_keys_path, uid, gid)
-            packagepath = os.path.join('/', 'var', 'lib', 'pulse2', 'packages')
+            packagepath = os.path.join(os.path.expanduser('~pulseuser'), 'packages')
             os.chown(packagepath, uid, gidroot)
             os.chmod(os.path.dirname(authorized_keys_path), 0700)
             os.chmod(authorized_keys_path, 0644)
@@ -82,7 +82,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         elif sys.platform.startswith('win'):
             authorized_keys_path = os.path.join(os.environ["ProgramFiles"], 'Pulse', '.ssh','authorized_keys' )
         elif sys.platform.startswith('darwin'):
-            authorized_keys_path = os.path.join(os.path.join('/', 'var', 'lib', 'pulse2', '.ssh', 'authorized_keys') )
+            authorized_keys_path = os.path.join(os.path.join(os.path.expanduser('~pulse'), '.ssh', 'authorized_keys') )
         else:
             return
 

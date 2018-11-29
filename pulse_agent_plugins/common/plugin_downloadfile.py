@@ -32,7 +32,7 @@ import socket
 from random import randint
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
-plugin = { "VERSION" : "1.64", "NAME" : "downloadfile", "TYPE" : "all" }
+plugin = { "VERSION" : "1.65", "NAME" : "downloadfile", "TYPE" : "all" }
 paramglobal = {"timeupreverssh" : 20 , "portsshmaster" : 22, "filetmpconfigssh" : "/tmp/tmpsshconf", "remoteport" : 22}
 def create_path(type ="windows", host="", ipordomain="", path=""):
     """
@@ -132,7 +132,9 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                             touser = "")
 
     if reversessh == False:
-        if str(data['osmachine']).startswith('Linux') or str(data['osmachine']).startswith('darwin'):
+        if str(data['osmachine']).startswith('Linux'):
+            source = create_path(type = "linux", host = "pulseuser", ipordomain=data['ipmachine'], path = r'%s'%data['path_src_machine'])
+        elif str(data['osmachine']).startswith('darwin'):
             source = create_path(type = "linux", host = "pulse", ipordomain=data['ipmachine'], path = r'%s'%data['path_src_machine'])
         else:
             source = create_path(type = "windows", host = "pulse", ipordomain = data['ipmachine'], path = r'%s'%data['path_src_machine'])
@@ -141,7 +143,9 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         cretefileconfigrescp = "Host %s\nPort %s\nHost %s\nPort %s\n"%(data['ipmaster'], paramglobal['portsshmaster'], data['ipmachine'], localport)
         file_put_contents(paramglobal['filetmpconfigssh'],  cretefileconfigrescp)
     else:
-        if str(data['osmachine']).startswith('Linux') or str(data['osmachine']).startswith('darwin'):
+        if str(data['osmachine']).startswith('Linux'):
+            source = create_path(type = "linux", host = "pulseuser", ipordomain="localhost", path = r'%s'%data['path_src_machine'])
+        elif str(data['osmachine']).startswith('darwin'):
             source = create_path(type = "linux", host = "pulse", ipordomain="localhost", path = r'%s'%data['path_src_machine'])
         else:
             source = create_path(type = "windows", host = "pulse", ipordomain = "localhost", path = r'%s'%data['path_src_machine'])
@@ -175,7 +179,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         objectxmpp.send_message(mto = message['to'],
                     mbody = json.dumps(datareversessh),
                     mtype = 'chat')
- 
+
         # initialise se cp
         command = scpfile(source,
                           dest,
@@ -202,7 +206,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                 fromuser = "",
                                 touser = "")
 
-   
+
     z = simplecommand(command)
     print z['result']
     print z['code']
