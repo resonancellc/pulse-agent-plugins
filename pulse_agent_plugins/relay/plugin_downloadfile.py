@@ -32,7 +32,7 @@ import socket
 from random import randint
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
-plugin = { "VERSION" : "1.65", "NAME" : "downloadfile", "TYPE" : "relay" }
+plugin = { "VERSION" : "1.66", "NAME" : "downloadfile", "TYPE" : "relay" }
 paramglobal = {"timeupreverssh" : 20 , "portsshmaster" : 22, "filetmpconfigssh" : "/tmp/tmpsshconf", "remoteport" : 22}
 def create_path(type ="windows", host="", ipordomain="", path=""):
     """
@@ -100,8 +100,16 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
     logging.getLogger().debug("###################################################")
     logging.getLogger().debug("call %s from %s"%(plugin,message['from']))
     logging.getLogger().debug("###################################################")
-
-    print json.dumps(data,indent=4)
+    # print json.dumps(data,indent=4)
+    logger.debug("Install key ARS in authorized_keys on agent machine")
+    body = {'action' : 'installkey',
+            'sessionid': sessionid,
+            'data' : { 'jidAM' : data['jidmachine']
+            }
+    }
+    objectxmpp.send_message( mto = objectxmpp.boundjid.bare,
+                             mbody = json.dumps(body),
+                             mtype = 'chat')
     reversessh = False
     localport = 22
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
