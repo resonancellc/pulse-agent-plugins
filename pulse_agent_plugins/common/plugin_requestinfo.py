@@ -25,11 +25,12 @@
 import json
 from lib.managepackage import managepackage
 import logging
-import platform, sys
+import platform
+import sys
 
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
-plugin = { "VERSION" : "1.1", "NAME" : "requestinfo", "TYPE" : "all" }
+plugin = { "VERSION" : "1.2", "NAME" : "requestinfo", "TYPE" : "all" }
 
 def action( objectxmpp, action, sessionid, data, message, dataerreur):
     logging.getLogger().debug("call %s from %s"%(plugin,message['from']))
