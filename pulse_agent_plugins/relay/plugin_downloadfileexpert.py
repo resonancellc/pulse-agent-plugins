@@ -19,8 +19,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA 02110-1301, USA.
 #
-# file plugin_downloadfile.py
-# pluginsrelay/plugin_downloadfile.py
+# 
+# file relay/plugin_downloadfileexpert.py
 import logging
 
 from lib.utils import  simplecommand
@@ -33,7 +33,7 @@ from random import randint
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
 
-plugin = { "VERSION" : "1.0", "NAME" : "downloadfileexpert", "TYPE" : "all" }
+plugin = { "VERSION" : "1.0", "NAME" : "downloadfileexpert", "TYPE" : "relay" }
 paramglobal = {"timeupreverssh" : 30 , "portsshmaster" : 22, "filetmpconfigssh" : "/tmp/tmpsshconf", "remoteport" : 22}
 def create_path(type ="windows", host="", ipordomain="", path=""):
     """
@@ -171,12 +171,16 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
     data['path_src_machine_dir'] = data['path_src_machine_dir'] + data['path_src_machine_file']
     for directory in data['path_src_machine_dir']:
         if reversessh == False:
-            if str(data['osmachine']).startswith('Linux') or str(data['osmachine']).startswith('darwin'):
+            if str(data['osmachine']).startswith('Linux'):
+                source = create_path(type = "linux", host = "pulseuser", ipordomain=data['ipmachine'], path = r'%s'%directory)
+            elif str(data['osmachine']).startswith('darwin'):
                 source = create_path(type = "linux", host = "pulse", ipordomain=data['ipmachine'], path = r'%s'%directory)
             else:
                 source = create_path(type = "windows", host = "pulse", ipordomain = data['ipmachine'], path = r'%s'%directory)
         else:
-            if str(data['osmachine']).startswith('Linux') or str(data['osmachine']).startswith('darwin'):
+            if str(data['osmachine']).startswith('Linux'):
+                source = create_path(type = "linux", host = "pulseuser", ipordomain="localhost", path = r'%s'%directory)
+            elif str(data['osmachine']).startswith('darwin'):
                 source = create_path(type = "linux", host = "pulse", ipordomain="localhost", path = r'%s'%directory)
             else:
                 source = create_path(type = "windows", host = "pulse", ipordomain = "localhost", path = r'%s'%directory)
