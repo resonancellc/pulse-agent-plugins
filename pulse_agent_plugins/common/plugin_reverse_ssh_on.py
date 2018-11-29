@@ -30,7 +30,7 @@ from lib.utils import file_get_contents, file_put_contents, simplecommandstr
 import shutil
 import logging
 
-plugin = {"VERSION" : "2.9", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
+plugin = {"VERSION" : "2.10", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
 
 def checkresult(result):
     if result['codereturn'] != 0:
@@ -85,10 +85,10 @@ def install_key_ssh_relayserver(keypriv, private=False):
 
     if private == True:
         keyname = "id_rsa"
-        keyperm = "0o600"
+        keyperm = 0o600
     else:
         keyname = "id_rsa.pub"
-        keyperm = "0o644"
+        keyperm = 0o644
 
     if sys.platform.startswith('linux'):
         if not os.path.isdir(os.path.join(os.path.expanduser('~pulseuser'), ".ssh/")):
@@ -232,11 +232,12 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur ):
                 if not 'persistance' in data:
                     data['persistance'] = "no"
                 if 'persistance' in data and data['persistance'].lower() != "no":
-                    logging.getLogger().info("suppression reversessh %s"%str(objectxmpp.reversesshmanage[data['persistance']]))
-                    cmd = "kill -9 %s"%str(objectxmpp.reversesshmanage[data['persistance']])
-                    logging.getLogger().info(cmd)
-                    simplecommandstr(cmd)
-                    objectxmpp.xmpplog( "suppression reversessh %s"%str(objectxmpp.reversesshmanage[data['persistance']]),
+                    if data['persistance'] in objectxmpp.reversesshmanage:
+                        logging.getLogger().info("suppression reversessh %s"%str(objectxmpp.reversesshmanage[data['persistance']]))
+                        cmd = "kill -9 %s"%str(objectxmpp.reversesshmanage[data['persistance']])
+                        logging.getLogger().info(cmd)
+                        simplecommandstr(cmd)
+                        objectxmpp.xmpplog( "suppression reversessh %s"%str(objectxmpp.reversesshmanage[data['persistance']]),
                                         type = 'noset',
                                         sessionname = sessionid,
                                         priority = -1,
