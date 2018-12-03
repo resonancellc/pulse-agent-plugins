@@ -117,18 +117,18 @@ def action(objetxmpp, action, sessionid, data, message, dataerreur, result):
                         cursor.execute(insertparameter(result['data']['connection'][proto.upper()], 'private-key', keydata))
                     else:
                     # adapte compte suivant os
-                    if option[4:] == "username":
-                        if data['os'].lower().startswith('linux'):
-                            username = "pulseuser"
-                        elif data['os'].lower().startswith('win'):
-                            username = "pulse"
-                        elif data['os'].lower().startswith('darwin'):
-                            username = "pulse"
+                        if option[4:] == "username":
+                            if data['os'].lower().startswith('linux'):
+                                username = "pulseuser"
+                            elif data['os'].lower().startswith('win'):
+                                username = "pulse"
+                            elif data['os'].lower().startswith('darwin'):
+                                username = "pulse"
+                            else:
+                                username = "pulse"
+                            cursor.execute(insertparameter(result['data']['connection'][proto.upper()], "username", username))
                         else:
-                            username = "pulse"
-                        cursor.execute(insertparameter(result['data']['connection'][proto.upper()], "username", username))
-                    else:
-                        cursor.execute(insertparameter(result['data']['connection'][proto.upper()], option[4:], getattr(objetxmpp.config,option)))
+                            cursor.execute(insertparameter(result['data']['connection'][proto.upper()], option[4:], getattr(objetxmpp.config,option)))
 
 
             # Commit our queries
