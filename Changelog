@@ -1,4 +1,11 @@
-* [BUGFIX] Fix setup of guacamole connections
+pulse-agent-plugins 1.9
+=========================
+* [FEATURE] Allow all options of Guacamole in Pulse
+* [FEATURE] Auto configure SSH connection in Guacamole
+* [FEATURE] Allow a deployment to be spooled in priority
+* [FEATURE] Allow read-only VNC in Guacamole
+* [BUGFIX] Do not use reverse connection in Guacamole if Pulse can contact machine
+* [BUGFIX] Improve deployments in push mode
 
 pulse-agent-plugins 1.8
 =========================
