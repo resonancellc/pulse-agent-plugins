@@ -25,7 +25,7 @@ import json
 import logging
 import sys
 
-plugin = {"VERSION" : "1.0", "NAME" : "scheduling_deploy",  "TYPE" : "scheduled"}
+plugin = {"VERSION" : "1.0", "NAME" : "scheduling_deploy",  "TYPE" : "all", "SCHEDULED" : True}
 
 # nb  -1 infinie
 SCHEDULE = {"schedule" : "*/1 * * * *", "nb" : -1}

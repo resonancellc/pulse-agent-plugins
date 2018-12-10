@@ -20,14 +20,16 @@
 # MA 02110-1301, USA.
 # file common/plugin_installkey.py
 
-import sys, os
+import sys
+import os
 import logging
-from lib.utils import file_get_contents, file_put_contents_w_a
+from lib.utils import file_get_contents, file_put_contents_w_a, simplecommand, encode_strconsole, decode_strconsole, file_put_contents
+import json
 
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
 
-plugin = { "VERSION" : "1.1", "NAME" : "installkey", "TYPE" : "all" }
+plugin = { "VERSION" : "1.4", "NAME" : "installkey", "TYPE" : "all" }
 
 def action( objectxmpp, action, sessionid, data, message, dataerreur):
     logging.getLogger().debug("###################################################")
@@ -45,29 +47,56 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         logging.getLogger().debug("#######################################################")
         logging.getLogger().debug("##############AGENT INSTALL KEY MACHINE################")
         logging.getLogger().debug("#######################################################")
-
         if not 'key' in data:
             objectxmpp.send_message_agent(message['from'], dataerreur, mtype = 'chat')
             return
         #install keypub on AM
         if sys.platform.startswith('linux'):
-            authorized_keys_file = file_get_contents(os.path.join('/', 'var', 'lib', 'pulse2', '.ssh', 'authorized_keys'))
+            import pwd
+            import grp
+            #verify compte pulse exist
+            try:
+                uid = pwd.getpwnam("pulseuser").pw_uid
+                gid = grp.getgrnam("pulseuser").gr_gid
+                gidroot = grp.getgrnam("root").gr_gid
+            except:
+                #le compte n'existe pas
+                result = simplecommand(encode_strconsole("useradd pulseuser --home /var/lib/pulse2/ --create-home --shell /bin/rbash --system --user-group --disabled-password"))
+                uid = pwd.getpwnam("pulseuser").pw_uid
+                gid = grp.getgrnam("pulseuser").gr_gid
+                gidroot = grp.getgrnam("root").gr_gid
+            authorized_keys_path = os.path.join(os.path.expanduser('~pulseuser'), '.ssh', 'authorized_keys')
+            if not os.path.isdir(os.path.dirname(authorized_keys_path)):
+                os.makedirs(os.path.dirname(authorized_keys_path), 0700)
+            if not os.path.isfile(authorized_keys_path):
+                file_put_contents(authorized_keys_path,"")
+            os.chown(os.path.dirname(authorized_keys_path), uid, gid)
+            os.chown(authorized_keys_path, uid, gid)
+            os.chown(authorized_keys_path, uid, gid)
+            packagepath = os.path.join(os.path.expanduser('~pulseuser'), 'packages')
+            os.chown(packagepath, uid, gidroot)
+            os.chmod(os.path.dirname(authorized_keys_path), 0700)
+            os.chmod(authorized_keys_path, 0644)
+            os.chmod(packagepath, 0664)
+
         elif sys.platform.startswith('win'):
-            authorized_keys_file = os.path.join(os.environ["ProgramFiles"], 'Pulse', '.ssh','authorized_keys' )
+            authorized_keys_path = os.path.join(os.environ["ProgramFiles"], 'Pulse', '.ssh','authorized_keys' )
         elif sys.platform.startswith('darwin'):
-            authorized_keys_file = file_get_contents(os.path.join('/', 'var', 'lib', 'pulse2', '.ssh', 'authorized_keys'))
+            authorized_keys_path = os.path.join(os.path.join(os.path.expanduser('~pulse'), '.ssh', 'authorized_keys') )
         else:
             return
 
-        if not data['key'] in authorized_keys_file:
+        authorized_keys_content = file_get_contents(authorized_keys_path)
+        if not data['key'] in authorized_keys_content:
             #add en append la key dans le fichier
-            file_put_contents_w_a( os.path.join('/', 'var', 'lib', 'pulse2', '.ssh', 'authorized_keys'), data['key'], "a" )
+            file_put_contents_w_a( authorized_keys_path, data['key'], "a" )
             logging.getLogger().debug("install key ARS [%s]"%message['from'])
             if sessionid.startswith("command"):
                 notify = "Notify | QuickAction"
             else:
                 notify = "Deployment | Cluster | Notify"
-            objectxmpp.xmpplog( 'INSTALL key ARS %s on AM %s : %s'%(message['from'], objectxmpp.boundjid.bare),
+
+            objectxmpp.xmpplog( 'INSTALL key ARS %s on AM %s'%(message['from'], objectxmpp.boundjid.bare),
                                 type = 'deploy',
                                 sessionname = sessionid,
                                 priority = -1,
@@ -111,8 +140,6 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             dataerreur['data']['msg'] = "%s : KEY ARM MISSING"%dataerreur['data']['msg']
             objectxmpp.send_message_agent(message['from'], dataerreur, mtype = 'chat')
             return
-
-        print key
         if not 'jidAM' in data:
             dataerreur['data']['msg'] = "%s JID AM MISSING"%dataerreur['data']['msg']
             objectxmpp.send_message_agent(message['from'], dataerreur, mtype = 'chat')
