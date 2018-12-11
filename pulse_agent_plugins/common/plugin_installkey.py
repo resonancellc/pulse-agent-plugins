@@ -29,7 +29,7 @@ import json
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
 
-plugin = { "VERSION" : "1.4", "NAME" : "installkey", "TYPE" : "all" }
+plugin = { "VERSION" : "1.41", "NAME" : "installkey", "TYPE" : "all" }
 
 def action( objectxmpp, action, sessionid, data, message, dataerreur):
     logging.getLogger().debug("###################################################")
@@ -61,10 +61,10 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                 gidroot = grp.getgrnam("root").gr_gid
             except:
                 #le compte n'existe pas
-                result = simplecommand(encode_strconsole("useradd pulseuser --home /var/lib/pulse2/ --create-home --shell /bin/rbash --system --user-group --disabled-password"))
-                uid = pwd.getpwnam("pulseuser").pw_uid
-                gid = grp.getgrnam("pulseuser").gr_gid
-                gidroot = grp.getgrnam("root").gr_gid
+                result = simplecommand(encode_strconsole("adduser --system --group --home /var/lib/pulse2 --shell /bin/rbash --disabled-password pulseuser"))
+            uid = pwd.getpwnam("pulseuser").pw_uid
+            gid = grp.getgrnam("pulseuser").gr_gid
+            gidroot = grp.getgrnam("root").gr_gid
             authorized_keys_path = os.path.join(os.path.expanduser('~pulseuser'), '.ssh', 'authorized_keys')
             if not os.path.isdir(os.path.dirname(authorized_keys_path)):
                 os.makedirs(os.path.dirname(authorized_keys_path), 0700)
@@ -74,11 +74,13 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             os.chown(authorized_keys_path, uid, gid)
             os.chown(authorized_keys_path, uid, gid)
             packagepath = os.path.join(os.path.expanduser('~pulseuser'), 'packages')
+            if not os.path.isfile(packagepath):
+                os.makedirs(packagepath, 0764)
             os.chown(packagepath, uid, gidroot)
             os.chmod(os.path.dirname(authorized_keys_path), 0700)
             os.chmod(authorized_keys_path, 0644)
-            os.chmod(packagepath, 0664)
-
+            os.chmod(packagepath, 0764)
+            result = simplecommand(encode_strconsole("chown -R pulseuser: '/var/lib/pulse'"))
         elif sys.platform.startswith('win'):
             authorized_keys_path = os.path.join(os.environ["ProgramFiles"], 'Pulse', '.ssh','authorized_keys' )
         elif sys.platform.startswith('darwin'):
