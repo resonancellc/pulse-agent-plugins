@@ -30,7 +30,7 @@ from lib.utils import file_get_contents, file_put_contents, simplecommandstr
 import shutil
 import logging
 
-plugin = {"VERSION" : "2.8", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
+plugin = {"VERSION" : "2.10", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
 
 def checkresult(result):
     if result['codereturn'] != 0:
@@ -85,21 +85,21 @@ def install_key_ssh_relayserver(keypriv, private=False):
 
     if private == True:
         keyname = "id_rsa"
-        keyperm = "0o600"
+        keyperm = 0o600
     else:
         keyname = "id_rsa.pub"
-        keyperm = "0o644"
+        keyperm = 0o644
 
     if sys.platform.startswith('linux'):
-        if not os.path.isdir(os.path.join(os.path.expanduser('~reversessh'), ".ssh/")):
-            os.makedirs(os.path.join(os.path.expanduser('~reversessh'), ".ssh/"))
-        filekey = os.path.join("/", "home", "reversessh", ".ssh", keyname)
+        if not os.path.isdir(os.path.join(os.path.expanduser('~pulseuser'), ".ssh/")):
+            os.makedirs(os.path.join(os.path.expanduser('~pulseuser'), ".ssh/"))
+        filekey = os.path.join(os.path.expanduser('~pulseuser'), ".ssh", keyname)
     elif sys.platform.startswith('win'):
         filekey = os.path.join(os.environ["ProgramFiles"], "Pulse", ".ssh", keyname)
     elif sys.platform.startswith('darwin'):
-        if not os.path.isdir(os.path.join("/", "Users", "reversessh", ".ssh")):
-            os.makedirs(os.path.join("/", "Users", "reversessh", ".ssh"))
-        filekey = os.path.join("/", "Users", "reversessh", ".ssh", keyname)
+        if not os.path.isdir(os.path.join(os.path.expanduser('~pulse'), ".ssh")):
+            os.makedirs(os.path.join(os.path.expanduser('~pulse'), ".ssh"))
+        filekey = os.path.join(os.path.expanduser('~pulse'), ".ssh", keyname)
     else:
         return
 
@@ -221,20 +221,23 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur ):
                                 touser = "")
 
             if sys.platform.startswith('linux'):
+                filekey = os.path.join(os.path.expanduser('~pulseuser'), ".ssh", "id_rsa")
                 dd = """#!/bin/bash
-                /usr/bin/ssh -t -t -%s %s:localhost:%s -o StrictHostKeyChecking=no -i "/home/reversessh/.ssh/id_rsa" -l reversessh %s&
-                """%(reversetype, data['port'], remoteport, data['relayserverip'])
-                file_put_contents("/home/reversessh/reversessh.sh",  dd)
-                os.system("chmod  u+x /home/reversessh/reversessh.sh")
-                args = shlex.split("/home/reversessh/reversessh.sh")
+                /usr/bin/ssh -t -t -%s %s:localhost:%s -o StrictHostKeyChecking=no -i "%s" -l reversessh %s&
+                """%(reversetype, data['port'], remoteport, filekey, data['relayserverip'])
+                reversesshsh = os.path.join(os.path.expanduser('~pulseuser'), "reversessh.sh")
+                file_put_contents(reversesshsh,  dd)
+                os.chmod(reversesshsh, 0o700)
+                args = shlex.split(reversesshsh)
                 if not 'persistance' in data:
                     data['persistance'] = "no"
                 if 'persistance' in data and data['persistance'].lower() != "no":
-                    logging.getLogger().info("suppression reversessh %s"%str(objectxmpp.reversesshmanage[data['persistance']]))
-                    cmd = "kill -9 %s"%str(objectxmpp.reversesshmanage[data['persistance']])
-                    logging.getLogger().info(cmd)
-                    simplecommandstr(cmd)
-                    objectxmpp.xmpplog( "suppression reversessh %s"%str(objectxmpp.reversesshmanage[data['persistance']]),
+                    if data['persistance'] in objectxmpp.reversesshmanage:
+                        logging.getLogger().info("suppression reversessh %s"%str(objectxmpp.reversesshmanage[data['persistance']]))
+                        cmd = "kill -9 %s"%str(objectxmpp.reversesshmanage[data['persistance']])
+                        logging.getLogger().info(cmd)
+                        simplecommandstr(cmd)
+                        objectxmpp.xmpplog( "suppression reversessh %s"%str(objectxmpp.reversesshmanage[data['persistance']]),
                                         type = 'noset',
                                         sessionname = sessionid,
                                         priority = -1,
@@ -326,12 +329,14 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur ):
                                 touser = "")
 
             elif sys.platform.startswith('darwin'):
+                filekey = os.path.join(os.path.expanduser('~pulse'), ".ssh", "id_rsa")
                 dd = """#!/bin/bash
-                /usr/bin/ssh -t -t -%s %s:localhost:%s -o StrictHostKeyChecking=no -i "/Users/reversessh/.ssh/id_rsa" -l reversessh %s&
-                """%(reversetype, data['port'], remoteport, data['relayserverip'])
-                file_put_contents("/Users/reversessh/reversessh.sh",  dd)
-                os.system("chmod u+x /Users/reversessh/reversessh.sh")
-                args = shlex.split("/Users/reversessh/reversessh.sh")
+                /usr/bin/ssh -t -t -%s %s:localhost:%s -o StrictHostKeyChecking=no -i "%s" -l reversessh %s&
+                """%(reversetype, data['port'], remoteport, filekey, data['relayserverip'])
+                reversesshsh = os.path.join(os.path.expanduser('~pulse'), "reversessh.sh")
+                file_put_contents(reversesshsh,  dd)
+                os.chmod(reversesshsh, 0o700)
+                args = shlex.split(reversesshsh)
                 if not 'persistance' in data:
                     data['persistance'] = "no"
                 if 'persistance' in data and data['persistance'].lower() != "no":
