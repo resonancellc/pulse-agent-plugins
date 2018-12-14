@@ -38,7 +38,7 @@ import time
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
 
-plugin = {"VERSION" : "3.08", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
+plugin = {"VERSION" : "3.09", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
 
 
 """
@@ -1444,7 +1444,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                 pathnew =  data_in_session['folders_packages'][2:]
                                 pathnew = "../../../../" + pathnew.replace("\\","/") + packuuid + "/"
                             else:
-                                pathnew = data_in_session['folders_packages'] + packuuid + "/"
+                                pathnew = data_in_session['folders_packages'] + "/" + packuuid + "/"
                             pathnew = pathnew.replace("//","/")
                             optionrsync = " -e \"ssh -o IdentityFile=/root/.ssh/id_rsa "\
                                             "-o UserKnownHostsFile=/dev/null "\

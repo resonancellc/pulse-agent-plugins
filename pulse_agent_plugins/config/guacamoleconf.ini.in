@@ -17,5 +17,6 @@ guacamole_dbpasswd = @@PLUGIN_GUACAMOLE_DBPASSWD@@
 rdp_server-layout = fr-fr-azerty
 rdp_color-depth = 24
 vnc_color-depth = 24
+ssh_username = pulse
 ssh_server-alive-interval = 60
 ssh_keyfile = /root/.ssh/id_rsa
