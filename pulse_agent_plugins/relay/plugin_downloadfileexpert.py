@@ -33,7 +33,7 @@ from random import randint
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
 
-plugin = { "VERSION" : "1.0", "NAME" : "downloadfileexpert", "TYPE" : "relay" }
+plugin = { "VERSION" : "1.1", "NAME" : "downloadfileexpert", "TYPE" : "relayserver" }
 paramglobal = {"timeupreverssh" : 30 , "portsshmaster" : 22, "filetmpconfigssh" : "/tmp/tmpsshconf", "remoteport" : 22}
 def create_path(type ="windows", host="", ipordomain="", path=""):
     """
