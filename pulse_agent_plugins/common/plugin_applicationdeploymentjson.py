@@ -38,7 +38,7 @@ import time
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
 
-plugin = {"VERSION" : "3.09", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
+plugin = {"VERSION" : "3.12", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
 
 
 """
@@ -1319,10 +1319,13 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                             #set  user ssh
                             if data_in_session['os'].startswith('linux'):
                                 data_in_session['userssh'] = "pulseuser"
+                                data_in_session['rsyncpath'] = "/usr/bin/rsync"
                             elif data_in_session['os'].startswith('win'):
                                 data_in_session['userssh'] = "pulse"
+                                data_in_session['rsyncpath'] = "C:\\\\Windows\\\\SysWOW64\\\\rsync.exe"
                             elif data_in_session['os'].startswith('darwin'):
                                 data_in_session['userssh'] = "pulse"
+                                data_in_session['rsyncpath'] = "rsync"
                         # information set in session data
                         objsession.setdatasession(data_in_session)
 
@@ -1419,12 +1422,12 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                 data_in_session['limit_rate_ko'] != "" and\
                                     int(data_in_session['limit_rate_ko']) > 0:
                                 cmdpre = "scp -C -r -l %s "%(int(data_in_session['limit_rate_ko']) * 8)
-                                cmdrsyn = "rsync -z --bwlimit=%s "%(int(data_in_session['limit_rate_ko']) * 8)
+                                cmdrsyn = "rsync -z --rsync-path=%s --bwlimit=%s "%(data_in_session['rsyncpath'],int(data_in_session['limit_rate_ko']) * 8)
 
                                 msg = "push transfert package :%s to %s <span style='font-weight: bold;color : orange;'> [transfert rate %s ko]</span>"%(data_in_session['name'],data_in_session['jidmachine'], data_in_session['limit_rate_ko'])
                             else:
                                 cmdpre = "scp -C -r "
-                                cmdrsyn = "rsync -z "
+                                cmdrsyn = "rsync -z --rsync-path=%s "%data_in_session['rsyncpath']
                                 msg = "push transfert package :%s to %s"%(data_in_session['name'],data_in_session['jidmachine'])
                             optionscp = "-o IdentityFile=/root/.ssh/id_rsa "\
                                      "-o StrictHostKeyChecking=no "\
