@@ -38,7 +38,7 @@ import time
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
 
-plugin = {"VERSION" : "3.12", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
+plugin = {"VERSION" : "3.13", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
 
 
 """
@@ -1445,7 +1445,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
 
                             if data_in_session['folders_packages'].lower().startswith('c:') or data_in_session['folders_packages'][1] == ":" :
                                 pathnew =  data_in_session['folders_packages'][2:]
-                                pathnew = "../../../../" + pathnew.replace("\\","/") + packuuid + "/"
+                                pathnew = "../../../../" + pathnew.replace("\\","/") + "/" + packuuid + "/"
                             else:
                                 pathnew = data_in_session['folders_packages'] + "/" + packuuid + "/"
                             pathnew = pathnew.replace("//","/")
