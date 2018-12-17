@@ -30,7 +30,7 @@ import uuid
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
 
-plugin = { "VERSION" : "1.45", "NAME" : "installkey", "TYPE" : "all" }
+plugin = { "VERSION" : "1.46", "NAME" : "installkey", "TYPE" : "all" }
 
 def action( objectxmpp, action, sessionid, data, message, dataerreur):
     logging.getLogger().debug("###################################################")
@@ -98,8 +98,10 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                 os.makedirs(os.path.dirname(authorized_keys_path), 0700)
             if not os.path.isfile(authorized_keys_path):
                 file_put_contents(authorized_keys_path,"")
+            currentdir = os.getcwd()
             os.chdir(os.path.join(os.environ["ProgramFiles"], 'OpenSSH'))
             result = simplecommand(encode_strconsole('powershell -ExecutionPolicy Bypass -Command ". .\FixHostFilePermissions.ps1 -Confirm:$false"'))
+            os.chdir(currentdir)
             logging.getLogger().debug("Reset of permissions on ssh keys and folders: %s" %result)
         elif sys.platform.startswith('darwin'):
             authorized_keys_path = os.path.join(os.path.join(os.path.expanduser('~pulse'), '.ssh', 'authorized_keys') )
