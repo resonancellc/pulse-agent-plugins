@@ -25,11 +25,12 @@ import os
 import logging
 from lib.utils import file_get_contents, file_put_contents_w_a, simplecommand, encode_strconsole, decode_strconsole, file_put_contents
 import json
+import uuid
 
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
 
-plugin = { "VERSION" : "1.41", "NAME" : "installkey", "TYPE" : "all" }
+plugin = { "VERSION" : "1.45", "NAME" : "installkey", "TYPE" : "all" }
 
 def action( objectxmpp, action, sessionid, data, message, dataerreur):
     logging.getLogger().debug("###################################################")
@@ -82,7 +83,24 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             os.chmod(packagepath, 0764)
             result = simplecommand(encode_strconsole("chown -R pulseuser: '/var/lib/pulse'"))
         elif sys.platform.startswith('win'):
+            import win32net
+            # check if pulse account exists
+            try:
+                win32net.NetUserGetInfo('','pulse',0)
+            except:
+                # pulse account doesn't exist
+                pulseuserpassword = uuid.uuid4().hex
+                pulseuserhome = os.path.join(os.environ["ProgramFiles"], 'Pulse')
+                result = simplecommand(encode_strconsole('net user "pulse" "%s" /ADD /COMMENT:"Pulse user with admin rights on the system" /PROFILEPATH:"%s"' % (pulseuserpassword, pulseuserhome)))
+                logging.getLogger().debug("Creation of pulse user: %s" %result)
             authorized_keys_path = os.path.join(os.environ["ProgramFiles"], 'Pulse', '.ssh','authorized_keys' )
+            if not os.path.isdir(os.path.dirname(authorized_keys_path)):
+                os.makedirs(os.path.dirname(authorized_keys_path), 0700)
+            if not os.path.isfile(authorized_keys_path):
+                file_put_contents(authorized_keys_path,"")
+            os.chdir(os.path.join(os.environ["ProgramFiles"], 'OpenSSH'))
+            result = simplecommand(encode_strconsole('powershell -ExecutionPolicy Bypass -Command ". .\FixHostFilePermissions.ps1 -Confirm:$false"'))
+            logging.getLogger().debug("Reset of permissions on ssh keys and folders: %s" %result)
         elif sys.platform.startswith('darwin'):
             authorized_keys_path = os.path.join(os.path.join(os.path.expanduser('~pulse'), '.ssh', 'authorized_keys') )
         else:
