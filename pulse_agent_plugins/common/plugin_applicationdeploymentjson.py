@@ -1319,7 +1319,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                             #set  user ssh
                             if data_in_session['os'].startswith('linux'):
                                 data_in_session['userssh'] = "pulseuser"
-                                data_in_session['rsyncpath'] = "/usr/bin/rsync"
+                                data_in_session['rsyncpath'] = "rsync"
                             elif data_in_session['os'].startswith('win'):
                                 data_in_session['userssh'] = "pulse"
                                 data_in_session['rsyncpath'] = "C:\\\\Windows\\\\SysWOW64\\\\rsync.exe"
