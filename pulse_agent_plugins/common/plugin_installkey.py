@@ -75,7 +75,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             os.chown(authorized_keys_path, uid, gid)
             os.chown(authorized_keys_path, uid, gid)
             packagepath = os.path.join(os.path.expanduser('~pulseuser'), 'packages')
-            if not os.path.isfile(packagepath):
+            if not os.path.isdir(packagepath):
                 os.makedirs(packagepath, 0764)
             os.chown(packagepath, uid, gidroot)
             os.chmod(os.path.dirname(authorized_keys_path), 0700)
