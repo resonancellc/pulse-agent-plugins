@@ -38,7 +38,7 @@ import time
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
 
-plugin = {"VERSION" : "3.14", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
+plugin = {"VERSION" : "3.17", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
 
 
 """
@@ -1468,7 +1468,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                             "-o CheckHostIP=no "\
                                             "-o LogLevel=ERROR "\
                                             "-o ConnectTimeout=10\" "\
-                                            "-av %s/ %s@%s:'%s'"%(pathin,data_in_session['userssh'],data_in_session['ipmachine'],pathnew)
+                                            "-av --chmod=777 %s/ %s@%s:'%s'"%(pathin,data_in_session['userssh'],data_in_session['ipmachine'],pathnew)
                             cmdscp = cmdpre + optionscp
                             cmdrsyn = cmdrsyn + optionrsync
 
