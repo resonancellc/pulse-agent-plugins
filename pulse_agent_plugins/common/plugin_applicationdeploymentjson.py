@@ -38,7 +38,7 @@ import time
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
 
-plugin = {"VERSION" : "3.13", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
+plugin = {"VERSION" : "3.14", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
 
 
 """
@@ -1445,7 +1445,17 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
 
                             if data_in_session['folders_packages'].lower().startswith('c:') or data_in_session['folders_packages'][1] == ":" :
                                 pathnew =  data_in_session['folders_packages'][2:]
-                                pathnew = "../../../../" + pathnew.replace("\\","/") + "/" + packuuid + "/"
+                                # cywin path
+                                pathnew = "/cygdrive/c/" + pathnew.replace("\\","/") + "/" + packuuid + "/"
+                                #compose name for rsync
+                                listpath = pathnew.split("/")
+                                p = []
+                                for indexpath in listpath:
+                                    if " " in indexpath:
+                                        p.append('"' + indexpath + '"')
+                                    else:
+                                        p.append(indexpath)
+                                pathnew = "/".join(p)
                             else:
                                 pathnew = data_in_session['folders_packages'] + "/" + packuuid + "/"
                             pathnew = pathnew.replace("//","/")
@@ -1458,7 +1468,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                             "-o CheckHostIP=no "\
                                             "-o LogLevel=ERROR "\
                                             "-o ConnectTimeout=10\" "\
-                                            "-av %s/ %s@%s:\"%s\""%(pathin,data_in_session['userssh'],data_in_session['ipmachine'],pathnew)
+                                            "-av %s/ %s@%s:'%s'"%(pathin,data_in_session['userssh'],data_in_session['ipmachine'],pathnew)
                             cmdscp = cmdpre + optionscp
                             cmdrsyn = cmdrsyn + optionrsync
 
