@@ -25,11 +25,12 @@ import os
 import logging
 from lib.utils import file_get_contents, file_put_contents_w_a, simplecommand, encode_strconsole, decode_strconsole, file_put_contents
 import json
+import uuid
 
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
 
-plugin = { "VERSION" : "1.4", "NAME" : "installkey", "TYPE" : "all" }
+plugin = { "VERSION" : "1.471", "NAME" : "installkey", "TYPE" : "all" }
 
 def action( objectxmpp, action, sessionid, data, message, dataerreur):
     logging.getLogger().debug("###################################################")
@@ -61,10 +62,10 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                 gidroot = grp.getgrnam("root").gr_gid
             except:
                 #le compte n'existe pas
-                result = simplecommand(encode_strconsole("useradd pulseuser --home /var/lib/pulse2/ --create-home --shell /bin/rbash --system --user-group --disabled-password"))
-                uid = pwd.getpwnam("pulseuser").pw_uid
-                gid = grp.getgrnam("pulseuser").gr_gid
-                gidroot = grp.getgrnam("root").gr_gid
+                result = simplecommand(encode_strconsole("adduser --system --group --home /var/lib/pulse2 --shell /bin/rbash --disabled-password pulseuser"))
+            uid = pwd.getpwnam("pulseuser").pw_uid
+            gid = grp.getgrnam("pulseuser").gr_gid
+            gidroot = grp.getgrnam("root").gr_gid
             authorized_keys_path = os.path.join(os.path.expanduser('~pulseuser'), '.ssh', 'authorized_keys')
             if not os.path.isdir(os.path.dirname(authorized_keys_path)):
                 os.makedirs(os.path.dirname(authorized_keys_path), 0700)
@@ -74,13 +75,37 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             os.chown(authorized_keys_path, uid, gid)
             os.chown(authorized_keys_path, uid, gid)
             packagepath = os.path.join(os.path.expanduser('~pulseuser'), 'packages')
+            pathuser = os.path.join(os.path.expanduser('~pulseuser'))
+            if not os.path.isdir(pathuser):
+                os.chmod(pathuser, 751)
+            if not os.path.isdir(packagepath):
+                os.makedirs(packagepath, 0764)
             os.chown(packagepath, uid, gidroot)
             os.chmod(os.path.dirname(authorized_keys_path), 0700)
             os.chmod(authorized_keys_path, 0644)
-            os.chmod(packagepath, 0664)
-
+            os.chmod(packagepath, 0764)
+            result = simplecommand(encode_strconsole("chown -R pulseuser: '/var/lib/pulse'"))
         elif sys.platform.startswith('win'):
+            import win32net
+            # check if pulse account exists
+            try:
+                win32net.NetUserGetInfo('','pulse',0)
+            except:
+                # pulse account doesn't exist
+                pulseuserpassword = uuid.uuid4().hex
+                pulseuserhome = os.path.join(os.environ["ProgramFiles"], 'Pulse')
+                result = simplecommand(encode_strconsole('net user "pulse" "%s" /ADD /COMMENT:"Pulse user with admin rights on the system" /PROFILEPATH:"%s"' % (pulseuserpassword, pulseuserhome)))
+                logging.getLogger().debug("Creation of pulse user: %s" %result)
             authorized_keys_path = os.path.join(os.environ["ProgramFiles"], 'Pulse', '.ssh','authorized_keys' )
+            if not os.path.isdir(os.path.dirname(authorized_keys_path)):
+                os.makedirs(os.path.dirname(authorized_keys_path), 0700)
+            if not os.path.isfile(authorized_keys_path):
+                file_put_contents(authorized_keys_path,"")
+            currentdir = os.getcwd()
+            os.chdir(os.path.join(os.environ["ProgramFiles"], 'OpenSSH'))
+            result = simplecommand(encode_strconsole('powershell -ExecutionPolicy Bypass -Command ". .\FixHostFilePermissions.ps1 -Confirm:$false"'))
+            os.chdir(currentdir)
+            logging.getLogger().debug("Reset of permissions on ssh keys and folders: %s" %result)
         elif sys.platform.startswith('darwin'):
             authorized_keys_path = os.path.join(os.path.join(os.path.expanduser('~pulse'), '.ssh', 'authorized_keys') )
         else:

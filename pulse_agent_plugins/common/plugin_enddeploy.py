@@ -24,18 +24,18 @@ from lib.utils import file_get_contents, file_put_contents_w_a, simplecommand, e
 import json
 import time
 
-plugin = {"VERSION" : "1.1", "NAME" : "enddeploy",  "TYPE" : "all"}
+plugin = {"VERSION" : "1.2", "NAME" : "enddeploy",  "TYPE" : "all"}
 
 logger = logging.getLogger()
 
 def action( objectxmpp, action, sessionid, data, message, dataerreur):
     logging.getLogger().debug("###################################################")
-    logging.getLogger().debug("call %s from %s"%(plugin,message['from']))
+    logging.getLogger().debug("call %s from %s session id %s"%( plugin, message['from'], sessionid))
     logging.getLogger().debug("###################################################")
     if objectxmpp.config.agenttype in ['relayserver']:
         if objectxmpp.session.isexist(sessionid):
             datesession = objectxmpp.session.sessionfromsessiondata(sessionid).getdatasession()
-            result = simplecommand(encode_strconsole("netstat -tp | grep -v tcp6 | grep ESTABLISHED | grep '%s'"%datesession['ipmachine']))
+            result = simplecommand(encode_strconsole("netstat -tpn | grep -v tcp6 | grep -v sshd | grep ssh | grep ESTABLISHED | grep '%s'"%datesession['ipmachine']))
             if result['code'] == 0:
                 # termine ssh connection to AM
                 for connection_ssh in result['result']:
@@ -62,9 +62,9 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                         result1 = simplecommand(encode_strconsole("kill -6 %s"%processus))
                         if result1['code'] != 0:
                             logger.error(str(result1['result']))
+        # add session id pour clear interdiction apres un certain momment
+        objectxmpp.banterminate[sessionid] = time.time()
     # add session id pour bloquage message
     objectxmpp.ban_deploy_sessionid_list.add(sessionid)
-    # add session id pour clear interdiction apres un certain momment
-    objectxmpp.banterminate[sessionid] = time.time()
 
 
