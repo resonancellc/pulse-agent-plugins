@@ -30,7 +30,7 @@ import uuid
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
 
-plugin = { "VERSION" : "1.46", "NAME" : "installkey", "TYPE" : "all" }
+plugin = { "VERSION" : "1.471", "NAME" : "installkey", "TYPE" : "all" }
 
 def action( objectxmpp, action, sessionid, data, message, dataerreur):
     logging.getLogger().debug("###################################################")
@@ -75,6 +75,9 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             os.chown(authorized_keys_path, uid, gid)
             os.chown(authorized_keys_path, uid, gid)
             packagepath = os.path.join(os.path.expanduser('~pulseuser'), 'packages')
+            pathuser = os.path.join(os.path.expanduser('~pulseuser'))
+            if not os.path.isdir(pathuser):
+                os.chmod(pathuser, 751)
             if not os.path.isdir(packagepath):
                 os.makedirs(packagepath, 0764)
             os.chown(packagepath, uid, gidroot)
