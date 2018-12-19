@@ -33,7 +33,7 @@ from random import randint
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
 
-plugin = { "VERSION" : "1.0", "NAME" : "downloadfileexpert", "TYPE" : "relay" }
+plugin = { "VERSION" : "1.3", "NAME" : "downloadfileexpert", "TYPE" : "relayserver" }
 paramglobal = {"timeupreverssh" : 30 , "portsshmaster" : 22, "filetmpconfigssh" : "/tmp/tmpsshconf", "remoteport" : 22}
 def create_path(type ="windows", host="", ipordomain="", path=""):
     """
@@ -44,10 +44,12 @@ def create_path(type ="windows", host="", ipordomain="", path=""):
         return ""
     if type == "windows":
         if host != "" and ipordomain != "":
-            print host,ipordomain,path
-            return "%s@%s:\"\\\"%s\\\"\""%( host,
-                                            ipordomain,
-                                            path)
+            if path.endswith("\\"):
+                path = path[:-1]
+            a= '%s@%s:"\\"%s\\""'%( host,
+                                    ipordomain,
+                                    path)
+            return a
         else:
             return "\"\\\"%s\\\"\""%(path)
     elif type == "linux":
