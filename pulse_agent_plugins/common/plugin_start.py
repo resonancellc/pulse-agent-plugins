@@ -23,24 +23,14 @@
 import base64
 import json
 import sys, os
-from lib.managepackage import managepackage, search_list_of_deployment_packages
-import socket
-from lib.grafcetdeploy import grafcet
 import logging
-import pycurl
 import platform
-#from lib.utils import save_back_to_deploy, cleanbacktodeploy, simplecommandstr, get_keypub_ssh
-from lib.utils import save_back_to_deploy, cleanbacktodeploy, simplecommandstr, isBase64
-import copy
+from lib.utils import file_get_contents
 import traceback
-from sleekxmpp.xmlstream import  JID
-import time
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
 
-plugin = {"VERSION" : "1.0", "NAME" : "start", "TYPE" : "all"}
-
-
+plugin = {"VERSION" : "1.1", "NAME" : "start", "TYPE" : "all"}
 
 def action( objectxmpp, action, sessionid, data, message, dataerreur):
     logger.debug("###################################################")
@@ -49,7 +39,24 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
     if objectxmpp.config.agenttype in ['machine']:
         logger.debug("#################AGENT MACHINE#####################")
         logger.debug("###################################################")
-
+        if sys.platform.startswith('win'):
+            #injection version clef de registre
+            import _winreg
+            agentversion = os.path.join(objectxmpp.pathagent, "agentversion")
+            key = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE,
+                                "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Pulse Agent\\",
+                                0 ,
+                                _winreg.KEY_SET_VALUE | _winreg.KEY_WOW64_64KEY)
+            _winreg.SetValueEx ( key, 
+                                'DisplayVersion'  ,
+                                0,
+                                _winreg.REG_SZ,
+                                file_get_contents(os.path.join(objectxmpp.img_agent, "agentversion")).strip())
+            _winreg.CloseKey(key)
+        elif sys.platform.startswith('linux') :
+            pass
+        elif sys.platform.startswith('darwin'):
+           pass
     else:
         logger.debug("###################################################")
         logger.debug("##############AGENT RELAY SERVER###################")
