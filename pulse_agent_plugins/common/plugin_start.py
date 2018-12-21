@@ -30,7 +30,7 @@ import traceback
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
 
-plugin = {"VERSION" : "1.1", "NAME" : "start", "TYPE" : "all"}
+plugin = {"VERSION" : "1.11", "NAME" : "start", "TYPE" : "all"}
 
 def action( objectxmpp, action, sessionid, data, message, dataerreur):
     logger.debug("###################################################")
@@ -41,18 +41,24 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         logger.debug("###################################################")
         if sys.platform.startswith('win'):
             #injection version clef de registre
-            import _winreg
-            agentversion = os.path.join(objectxmpp.pathagent, "agentversion")
-            key = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE,
-                                "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Pulse Agent\\",
-                                0 ,
-                                _winreg.KEY_SET_VALUE | _winreg.KEY_WOW64_64KEY)
-            _winreg.SetValueEx ( key, 
-                                'DisplayVersion'  ,
-                                0,
-                                _winreg.REG_SZ,
-                                file_get_contents(os.path.join(objectxmpp.img_agent, "agentversion")).strip())
-            _winreg.CloseKey(key)
+            logger.debug("INJECTION KEY REGISTER VERSION")
+            pathversion = os.path.join(objectxmpp.pathagent, "agentversion")
+            if os.path.isfile(pathversion):
+                version = file_get_contents(pathversion).strip()
+                if len(version) < 20:
+                    logger.debug("Version AGENT is " + version)
+                    import _winreg
+                    agentversion = os.path.join(objectxmpp.pathagent, "agentversion")
+                    key = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE,
+                                        "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Pulse Agent\\",
+                                        0 ,
+                                        _winreg.KEY_SET_VALUE | _winreg.KEY_WOW64_64KEY)
+                    _winreg.SetValueEx ( key, 
+                                        'DisplayVersion'  ,
+                                        0,
+                                        _winreg.REG_SZ,
+                                        version)
+                    _winreg.CloseKey(key)
         elif sys.platform.startswith('linux') :
             pass
         elif sys.platform.startswith('darwin'):
