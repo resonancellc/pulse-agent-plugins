@@ -26,12 +26,11 @@ import json
 import zlib
 import base64
 from random import randint
-from time import sleep
 import traceback
 from lib.utils import file_put_contents, file_get_contents
 from lib.update_remote_agent import Update_Remote_Agent
 
-plugin={"VERSION": "1.2", "NAME" : "updateagent", "TYPE" : "all", "waittingmax" : 35, "waittingmin" : 5}
+plugin={"VERSION": "1.3", "NAME" : "updateagent", "TYPE" : "all", "waittingmax" : 35, "waittingmin" : 5}
 
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
@@ -63,7 +62,6 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             # attente aleatoire de quelques minutes avant de demander la mise à jour des agents
             try :
                 if len(difference['program_agent']) !=0 or len(difference['lib_agent']) !=0 or len(difference['script_agent']) !=0:
-                    #sleep(randint(plugin['waittingmin'],plugin['waittingmax']))
                     # demande de mise à jour.
                     #todo send message only files for updating.
                     msgupdate_me = { 'action': "result%s"%action,
@@ -128,7 +126,7 @@ def reinstall_agent_with_image_agent_version_master(objectxmpp):
                             'DisplayVersion'  ,
                             0,
                             _winreg.REG_SZ,
-                            file_get_contents(os.path.join(objectxmpp.img_agent, "agentversion")))
+                            file_get_contents(os.path.join(objectxmpp.img_agent, "agentversion")).strip())
         _winreg.CloseKey(key)
 
         for fichier in newdescriptorimage.get_md5_descriptor_agent()['lib_agent']:

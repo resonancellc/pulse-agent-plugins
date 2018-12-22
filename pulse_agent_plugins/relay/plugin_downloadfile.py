@@ -32,7 +32,7 @@ import socket
 from random import randint
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
-plugin = { "VERSION" : "1.63", "NAME" : "downloadfile", "TYPE" : "all" }
+plugin = { "VERSION" : "1.67", "NAME" : "downloadfile", "TYPE" : "relayserver" }
 paramglobal = {"timeupreverssh" : 20 , "portsshmaster" : 22, "filetmpconfigssh" : "/tmp/tmpsshconf", "remoteport" : 22}
 def create_path(type ="windows", host="", ipordomain="", path=""):
     """
@@ -57,12 +57,13 @@ def create_path(type ="windows", host="", ipordomain="", path=""):
         else:
             return "\"%s\""%(path)
 
-def scpfile(scr, dest, reverbool=False):
+def scpfile(scr, dest,  objectxmpp, sessionid, reverbool=False):
     if reverbool:
         # version fichier de configuration.
-        cmdpre = "scp -rp3 -F %s "\
+        cmdpre = "scp -C -rp3 -F %s "\
                     "-o IdentityFile=/root/.ssh/id_rsa "\
                     "-o StrictHostKeyChecking=no "\
+                    "-o LogLevel=ERROR "\
                     "-o UserKnownHostsFile=/dev/null "\
                     "-o Batchmode=yes "\
                     "-o PasswordAuthentication=no "\
@@ -70,9 +71,10 @@ def scpfile(scr, dest, reverbool=False):
                     "-o CheckHostIP=no "\
                     "-o ConnectTimeout=10 "%paramglobal['filetmpconfigssh']
     else :
-        cmdpre = "scp -rp3 "\
+        cmdpre = "scp -C -rp3 "\
                     "-o IdentityFile=/root/.ssh/id_rsa "\
                     "-o StrictHostKeyChecking=no "\
+                    "-o LogLevel=ERROR "\
                     "-o UserKnownHostsFile=/dev/null "\
                     "-o Batchmode=yes "\
                     "-o PasswordAuthentication=no "\
@@ -80,14 +82,34 @@ def scpfile(scr, dest, reverbool=False):
                     "-o CheckHostIP=no "\
                     "-o ConnectTimeout=10 "
     cmdpre =  "%s %s %s"%(cmdpre, scr, dest)
+    objectxmpp.xmpplog( 'cmd : ' + cmdpre,
+                               type = 'noset',
+                               sessionname = sessionid,
+                               priority = -1,
+                               action = "",
+                               who = objectxmpp.boundjid.bare,
+                               how = "",
+                               why = "",
+                               module = "Notify | Download | Transfertfile",
+                               date = None ,
+                               fromuser = "",
+                               touser = "")
     return cmdpre
 
 def action( objectxmpp, action, sessionid, data, message, dataerreur):
     logging.getLogger().debug("###################################################")
     logging.getLogger().debug("call %s from %s"%(plugin,message['from']))
     logging.getLogger().debug("###################################################")
-
-    print json.dumps(data,indent=4)
+    # print json.dumps(data,indent=4)
+    logger.debug("Install key ARS in authorized_keys on agent machine")
+    body = {'action' : 'installkey',
+            'sessionid': sessionid,
+            'data' : { 'jidAM' : data['jidmachine']
+            }
+    }
+    objectxmpp.send_message( mto = objectxmpp.boundjid.bare,
+                             mbody = json.dumps(body),
+                             mtype = 'chat')
     reversessh = False
     localport = 22
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -112,14 +134,16 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                             who = objectxmpp.boundjid.bare,
                             how = "",
                             why = "",
-                            module = "Notify | Download",
+                            module = "Notify | Download | Transfertfile",
                             date = None ,
                             fromuser = "",
                             touser = "")
 
     if reversessh == False:
-        if str(data['osmachine']).startswith('Linux') or str(data['osmachine']).startswith('darwin'):
-            source = create_path(type = "linux", host = "root", ipordomain=data['ipmachine'], path = r'%s'%data['path_src_machine'])
+        if str(data['osmachine']).startswith('Linux'):
+            source = create_path(type = "linux", host = "pulseuser", ipordomain=data['ipmachine'], path = r'%s'%data['path_src_machine'])
+        elif str(data['osmachine']).startswith('darwin'):
+            source = create_path(type = "linux", host = "pulse", ipordomain=data['ipmachine'], path = r'%s'%data['path_src_machine'])
         else:
             source = create_path(type = "windows", host = "pulse", ipordomain = data['ipmachine'], path = r'%s'%data['path_src_machine'])
 
@@ -127,8 +151,10 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         cretefileconfigrescp = "Host %s\nPort %s\nHost %s\nPort %s\n"%(data['ipmaster'], paramglobal['portsshmaster'], data['ipmachine'], localport)
         file_put_contents(paramglobal['filetmpconfigssh'],  cretefileconfigrescp)
     else:
-        if str(data['osmachine']).startswith('Linux') or str(data['osmachine']).startswith('darwin'):
-            source = create_path(type = "linux", host = "root", ipordomain="localhost", path = r'%s'%data['path_src_machine'])
+        if str(data['osmachine']).startswith('Linux'):
+            source = create_path(type = "linux", host = "pulseuser", ipordomain="localhost", path = r'%s'%data['path_src_machine'])
+        elif str(data['osmachine']).startswith('darwin'):
+            source = create_path(type = "linux", host = "pulse", ipordomain="localhost", path = r'%s'%data['path_src_machine'])
         else:
             source = create_path(type = "windows", host = "pulse", ipordomain = "localhost", path = r'%s'%data['path_src_machine'])
 
@@ -141,9 +167,8 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                        ipordomain=data['ipmaster'],
                        path=data['path_dest_master'])
     if reversessh == False:
-        command = scpfile(source, dest)
+        command = scpfile(source, dest, objectxmpp, sessionid)
     else:
-
         datareversessh = {
             'action': 'reverse_ssh_on',
             'sessionid': sessionid,
@@ -162,10 +187,12 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         objectxmpp.send_message(mto = message['to'],
                     mbody = json.dumps(datareversessh),
                     mtype = 'chat')
- 
+
         # initialise se cp
         command = scpfile(source,
                           dest,
+                          objectxmpp,
+                          sessionid,
                           reverbool = True)
 
         time.sleep(paramglobal['timeupreverssh'])
@@ -182,10 +209,12 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                 who = objectxmpp.boundjid.bare,
                                 how = "",
                                 why = "",
-                                module = "Notify | Download",
+                                module = "Notify | Download | Transfertfile",
                                 date = None ,
                                 fromuser = "",
                                 touser = "")
+
+
     z = simplecommand(command)
     print z['result']
     print z['code']
@@ -212,7 +241,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                 who = objectxmpp.boundjid.bare,
                                 how = "",
                                 why = "",
-                                module = "Notify | Download",
+                                module = "Notify | Download | Transfertfile",
                                 date = None ,
                                 fromuser = "",
                                 touser = "")
@@ -225,7 +254,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                 who = objectxmpp.boundjid.bare,
                                 how = "",
                                 why = "",
-                                module = "Notify | Download",
+                                module = "Notify | Download | Transfertfile",
                                 date = None ,
                                 fromuser = "",
                                 touser = "")
@@ -239,8 +268,32 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                     "-o ServerAliveInterval=10 "\
                     "-o CheckHostIP=no "\
                     "-o ConnectTimeout=10 'chmod 777 -R %s'"%(str(tabdest[0][:-1]),os.path.dirname(tabdest[1]))
+        objectxmpp.xmpplog( 'cmd : ' + cmd,
+                            type = 'noset',
+                            sessionname = sessionid,
+                            priority = -1,
+                            action = "",
+                            who = objectxmpp.boundjid.bare,
+                            how = "",
+                            why = "",
+                            module = "Notify | Download | Transfertfile",
+                            date = None ,
+                            fromuser = "",
+                            touser = "")
         z = simplecommand(cmd)
         if z['code'] == 0:
+            objectxmpp.xmpplog( 'result transfert : ' + '\n'.join(z['result']),
+                                type = 'noset',
+                                sessionname = sessionid,
+                                priority = -1,
+                                action = "",
+                                who = objectxmpp.boundjid.bare,
+                                how = "",
+                                why = "",
+                                module = "Notify | Download | Transfertfile",
+                                date = None ,
+                                fromuser = "",
+                                touser = "")
             objectxmpp.xmpplog( 'change mode 777 for file %s '%( os.path.basename(data['path_src_machine'])),
                                 type = 'noset',
                                 sessionname = sessionid,
@@ -249,7 +302,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                 who = objectxmpp.boundjid.bare,
                                 how = "",
                                 why = "",
-                                module = "Notify | Download",
+                                module = "Notify | Download | Transfertfile",
                                 date = None ,
                                 fromuser = "",
                                 touser = "")
@@ -262,7 +315,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                 who = objectxmpp.boundjid.bare,
                                 how = "",
                                 why = "",
-                                module = "Notify | Download",
+                                module = "Notify | Download | Transfertfile",
                                 date = None ,
                                 fromuser = "",
                                 touser = "")
