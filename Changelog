@@ -11,6 +11,7 @@ pulse-agent-plugins 1.10
 * [BUGFIX] Fix deployments on Linux clients in push mode
 * [BUGFIX] Fix user used for guacamole ssh connections
 * [BUGFIX] Fix path to package folder on Windows clients
+* [BUGFIX] Insert agent version in Windows registry on agent startup
 
 
 pulse-agent-plugins 1.9
