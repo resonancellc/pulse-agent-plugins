@@ -19,7 +19,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA 02110-1301, USA.
 
-from  lib.utils import pluginprocess, simplecommand
+from  lib.utils import pluginprocess, simplecommand, file_put_contents_w_a, file_get_contents
 import os, sys, platform
 import zlib
 import base64
@@ -27,6 +27,7 @@ import traceback
 import json
 import logging
 import subprocess
+import lxml.etree as ET
 
 if sys.platform.startswith('win'):
     from lib.registerwindows import constantregisterwindows
@@ -35,7 +36,13 @@ if sys.platform.startswith('win'):
 DEBUGPULSEPLUGIN = 25
 ERRORPULSEPLUGIN = 40
 WARNINGPULSEPLUGIN = 30
-plugin = {"VERSION": "1.13", "NAME" :"inventory", "TYPE":"machine"}
+plugin = {"VERSION": "1.14", "NAME" :"inventory", "TYPE":"machine"}
+
+def compact_xml(inputfile):
+    parser = ET.XMLParser(remove_blank_text=True, remove_comments=True)
+    xmlTree = ET.parse(inputfile, parser=parser)
+    strinventory  =  ET.tostring(xmlTree, pretty_print=False)
+    file_put_contents_w_a(inputfile, '<?xml version="1.0" encoding="UTF-8" ?>' + strinventory)
 
 @pluginprocess
 def action(xmppobject, action, sessionid, data, message, dataerreur, result):
@@ -44,6 +51,7 @@ def action(xmppobject, action, sessionid, data, message, dataerreur, result):
         try:
             inventoryfile = os.path.join("/","tmp","inventory.txt")
             simplecommand("fusioninventory-agent --local=%s"%inventoryfile)
+            compact_xml(inventoryfile)
             Fichier = open(inventoryfile, 'r')
             result['data']['inventory'] = Fichier.read()
             Fichier.close()
@@ -61,10 +69,11 @@ def action(xmppobject, action, sessionid, data, message, dataerreur, result):
 
             # run the inventory
             program = os.path.join(os.environ["ProgramFiles"], 'FusionInventory-Agent', 'fusioninventory-agent.bat')
-            namefile = os.path.join(os.environ["ProgramFiles"], 'Pulse', 'tmp', 'inventory.txt')
-            cmd = """\"%s\" --scan-profiles --local=\"%s\""""%(program, namefile)
+            inventoryfile = os.path.join(os.environ["ProgramFiles"], 'Pulse', 'tmp', 'inventory.txt')
+            cmd = """\"%s\" --scan-profiles --local=\"%s\""""%(program, inventoryfile)
             simplecommand(cmd)
-            Fichier = open(namefile, 'r')
+            compact_xml(inventoryfile)
+            Fichier = open(inventoryfile, 'r')
             result['data']['inventory'] = base64.b64encode(zlib.compress(Fichier.read(), 9))
             Fichier.close()
             # read max_key_index parameter to find out the number of keys
@@ -125,6 +134,7 @@ def action(xmppobject, action, sessionid, data, message, dataerreur, result):
             inventoryfile = os.path.join("/","tmp","inventory.txt")
             ## attention this command has been tested on only 1 Mac
             simplecommand("/opt/fusioninventory-agent/bin/fusioninventory-inventory > %s"%inventoryfile)
+            compact_xml(inventoryfile)
             Fichier = open(inventoryfile, 'r')
             result['data']['inventory'] = Fichier.read()
             Fichier.close()
