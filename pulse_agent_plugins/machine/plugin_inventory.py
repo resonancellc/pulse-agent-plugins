@@ -18,8 +18,9 @@
 # along with Pulse 2; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA 02110-1301, USA.
+# file : plugin_inventory.py
 
-from  lib.utils import pluginprocess, simplecommand, file_put_contents_w_a, file_get_contents
+from  lib.utils import simplecommand, file_put_contents_w_a, file_get_contents
 import os, sys, platform
 import zlib
 import base64
@@ -28,7 +29,9 @@ import json
 import logging
 import subprocess
 import lxml.etree as ET
+from sleekxmpp import jid
 
+logger = logging.getLogger()
 if sys.platform.startswith('win'):
     from lib.registerwindows import constantregisterwindows
     import _winreg
@@ -36,7 +39,7 @@ if sys.platform.startswith('win'):
 DEBUGPULSEPLUGIN = 25
 ERRORPULSEPLUGIN = 40
 WARNINGPULSEPLUGIN = 30
-plugin = {"VERSION": "1.14", "NAME" :"inventory", "TYPE":"machine"}
+plugin = {"VERSION": "1.15", "NAME" :"inventory", "TYPE":"machine"}
 
 def compact_xml(inputfile):
     parser = ET.XMLParser(remove_blank_text=True, remove_comments=True)
@@ -44,9 +47,24 @@ def compact_xml(inputfile):
     strinventory  =  ET.tostring(xmlTree, pretty_print=False)
     file_put_contents_w_a(inputfile, '<?xml version="1.0" encoding="UTF-8" ?>' + strinventory)
 
-@pluginprocess
-def action(xmppobject, action, sessionid, data, message, dataerreur, result):
+
+def action(xmppobject, action, sessionid, data, message, dataerreur):
     logging.log(DEBUGPULSEPLUGIN,"plugin %s"% (plugin))
+    try:
+        xmppobject.sub_inventory
+    except :
+        xmppobject.sub_inventory = xmppobject.agentmaster
+    resultaction = "result%s" % action
+    result = {}
+    result['action'] = resultaction
+    result['ret'] = 0
+    result['sessionid'] = sessionid
+    result['base64'] = False
+    result['data'] = {}
+    dataerreur['action'] = resultaction
+    dataerreur['data']['msg'] = "ERROR : %s" % action
+    dataerreur['sessionid'] = sessionid
+
     if sys.platform.startswith('linux'):
         try:
             inventoryfile = os.path.join("/","tmp","inventory.txt")
@@ -57,8 +75,12 @@ def action(xmppobject, action, sessionid, data, message, dataerreur, result):
             Fichier.close()
             result['data']['inventory'] = base64.b64encode(zlib.compress(result['data']['inventory'], 9))
         except Exception as e:
-            traceback.print_exc(file=sys.stdout)
-            raise
+            logger.error("\n%s"%(traceback.format_exc()))
+            print "Send error message\n%s" % dataerreur
+            objetxmpp.send_message(mto=xmppobject.sub_inventory,
+                                   mbody=json.dumps(dataerreur),
+                                   mtype='chat')
+            return
     elif sys.platform.startswith('win'):
         try:
             bitness = platform.architecture()[0]
@@ -69,11 +91,11 @@ def action(xmppobject, action, sessionid, data, message, dataerreur, result):
 
             # run the inventory
             program = os.path.join(os.environ["ProgramFiles"], 'FusionInventory-Agent', 'fusioninventory-agent.bat')
-            inventoryfile = os.path.join(os.environ["ProgramFiles"], 'Pulse', 'tmp', 'inventory.txt')
-            cmd = """\"%s\" --scan-profiles --local=\"%s\""""%(program, inventoryfile)
+            namefile = os.path.join(os.environ["ProgramFiles"], 'Pulse', 'tmp', 'inventory.txt')
+            cmd = """\"%s\" --scan-profiles --local=\"%s\""""%(program, namefile)
             simplecommand(cmd)
             compact_xml(inventoryfile)
-            Fichier = open(inventoryfile, 'r')
+            Fichier = open(namefile, 'r')
             result['data']['inventory'] = base64.b64encode(zlib.compress(Fichier.read(), 9))
             Fichier.close()
             # read max_key_index parameter to find out the number of keys
@@ -126,9 +148,12 @@ def action(xmppobject, action, sessionid, data, message, dataerreur, result):
                 logging.log(DEBUGPULSEPLUGIN,"---------- End Registry inventory Data ----------")
                 result['data']['reginventory'] = base64.b64encode(json.dumps(result['data']['reginventory'], indent=4, separators=(',', ': ')))
         except Exception, e:
-            logging.log(ERRORPULSEPLUGIN,"Error: %s" % str(e))
-            traceback.print_exc(file=sys.stdout)
-            raise
+            logger.error("\n%s"%(traceback.format_exc()))
+            print "Send error message\n%s" % dataerreur
+            objetxmpp.send_message(mto=xmppobject.sub_inventory,
+                                   mbody=json.dumps(dataerreur),
+                                   mtype='chat')
+            return
     elif sys.platform.startswith('darwin'):
         try:
             inventoryfile = os.path.join("/","tmp","inventory.txt")
@@ -140,5 +165,15 @@ def action(xmppobject, action, sessionid, data, message, dataerreur, result):
             Fichier.close()
             result['data']['inventory'] = base64.b64encode(zlib.compress(result['data']['inventory'], 9))
         except Exception as e:
-            traceback.print_exc(file=sys.stdout)
-            raise
+            logger.error("\n%s"%(traceback.format_exc()))
+            objetxmpp.send_message(mto=xmppobject.sub_inventory,
+                                   mbody=json.dumps(dataerreur),
+                                   mtype='chat')
+            return
+
+    if result['base64'] == True:
+        result['data'] = base64.b64encode(json.dumps(result['data']))
+
+    xmppobject.send_message(mto=xmppobject.sub_inventory,
+                            mbody=json.dumps(result),
+                            mtype='chat')
