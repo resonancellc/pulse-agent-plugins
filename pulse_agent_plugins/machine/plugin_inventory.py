@@ -77,7 +77,7 @@ def action(xmppobject, action, sessionid, data, message, dataerreur):
         except Exception as e:
             logger.error("\n%s"%(traceback.format_exc()))
             print "Send error message\n%s" % dataerreur
-            objetxmpp.send_message(mto=xmppobject.sub_inventory,
+            xmppobject.send_message(mto=xmppobject.sub_inventory,
                                    mbody=json.dumps(dataerreur),
                                    mtype='chat')
             return
@@ -150,7 +150,7 @@ def action(xmppobject, action, sessionid, data, message, dataerreur):
         except Exception, e:
             logger.error("\n%s"%(traceback.format_exc()))
             print "Send error message\n%s" % dataerreur
-            objetxmpp.send_message(mto=xmppobject.sub_inventory,
+            xmppobject.send_message(mto=xmppobject.sub_inventory,
                                    mbody=json.dumps(dataerreur),
                                    mtype='chat')
             return
@@ -166,7 +166,7 @@ def action(xmppobject, action, sessionid, data, message, dataerreur):
             result['data']['inventory'] = base64.b64encode(zlib.compress(result['data']['inventory'], 9))
         except Exception as e:
             logger.error("\n%s"%(traceback.format_exc()))
-            objetxmpp.send_message(mto=xmppobject.sub_inventory,
+            xmppobject.send_message(mto=xmppobject.sub_inventory,
                                    mbody=json.dumps(dataerreur),
                                    mtype='chat')
             return
