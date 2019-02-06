@@ -51,7 +51,7 @@ def create_path(type ="windows", host="", ipordomain="", path=""):
                                     path)
             return a
         else:
-            return "\"\\\"%s\\\"\""%(path)
+            return "\"\\\"%s\"\""%(path)
     elif type == "linux":
         if host != "" and ipordomain != "":
             return "%s@%s:\"%s\""%( host,
