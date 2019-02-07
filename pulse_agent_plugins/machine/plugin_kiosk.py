@@ -26,13 +26,13 @@ import traceback
 import sys
 import socket
 
-plugin = {"VERSION": "1.3", "NAME" : "kiosk", "TYPE" : "machine"}
+logger = logging.getLogger()
+plugin = {"VERSION": "1.31", "NAME" : "kiosk", "TYPE" : "machine"}
 
 def action(objectxmpp, action, sessionid, data, message, dataerreur):
-    logging.getLogger().debug("=====================================================")
-    logging.getLogger().debug(plugin)
-    logging.getLogger().debug("=====================================================")
-
+    logger.debug("=====================================================")
+    logger.debug(plugin)
+    logger.debug("=====================================================")
     datasend = {'action' : "result%s"%plugin['NAME'],
                 'data' :{'subaction' : 'test'},
                 'sessionid' : sessionid
@@ -41,7 +41,7 @@ def action(objectxmpp, action, sessionid, data, message, dataerreur):
         if data['subaction'] == 'test':
             datasend['data']['msg'] = "test success"
             objectxmpp.send_message(mto=message['from'],
-                                    mbody=json.dumps(datasend, sort_keys=True, indent=4),
+                                    mbody=json.dumps(datasend, indent=4),
                                     mtype='chat')
         elif data['subaction'] == 'listpackage':
             # todo
@@ -53,12 +53,12 @@ def action(objectxmpp, action, sessionid, data, message, dataerreur):
             send_kiosk_data(strjson, objectxmpp.config.kiosk_local_port, objectxmpp, dataerreur, message)
             pass
         elif data['subaction'] == "profiles_updated":
-            logging.getLogger().info("send updated profiles to kiosk")
+            logger.info("send updated profiles to kiosk")
             strjson = json.dumps(data['data'])
             send_kiosk_data(strjson, objectxmpp.config.kiosk_local_port, objectxmpp, dataerreur, message)
             pass
         elif data['subaction'] == "profiles_updated":
-            logging.getLogger().info("send updated profiles to kiosk")
+            logger.info("send updated profiles to kiosk")
             strjson = json.dumps(data['data'])
             send_kiosk_data(strjson, objectxmpp.config.kiosk_local_port, objectxmpp, dataerreur, message)
             pass
@@ -76,7 +76,6 @@ def send_kiosk_data(datastrdata, port = 8766, objectxmpp= None, dataerror = None
     server_address = ('localhost', port)
     try:
         sock.connect(server_address)
-        print "send message"
         sock.sendall(datastrdata.encode('ascii'))
         data = sock.recv(2048)
         print ('received "%s"' % data)
@@ -84,13 +83,13 @@ def send_kiosk_data(datastrdata, port = 8766, objectxmpp= None, dataerror = None
         dataerror['ret'] = -255
         if not "Errno 111" in str(e):
             traceback.print_exc(file=sys.stdout)
-            logging.getLogger().error("Kiosk [%s]"%str(e))
+            logger.error("Kiosk [%s]"%str(e))
             dataerror['data']['msg'] = "plugin kiosk error on machine %s : [%s]"%(objectxmpp.boundjid.bare, str(e))
             objectxmpp.send_message(mto=message['from'],
                                     mbody=json.dumps(dataerror),
                                     mtype='chat')
         else :
-            logging.getLogger().warning("Kiosk is not listen: verify presence kiosk")
+            logger.warning("Kiosk is not listen: verify presence kiosk")
             msg = "Kiosk is not listen on machine %s : [%s]\nverrify presence kiosk"%(objectxmpp.boundjid.bare, str(e))
             if objectxmpp is not None and dataerror is not None and message is not None:
                 dataerror['ret'] = -255
