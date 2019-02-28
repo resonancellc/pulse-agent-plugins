@@ -39,7 +39,7 @@ if sys.platform.startswith('win'):
 DEBUGPULSEPLUGIN = 25
 ERRORPULSEPLUGIN = 40
 WARNINGPULSEPLUGIN = 30
-plugin = {"VERSION": "1.15", "NAME" :"inventory", "TYPE":"machine"}
+plugin = {"VERSION": "1.16", "NAME" :"inventory", "TYPE":"machine"}
 
 def compact_xml(inputfile):
     parser = ET.XMLParser(remove_blank_text=True, remove_comments=True)
@@ -94,7 +94,10 @@ def action(xmppobject, action, sessionid, data, message, dataerreur):
             namefile = os.path.join(os.environ["ProgramFiles"], 'Pulse', 'tmp', 'inventory.txt')
             cmd = """\"%s\" --scan-profiles --local=\"%s\""""%(program, namefile)
             simplecommand(cmd)
-            compact_xml(inventoryfile)
+            try:
+                compact_xml(namefile)
+            except:
+               logger.error("\n%s"%(traceback.format_exc()))
             Fichier = open(namefile, 'r')
             result['data']['inventory'] = base64.b64encode(zlib.compress(Fichier.read(), 9))
             Fichier.close()
@@ -160,7 +163,7 @@ def action(xmppobject, action, sessionid, data, message, dataerreur):
             ## attention this command has been tested on only 1 Mac
             simplecommand("/opt/fusioninventory-agent/bin/fusioninventory-inventory > %s"%inventoryfile)
             compact_xml(inventoryfile)
-            Fichier = open(inventoryfile, 'r')
+            Fichier = open(inventoryfile,git pull --rebase 'r')
             result['data']['inventory'] = Fichier.read()
             Fichier.close()
             result['data']['inventory'] = base64.b64encode(zlib.compress(result['data']['inventory'], 9))
