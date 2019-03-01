@@ -163,7 +163,7 @@ def action(xmppobject, action, sessionid, data, message, dataerreur):
             ## attention this command has been tested on only 1 Mac
             simplecommand("/opt/fusioninventory-agent/bin/fusioninventory-inventory > %s"%inventoryfile)
             compact_xml(inventoryfile)
-            Fichier = open(inventoryfile,git pull --rebase 'r')
+            Fichier = open(inventoryfile, 'r')
             result['data']['inventory'] = Fichier.read()
             Fichier.close()
             result['data']['inventory'] = base64.b64encode(zlib.compress(result['data']['inventory'], 9))
