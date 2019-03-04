@@ -1520,9 +1520,10 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                 return
                             #push transfert
                             takeresource(data_in_session, objectxmpp, sessionid)
-                            if objectxmpp.config.pushmethod == "scp":
+                            if hasattr(objectxmpp.config, 'pushmethod') and objectxmpp.config.pushmethod == "scp":
                                 cmdexec = cmdscp
                             else:
+                                objectxmpp.config.pushmethod = "rsync"
                                 cmdexec = cmdrsyn
                             logger.debug("tranfert cmd :\n %s"%cmdexec)
                             objectxmpp.xmpplog( "cmd : <span style=\"font-weight: bold;font-style: italic; color: blue;\">" + cmdexec + "</span>",
