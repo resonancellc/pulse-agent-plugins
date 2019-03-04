@@ -1422,12 +1422,12 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                 data_in_session['limit_rate_ko'] != "" and\
                                     int(data_in_session['limit_rate_ko']) > 0:
                                 cmdpre = "scp -C -r -l %s "%(int(data_in_session['limit_rate_ko']) * 8)
-                                cmdrsyn = "rsync -z --rsync-path=%s --bwlimit=%s "%(data_in_session['rsyncpath'],int(data_in_session['limit_rate_ko']) * 8)
+                                cmdrsync = "rsync -z --rsync-path=%s --bwlimit=%s "%(data_in_session['rsyncpath'],int(data_in_session['limit_rate_ko']) * 8)
 
                                 msg = "push transfert package :%s to %s <span style='font-weight: bold;color : orange;'> [transfert rate %s ko]</span>"%(data_in_session['name'],data_in_session['jidmachine'], data_in_session['limit_rate_ko'])
                             else:
                                 cmdpre = "scp -C -r "
-                                cmdrsyn = "rsync -z --rsync-path=%s "%data_in_session['rsyncpath']
+                                cmdrsync = "rsync -z --rsync-path=%s "%data_in_session['rsyncpath']
                                 msg = "push transfert package :%s to %s"%(data_in_session['name'],data_in_session['jidmachine'])
                             optionscp = "-o IdentityFile=/root/.ssh/id_rsa "\
                                      "-o StrictHostKeyChecking=no "\
@@ -1470,7 +1470,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                             "-o ConnectTimeout=10\" "\
                                             "-av --chmod=777 %s/ %s@%s:'%s'"%(pathin,data_in_session['userssh'],data_in_session['ipmachine'],pathnew)
                             cmdscp = cmdpre + optionscp
-                            cmdrsyn = cmdrsyn + optionrsync
+                            cmdrsync = cmdrsync + optionrsync
 
                             if not os.path.isdir(data_in_session['path']):
                                 objectxmpp.xmpplog('<span style="color: red;";>ERROR transfert [Package Server does not have this package %s]</span>'%data_in_session['path'],
@@ -1523,7 +1523,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                             if objectxmpp.config.pushmethod == "scp":
                                 cmdexec = cmdscp
                             else:
-                                cmdexec = cmdrsyn
+                                cmdexec = cmdrsync
                             logger.debug("tranfert cmd :\n %s"%cmdexec)
                             objectxmpp.xmpplog( "cmd : <span style=\"font-weight: bold;font-style: italic; color: blue;\">" + cmdexec + "</span>",
                                                 type = 'deploy',
