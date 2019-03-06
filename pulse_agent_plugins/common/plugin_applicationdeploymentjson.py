@@ -30,7 +30,7 @@ import logging
 import pycurl
 import platform
 #from lib.utils import save_back_to_deploy, cleanbacktodeploy, simplecommandstr, get_keypub_ssh
-from lib.utils import save_back_to_deploy, cleanbacktodeploy, simplecommandstr, isBase64
+from lib.utils import save_back_to_deploy, cleanbacktodeploy, simplecommandstr, isBase64, simplecommand, deletekey, installkey
 import copy
 import traceback
 from sleekxmpp.xmlstream import  JID
@@ -38,7 +38,7 @@ import time
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
 
-plugin = {"VERSION" : "3.17", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
+plugin = {"VERSION" : "3.18", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
 
 
 """
@@ -375,6 +375,9 @@ def signalendsessionforARS(datasend , objectxmpp, sessionid, error = False):
     except Exception as e:
         logger.debug(str(e))
         traceback.print_exc(file=sys.stdout)
+
+def keymachine(objectxmpp, jidmachine):
+    return objectxmpp.iqsendpulse(jidmachine, {"action" : "keypub", "data" : {}}, 15)
 
 
 def action( objectxmpp, action, sessionid, data, message, dataerreur):
@@ -1245,7 +1248,11 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             and data['transfert'] == True\
                 and 'methodetransfert' in data\
                     and data['methodetransfert'] == "pullcurl":
-            #mode pull AM to ARS
+            # mode pull AM to ARS
+            #### install key of machine pour authorized_keys
+            keypub = keymachine(objectxmpp, data['jidmachine'])
+            keypubjson = json.loads(keypub)
+            installkey(os.path.join("/", "var", "lib", "pulse2", "packages", ".ssh", "authorized_keys"), keypubjson['result'])
             ### Send deployment message directly to machine
             transfertdeploy = {
                                 'action': action,
