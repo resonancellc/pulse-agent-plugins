@@ -308,7 +308,7 @@ def pull_package_transfert_rsync(datasend, objectxmpp, ippackage, sessionid,cmdm
             obj = simplecommand(cmdexec)
             return obj['result']
         else:
-            boolsuccess  = false
+            boolsuccess = False
     except Exception as e:
         logger.error("\n%s"%(traceback.format_exc()))
         boolsuccess = False
