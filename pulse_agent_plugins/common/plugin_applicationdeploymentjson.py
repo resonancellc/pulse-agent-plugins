@@ -274,6 +274,49 @@ def curlgetdownloadfile( destfile, urlfile, insecure = True, limit_rate_ko= None
         c.perform()
         c.close()
 
+def pull_package_transfert_rsync(datasend, objectxmpp, ippackage, sessionid,cmdmode="rsync"):
+    #print json.dumps( datasend, indent = 4)
+    takeresource(datasend, objectxmpp, sessionid)
+    try:
+        packagename = datasend['data']['descriptor']['info']['packageUuid']
+        userpackage = "userpackage"
+        remotesrc = """%s@%s:'%s' """%(userpackage , ippackage, packagename)
+        execrsync = "rsync"
+        execscp   = "scp"
+        boolcmdexist = True
+        boolsuccess  = True
+        if sys.platform.startswith('linux'):
+            path_key_priv =  os.path.join("/", "root", ".ssh", "id_rsa")
+            localdest = " '%s/%s'"%(managepackage.packagedir(), packagename)
+        elif sys.platform.startswith('win'):
+            path_key_priv =  os.path.join(os.environ["ProgramFiles"], "Pulse", ".ssh", "id_rsa")
+            localdest = " '%s/%s'"%(managepackage.packagedir(), packagename)
+            execrsync = "C:\\\\Windows\\\\SysWOW64\\\\rsync.exe"
+            execscp   = os.path.join(os.environ["ProgramFiles"], "OpenSSH", "scp.exe")
+        elif sys.platform.startswith('darwin'):
+            path_key_priv =  os.path.join("/", "var", "root", ".ssh", "id_rsa")
+            localdest = " '%s/%s'"%(managepackage.packagedir(), packagename)
+        else :
+            boolcmdexist = False
+
+        if boolcmdexist:
+            cmdtransfert = "%s -C -r "%execscp
+            if cmdmode == "rsync":
+                cmdtransfert =  " %s -z --rsync-path=rsync "%execrsync
+            cmd = """%s -e "ssh -o IdentityFile=%s -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o Batchmode=yes -o PasswordAuthentication=no -o ServerAliveInterval=10 -o CheckHostIP=no -o LogLevel=ERROR -o ConnectTimeout=10" -av --chmod=777 """%(cmdtransfert, path_key_priv)
+            cmdexec =  cmd + remotesrc + localdest
+            obj = simplecommand(cmdexec)
+            return obj['result']
+        else:
+            boolsuccess  = false
+    except Exception as e:
+        logger.error("\n%s"%(traceback.format_exc()))
+        boolsuccess = False
+    finally:
+        removeresource(datasend, objectxmpp, sessionid)
+        signalendsessionforARS(datasend , objectxmpp, sessionid, error = True)
+        return boolsuccess
+
 def recuperefile(datasend, objectxmpp, ippackage, portpackage, sessionid):
     if not os.path.isdir(datasend['data']['pathpackageonmachine']):
         os.makedirs(datasend['data']['pathpackageonmachine'], mode=0777)
