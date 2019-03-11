@@ -30,7 +30,7 @@ import logging
 import pycurl
 import platform
 #from lib.utils import save_back_to_deploy, cleanbacktodeploy, simplecommandstr, get_keypub_ssh
-from lib.utils import save_back_to_deploy, cleanbacktodeploy, simplecommandstr, isBase64
+from lib.utils import save_back_to_deploy, cleanbacktodeploy, simplecommandstr, isBase64, simplecommand, deletekey, installkey
 import copy
 import traceback
 from sleekxmpp.xmlstream import  JID
@@ -38,7 +38,7 @@ import time
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
 
-plugin = {"VERSION" : "3.17", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
+plugin = {"VERSION" : "3.18", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
 
 
 """
@@ -134,7 +134,7 @@ def takeresource(datasend, objectxmpp, sessionid):
 
     logger.debug('take ressourse : %s'%datasendl['data']['jidrelay'])
     jidrs = JID(datasendl['data']['jidrelay'])
-    jidr = "%s@%s"%(jidrs.user, jidrs.domain) 
+    jidr = "%s@%s"%(jidrs.user, jidrs.domain)
     if jidr != objectxmpp.boundjid.bare:
         # libere la resources sur ARS par message (rend 1 resource)
         msgresource = {'action': "cluster",
@@ -274,6 +274,49 @@ def curlgetdownloadfile( destfile, urlfile, insecure = True, limit_rate_ko= None
         c.perform()
         c.close()
 
+def pull_package_transfert_rsync(datasend, objectxmpp, ippackage, sessionid,cmdmode="rsync"):
+    #print json.dumps( datasend, indent = 4)
+    takeresource(datasend, objectxmpp, sessionid)
+    try:
+        packagename = datasend['data']['descriptor']['info']['packageUuid']
+        userpackage = "userpackage"
+        remotesrc = """%s@%s:'%s' """%(userpackage , ippackage, packagename)
+        execrsync = "rsync"
+        execscp   = "scp"
+        boolcmdexist = True
+        boolsuccess  = True
+        if sys.platform.startswith('linux'):
+            path_key_priv =  os.path.join("/", "root", ".ssh", "id_rsa")
+            localdest = " '%s/%s'"%(managepackage.packagedir(), packagename)
+        elif sys.platform.startswith('win'):
+            path_key_priv =  os.path.join(os.environ["ProgramFiles"], "Pulse", ".ssh", "id_rsa")
+            localdest = " '%s/%s'"%(managepackage.packagedir(), packagename)
+            execrsync = "C:\\\\Windows\\\\SysWOW64\\\\rsync.exe"
+            execscp   = os.path.join(os.environ["ProgramFiles"], "OpenSSH", "scp.exe")
+        elif sys.platform.startswith('darwin'):
+            path_key_priv =  os.path.join("/", "var", "root", ".ssh", "id_rsa")
+            localdest = " '%s/%s'"%(managepackage.packagedir(), packagename)
+        else :
+            boolcmdexist = False
+
+        if boolcmdexist:
+            cmdtransfert = "%s -C -r "%execscp
+            if cmdmode == "rsync":
+                cmdtransfert =  " %s -z --rsync-path=rsync "%execrsync
+            cmd = """%s -e "ssh -o IdentityFile=%s -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o Batchmode=yes -o PasswordAuthentication=no -o ServerAliveInterval=10 -o CheckHostIP=no -o LogLevel=ERROR -o ConnectTimeout=10" -av --chmod=777 """%(cmdtransfert, path_key_priv)
+            cmdexec =  cmd + remotesrc + localdest
+            obj = simplecommand(cmdexec)
+            return obj['result']
+        else:
+            boolsuccess  = false
+    except Exception as e:
+        logger.error("\n%s"%(traceback.format_exc()))
+        boolsuccess = False
+    finally:
+        removeresource(datasend, objectxmpp, sessionid)
+        signalendsessionforARS(datasend , objectxmpp, sessionid, error = True)
+        return boolsuccess
+
 def recuperefile(datasend, objectxmpp, ippackage, portpackage, sessionid):
     if not os.path.isdir(datasend['data']['pathpackageonmachine']):
         os.makedirs(datasend['data']['pathpackageonmachine'], mode=0777)
@@ -375,6 +418,9 @@ def signalendsessionforARS(datasend , objectxmpp, sessionid, error = False):
     except Exception as e:
         logger.debug(str(e))
         traceback.print_exc(file=sys.stdout)
+
+def keymachine(objectxmpp, jidmachine):
+    return objectxmpp.iqsendpulse(jidmachine, {"action" : "keypub", "data" : {}}, 15)
 
 
 def action( objectxmpp, action, sessionid, data, message, dataerreur):
@@ -981,7 +1027,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         # Ce qui definie la charge d'un aRs, c'est le nombre de deploiement en cours( transfert de fichier non fait ou non terminer.)
         # si le transfert de fichiers est fait et terminé , alors ce deploiement n'est plus totalisé comme une charge pour ARS.
         # donc le coefficient de charge est diminué une fois un transfert de fichier terminé.
-        # alors tous les autre ARS du cluster recoive une notification permettant de tenir à jour ce coefficient. 
+        # alors tous les autre ARS du cluster recoive une notification permettant de tenir à jour ce coefficient.
 
         # consernant les deploiement avec dépendances, tous les deployement des packages sont effectué par un meme ARS.
 
@@ -991,11 +1037,11 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         # On a donc besoin d'un systeme de lissage de la charge ponctuel, pour que celle-ci soit dilué dans le temps.
         # pour cela, on définie un nombre maximun de deploiement simultané.
         # les deploiement sont empilés dans une pile LILO, puis dépilé est deployé pour avoir toujour une charge inférieur au nombre de deploiement simultanée demandé.
-        # on utilisera une base non sql pour conservé les descripteurs en attente de deploiement. 
-        # ainsi on assurera une persistance en cas d'arrêt de ARS. les deploiements encore dans la base seront 
+        # on utilisera une base non sql pour conservé les descripteurs en attente de deploiement.
+        # ainsi on assurera une persistance en cas d'arrêt de ARS. les deploiements encore dans la base seront
         # effectués a la remise en fonction de ARS.
 
-        #si parameter avanced spooling est définie, alors il remplace celui info du package 
+        #si parameter avanced spooling est définie, alors il remplace celui info du package
         if 'advanced' in data and 'spooling' in data['advanced'] :
             prioritylist = ["high", "ordinary"]
             if data['advanced']['spooling'] in prioritylist :
@@ -1094,7 +1140,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                             date = None ,
                                             fromuser = data['login'],
                                             touser = "")
- 
+
                 objectxmpp.session.resource.add(sessionid)
                 if not objectxmpp.session.isexist(sessionid):
                     logger.debug("creation session %s"%sessionid)
@@ -1245,7 +1291,11 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             and data['transfert'] == True\
                 and 'methodetransfert' in data\
                     and data['methodetransfert'] == "pullcurl":
-            #mode pull AM to ARS
+            # mode pull AM to ARS
+            #### install key of machine pour authorized_keys
+            keypub = keymachine(objectxmpp, data['jidmachine'])
+            keypubjson = json.loads(keypub)
+            installkey(os.path.join("/", "var", "lib", "pulse2", "packages", ".ssh", "authorized_keys"), keypubjson['result'])
             ### Send deployment message directly to machine
             transfertdeploy = {
                                 'action': action,
@@ -1377,7 +1427,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                         # - And return the path or install the packages.
                         # We leave and await message of the missing condition.
                         return
-                    
+
                     # We have all the information we continue deploy
                     # You have to prepare the transfer of packages.
                     # You must have a list of all the packages to install.
@@ -1520,9 +1570,10 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                 return
                             #push transfert
                             takeresource(data_in_session, objectxmpp, sessionid)
-                            if objectxmpp.config.pushmethod == "scp":
+                            if hasattr(objectxmpp.config, 'pushmethod') and objectxmpp.config.pushmethod == "scp":
                                 cmdexec = cmdscp
                             else:
+                                objectxmpp.config.pushmethod = "rsync"
                                 cmdexec = cmdrsync
                             logger.debug("tranfert cmd :\n %s"%cmdexec)
                             objectxmpp.xmpplog( "cmd : <span style=\"font-weight: bold;font-style: italic; color: blue;\">" + cmdexec + "</span>",
