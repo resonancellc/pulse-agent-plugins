@@ -2,6 +2,8 @@ from lib.configuration import confParameter
 import os
 import shutil
 
+plugin = {"VERSION" : "1.0", "NAME" : "scheduling_logsrotation",  "TYPE" : "all", "SCHEDULED" : True}
+
 # nb -1 infinie
 # everyday at 12:00
 SCHEDULE = {"schedule" : "00 12 * * *", "nb" : -1}
