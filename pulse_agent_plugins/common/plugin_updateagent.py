@@ -30,7 +30,7 @@ import traceback
 from lib.utils import file_put_contents, file_get_contents
 from lib.update_remote_agent import Update_Remote_Agent
 
-plugin={"VERSION": "1.3", "NAME" : "updateagent", "TYPE" : "all", "waittingmax" : 35, "waittingmin" : 5}
+plugin={"VERSION": "1.31", "NAME" : "updateagent", "TYPE" : "all", "waittingmax" : 35, "waittingmin" : 5}
 
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
@@ -71,9 +71,13 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     'ret' : 0,
                                     'base64' : False }
                     # renvoi descriptor pour demander la mise a jour
-                    objectxmpp.send_message(mto="master@pulse/MASTER",
-                                    mbody=json.dumps(msgupdate_me),
-                                    mtype='chat')
+                    agent_installor = "master@pulse/MASTER"
+                    if 'ars_update' in data and data['ars_update'] != "" :
+                        agent_installor = data['ars_update']
+                        msgupdate_me['action'] = "relayupdateagent"
+                    objectxmpp.send_message( mto = agent_installor,
+                                             mbody = json.dumps(msgupdate_me),
+                                             mtype = 'chat')
                     logger.debug("to updating files %s"%json.dumps(difference, indent = 4))
                     logger.debug("to deleting files %s"%json.dumps(sublibdifference, indent = 4))
                     delete_file_image(objectxmpp, sublibdifference)
@@ -105,6 +109,14 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             else:
                 content = zlib.decompress(base64.b64decode(data['content']))
                 dump_file_in_img(objectxmpp, data['namescript'], content, "script_agent")
+        elif data['subaction'] == "ars_update":
+            #verify agent type relayserver.
+            logger.debug( "recu update agent from %s"\
+                  " for update agent %s "\
+                      "[ descriptor %s ]"%( message['from'],
+                                            data['jidagent'],
+                                            data['descriptoragent']))
+            senddescriptormd5(objectxmpp, data)
 
 def reinstall_agent_with_image_agent_version_master(objectxmpp):
     newdescriptorimage = Update_Remote_Agent(objectxmpp.img_agent)
@@ -223,3 +235,20 @@ def delete_file_image(objectxmpp, listsuppfile):
                 logger.debug("remove file  image %s"%(file_mane))
             except OSError:
                 logger.warning("remove file  image %s : file not exist "%(file_mane))
+
+def senddescriptormd5(objectxmpp, data):
+    """
+        send the agent's figerprint descriptor in database to update the machine
+        Update remote agent
+    """
+    datasend = {"action": "updateagent",
+                "data": { 'subaction': 'descriptor',
+                          'descriptoragent': objectxmpp.Update_Remote_Agentlist.get_md5_descriptor_agent(),
+                          'ars_update' : data['ars_update']},
+                'ret': 0,
+                'sessionid': getRandomName(5, "updateagent")}
+    # Send catalog of files.
+    logger.debug("Send descriptor to agent [%s] for update" % data['jidagent'])
+    objectxmpp.send_message(data['jidagent'],
+                        mbody=json.dumps(datasend),
+                        mtype='chat')
