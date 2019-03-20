@@ -25,24 +25,22 @@
 import base64
 import json
 import os
+import sys
 import logging
 import zlib
 from time import sleep
 from utils import file_put_contents, file_get_contents, getRandomName
-
+import traceback
 
 logger = logging.getLogger()
 
 plugin = {"VERSION": "1.0", "NAME": "relayupdateagent", "TYPE": "relayserver"}
 
 def action( xmppobject, action, sessionid, data, message, dataerreur ):
-#def action(xmppobject, action, sessionid, data, message, ret, dataobj):
-    print "KKKKKKKKKKKKKKKKKKKKKKKKKKYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY3"
     logger.debug("#################################################")
     logger.debug(plugin)
     logger.debug(json.dumps(data, indent=4))
     logger.debug("#################################################")
-    print "KKKKKKKKKKKKKKKKKKKKKKKKKKYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY3"
     if "subaction" in data:
         if data['subaction'] == "update_me":
             # load version agent agentversion
