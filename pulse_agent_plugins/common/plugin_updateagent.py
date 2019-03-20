@@ -114,7 +114,7 @@ def reinstall_agent_with_image_agent_version_master(objectxmpp):
         for fichier in newdescriptorimage.get_md5_descriptor_agent()['program_agent']:
             os.system('copy  %s %s'%(os.path.join(objectxmpp.img_agent, fichier),
                                      os.path.join(objectxmpp.pathagent, fichier)))
-            logger.debug('updateagent plugin install program agent  %s to %s'%(os.path.join(objectxmpp.img_agent, fichier),
+            logger.debug('install program agent  %s to %s'%(os.path.join(objectxmpp.img_agent, fichier),
                                                             os.path.join(objectxmpp.pathagent)))
         os.system('copy  %s %s'%(os.path.join(objectxmpp.img_agent, "agentversion"),
                                  os.path.join(objectxmpp.pathagent, "agentversion")))
@@ -133,12 +133,12 @@ def reinstall_agent_with_image_agent_version_master(objectxmpp):
         for fichier in newdescriptorimage.get_md5_descriptor_agent()['lib_agent']:
             os.system('copy  %s %s'%(os.path.join(objectxmpp.img_agent, "lib", fichier),
                                      os.path.join(objectxmpp.pathagent, "lib", fichier)))
-            logger.debug('updateagent plugin install lib agent  %s to %s'%(os.path.join(objectxmpp.img_agent, "lib", fichier),
+            logger.debug('install lib agent  %s to %s'%(os.path.join(objectxmpp.img_agent, "lib", fichier),
                                                         os.path.join(objectxmpp.pathagent, "lib", fichier)))
         for fichier in newdescriptorimage.get_md5_descriptor_agent()['script_agent']:
             os.system('copy  %s %s'%(os.path.join(objectxmpp.img_agent, "script", fichier),
                                      os.path.join(objectxmpp.pathagent, "script", fichier)))
-            logger.debug('updateagent plugin install script agent %s to %s'%(os.path.join(objectxmpp.img_agent, "script", fichier),
+            logger.debug('install script agent %s to %s'%(os.path.join(objectxmpp.img_agent, "script", fichier),
                                                           os.path.join(objectxmpp.pathagent, "script", fichier)))
         #todo base de reg install version
     elif sys.platform.startswith('linux') or sys.platform.startswith('darwin'):
