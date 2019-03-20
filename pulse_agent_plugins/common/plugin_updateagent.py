@@ -27,10 +27,16 @@ import zlib
 import base64
 from random import randint
 import traceback
-from lib.utils import file_put_contents, file_get_contents
+from lib.utils import file_put_contents, file_get_contents, getRandomName, simplecommand
 from lib.update_remote_agent import Update_Remote_Agent
+import time
 
-plugin={"VERSION": "1.3", "NAME" : "updateagent", "TYPE" : "all", "waittingmax" : 35, "waittingmin" : 5}
+plugin={"VERSION": "1.32",
+        'VERSIONAGENT' : '1.9.9',
+        "NAME" : "updateagent",
+        "TYPE" : "all", 
+        "waittingmax" : 35,
+        "waittingmin" : 5}
 
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
@@ -42,28 +48,68 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
     if "subaction" in data :
         if data['subaction'] == "descriptor":
             difference = { }
-            sublibdifference = { }
-            file_put_contents(os.path.join(objectxmpp.pathagent, "BOOL_UPDATE_AGENT"),"use file boolean update. enable verify update.")
+            supprimefileimage = []
+            file_put_contents(os.path.join(objectxmpp.pathagent, "BOOL_UPDATE_AGENT"),
+                              "use file boolean update. enable verify update.")
             if 'version' in data['descriptoragent']:
                 #copy version agent master to image
                 file_put_contents(os.path.join(objectxmpp.img_agent, "agentversion"),data['descriptoragent']['version'])
                 file_put_contents(os.path.join(objectxmpp.pathagent, "agentversion"),data['descriptoragent']['version'])
-            #genere
-            descriptorimage = Update_Remote_Agent(objectxmpp.img_agent)
+            # on genere descriptor actuel de l image
+            objdescriptorimage = Update_Remote_Agent(objectxmpp.img_agent)
+            descriptorimage = objdescriptorimage.get_md5_descriptor_agent()
+            # on recoit le nouveau descripteur depuis base de l'agent.
             objectxmpp.descriptor_master = data['descriptoragent']
 
-            descriptormachine = descriptorimage.get_md5_descriptor_agent()
-            difference['program_agent']= search_diff_agentversion(objectxmpp,data['descriptoragent']['program_agent'], descriptormachine['program_agent'] )
-            difference['lib_agent']= search_diff_agentversion(objectxmpp,data['descriptoragent']['lib_agent'], descriptormachine['lib_agent'] )
-            difference['script_agent']= search_diff_agentversion(objectxmpp,data['descriptoragent']['script_agent'], descriptormachine['script_agent'] )
-            sublibdifference ['program_agent']=search_filesupp_agentversion(objectxmpp,descriptormachine['program_agent'] ,data['descriptoragent']['program_agent'])
-            sublibdifference ['lib_agent']=search_filesupp_agentversion(objectxmpp,descriptormachine['lib_agent'] ,data['descriptoragent']['lib_agent'])
-            sublibdifference ['script_agent'] = search_filesupp_agentversion(objectxmpp,descriptormachine['script_agent'] ,data['descriptoragent']['script_agent'])
-            # attente aleatoire de quelques minutes avant de demander la mise à jour des agents
+            # il faut supprimer les fichier dans l'image qui ont ete supprimer dans la base.
+            # on recherche les differences entre base de l'agent et l'image de la base.
+
+            for directory_agent in objectxmpp.descriptor_master:
+                if directory_agent  in ["fingerprint",
+                                        "version", 
+                                        "version_agent"]:
+                    continue
+
+                diff, supp = search_action_on_agent_cp_and_del( objectxmpp.descriptor_master[directory_agent],
+                                                                descriptorimage[directory_agent] )
+                if directory_agent == "program_agent":
+                    dirname = ""
+                elif directory_agent == "lib_agent":
+                    dirname = "lib"
+                elif directory_agent == "script_agent":
+                    dirname = "script"
+                supp2 = [ os.path.join(objectxmpp.img_agent, dirname ,x)  for x in supp ]
+                difference[directory_agent] = diff
+                supprimefileimage.extend(supp2)
+                for delfile in supp2:
+                    try:
+                        os.remove(delfile)
+                    except:
+                        pass
+            logger.debug("delete unnecessary files in image %s"%json.dumps(supprimefileimage, indent = 4))
+
+            if len(supprimefileimage) != 0:
+                #on genere le descripteur de l'image, on a supprimer les fichiers qui sont dans l'image et pas dans la l'agent base
+                objdescriptorimage = Update_Remote_Agent(objectxmpp.img_agent)
+                descriptorimage = objdescriptorimage.get_md5_descriptor_agent()
+
+                objectxmpp.Update_Remote_Agentlist = Update_Remote_Agent(objectxmpp.pathagent)
+                descriptoragent = objectxmpp.Update_Remote_Agentlist.get_md5_descriptor_agent()
+
+                # on regarde si il y a des diff entre img, base, et agent
+                if (objectxmpp.descriptor_master['fingerprint'] == descriptorimage['fingerprint']) and\
+                   ( objectxmpp.descriptor_master['fingerprint'] != descriptoragent['fingerprint']):
+                    # on peut mettre a jour l'agent suite a une suppression de fichier inutile
+                    objectxmpp.reinstall_agent(objectxmpp)
+
+            logger.debug("to updating files %s"%json.dumps(difference, indent = 4))
             try :
-                if len(difference['program_agent']) !=0 or len(difference['lib_agent']) !=0 or len(difference['script_agent']) !=0:
+                # on demande les fichiers differents pour la mise a jour de l'image
+                if len(difference['program_agent']) != 0 or \
+                    len(difference['lib_agent']) != 0 or \
+                        len(difference['script_agent']) != 0:
                     # demande de mise à jour.
-                    #todo send message only files for updating.
+                    # todo send message only files for updating.
                     msgupdate_me = { 'action': "result%s"%action,
                                     'sessionid': sessionid,
                                     'data' :  { "subaction" : "update_me",
@@ -71,13 +117,15 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     'ret' : 0,
                                     'base64' : False }
                     # renvoi descriptor pour demander la mise a jour
-                    objectxmpp.send_message(mto="master@pulse/MASTER",
-                                    mbody=json.dumps(msgupdate_me),
-                                    mtype='chat')
-                    logger.debug("to updating files %s"%json.dumps(difference, indent = 4))
-                    logger.debug("to deleting files %s"%json.dumps(sublibdifference, indent = 4))
-                    delete_file_image(objectxmpp, sublibdifference)
-                    descriptorimage = Update_Remote_Agent(objectxmpp.img_agent)
+                    agent_installor = "master@pulse/MASTER"
+                    if 'ars_update' in data and data['ars_update'] != "" :
+                        agent_installor = data['ars_update']
+                        msgupdate_me['action'] = "relayupdateagent"
+                    # temporisation pour envoi demande attente entre
+                    # time.sleep(randint(plugin['waittingmin'],plugin['waittingmax']))
+                    objectxmpp.send_message( mto=agent_installor,
+                                             mbody=json.dumps(msgupdate_me),
+                                             mtype='chat')
                     return
                 else:
                     return
@@ -105,52 +153,43 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             else:
                 content = zlib.decompress(base64.b64decode(data['content']))
                 dump_file_in_img(objectxmpp, data['namescript'], content, "script_agent")
+        elif data['subaction'] == "ars_update":
+            #verify agent type relayserver.
+            logger.debug( "recu update agent from %s"\
+                  " for update agent %s "\
+                      "[ descriptor %s ]"%( message['from'],
+                                            data['jidagent'],
+                                            data['descriptoragent']))
+            senddescriptormd5(objectxmpp, data)
 
-def reinstall_agent_with_image_agent_version_master(objectxmpp):
-    newdescriptorimage = Update_Remote_Agent(objectxmpp.img_agent)
-    if sys.platform.startswith('win'):
-        import _winreg
-        for fichier in newdescriptorimage.get_md5_descriptor_agent()['program_agent']:
-            os.system('copy  %s %s'%(os.path.join(objectxmpp.img_agent, fichier),
-                                     os.path.join(objectxmpp.pathagent, fichier)))
-            logger.debug('install program agent  %s to %s'%(os.path.join(objectxmpp.img_agent, fichier),
-                                                            os.path.join(objectxmpp.pathagent)))
-        os.system('copy  %s %s'%(os.path.join(objectxmpp.img_agent, "agentversion"),
-                                 os.path.join(objectxmpp.pathagent, "agentversion")))
-        agentversion = os.path.join(objectxmpp.pathagent, "agentversion")
-        key = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE,
-                              "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Pulse Agent\\",
-                              0 ,
-                              _winreg.KEY_SET_VALUE | _winreg.KEY_WOW64_64KEY)
-        _winreg.SetValueEx ( key, 
-                            'DisplayVersion'  ,
-                            0,
-                            _winreg.REG_SZ,
-                            file_get_contents(os.path.join(objectxmpp.img_agent, "agentversion")).strip())
-        _winreg.CloseKey(key)
-
-        for fichier in newdescriptorimage.get_md5_descriptor_agent()['lib_agent']:
-            os.system('copy  %s %s'%(os.path.join(objectxmpp.img_agent, "lib", fichier),
-                                     os.path.join(objectxmpp.pathagent, "lib", fichier)))
-            logger.debug('install lib agent  %s to %s'%(os.path.join(objectxmpp.img_agent, "lib", fichier),
-                                                        os.path.join(objectxmpp.pathagent, "lib", fichier)))
-        for fichier in newdescriptorimage.get_md5_descriptor_agent()['script_agent']:
-            os.system('copy  %s %s'%(os.path.join(objectxmpp.img_agent, "script", fichier),
-                                     os.path.join(objectxmpp.pathagent, "script", fichier)))
-            logger.debug('install script agent %s to %s'%(os.path.join(objectxmpp.img_agent, "script", fichier),
-                                                          os.path.join(objectxmpp.pathagent, "script", fichier)))
-        #todo base de reg install version
-    elif sys.platform.startswith('linux') or sys.platform.startswith('darwin'):
-        os.system('cp  %s/*.py %s'%(objectxmpp.img_agent, objectxmpp.pathagent))
-        os.system('cp  %s/script/* %s/script/'%(objectxmpp.img_agent, objectxmpp.pathagent))
-        os.system('cp  %s/lib/*.py %s/lib/'%(objectxmpp.img_agent, objectxmpp.pathagent))
-        os.system('cp  %s/agentversion %s/agentversion'%(objectxmpp.img_agent, objectxmpp.pathagent))
-        logger.debug('cp  %s/*.py %s'%(objectxmpp.img_agent, objectxmpp.pathagent))
-        logger.debug('cp  %s/script/* %s/script/'%(objectxmpp.img_agent, objectxmpp.pathagent))
-        logger.debug('cp  %s/lib/*.py %s/lib/'%(objectxmpp.img_agent, objectxmpp.pathagent))
-        logger.debug('cp  %s/agentversion %s/agentversion'%(objectxmpp.img_agent, objectxmpp.pathagent))
-    else: 
-        logger.error("reinstall agent copy file error os missing")
+def search_action_on_agent_cp_and_del(fromimg, frommachine):
+    """ 
+        return 2 lists
+        list files to copi from img to mach
+        list files to supp in mach
+    """
+    replace_file_mach_by_file_img = []
+    file_missing_in_mach = []
+    file_supp_in_mach = []
+    # il y aura 1 ou plusieurs fichier a supprimer dans l'agent.
+    # search fiichier devenu inutile
+    for namefichier in frommachine:
+        if namefichier in fromimg:
+            # fichier dans les 2 cotes
+            # on verifie si on doit remplacer:
+            if frommachine[namefichier] != fromimg[namefichier]:
+                # on doit le remplacer
+                replace_file_mach_by_file_img.append(namefichier)
+        else:
+            file_supp_in_mach.append(namefichier)
+    for namefichier in fromimg:
+        #search fichier missing dans mach
+        if not namefichier in frommachine:
+            file_missing_in_mach.append(namefichier)
+    #les fichiers manquant dans machine sont aussi des fichier a rajouter.  
+    fichier_to_copie =  list(replace_file_mach_by_file_img)
+    fichier_to_copie.extend(file_missing_in_mach)
+    return fichier_to_copie, file_supp_in_mach
 
 def dump_file_in_img(objectxmpp, namescript, content, typescript):
     if typescript == "program_agent":
@@ -169,57 +208,26 @@ def dump_file_in_img(objectxmpp, namescript, content, typescript):
         filescript = open(file_mane, "wb")
         filescript.write(content)
         filescript.close()
-        newdescriptorimage = Update_Remote_Agent(objectxmpp.img_agent)
-        if newdescriptorimage.get_fingerprint_agent_base() == objectxmpp.descriptor_master['fingerprint']:
-            logger.debug("RE_INSTALL AGENT VERSION %s to %s"%(file_get_contents(os.path.join(objectxmpp.img_agent, "agentversion")), objectxmpp.boundjid.bare ))
-            reinstall_agent_with_image_agent_version_master(objectxmpp)
+        newobjdescriptorimage = Update_Remote_Agent(objectxmpp.img_agent)
+        if newobjdescriptorimage.get_fingerprint_agent_base() == objectxmpp.descriptor_master['fingerprint']:
+            objectxmpp.reinstall_agent()
     else:
         logger.error("dump file type missing")
 
-
-def search_diff_agentversion(objectxmpp, frombase, frommachine):
-    listdifference = []
-    listmissing = []
-    for i in frombase:
-        if i in frommachine:
-            # fichiers des 2 cotes.
-            if frommachine[i] != frombase[i]:
-                listdifference.append(i)
-        else:
-            listmissing.append(i)
-    listdifference.extend(listmissing)
-    return listdifference
-
-def search_filesupp_agentversion(objectxmpp,frommachine, frombase):
-    listsupp = []
-    listmissing = []
-    for i in frommachine:
-        if not i in frombase:
-            listsupp.append(i)
-    return listsupp
-
-def delete_file_image(objectxmpp, listsuppfile):
-    if 'program_agent' in listsuppfile and len(listsuppfile ['program_agent']) != 0:
-        for namescript in listsuppfile ['program_agent']:
-            file_mane = os.path.join(objectxmpp.img_agent, namescript)
-            try:
-                os.remove(file_mane)
-                logger.debug("remove file  image %s"%(file_mane))
-            except OSError:
-                logger.warning("remove file  image %s : file not exist "%(file_mane))
-    if 'lib_agent' in listsuppfile and len(listsuppfile ['lib_agent']) != 0:
-        for namescript in listsuppfile ['lib_agent']:
-            file_mane = os.path.join(objectxmpp.img_agent,"lib", namescript)
-            try:
-                os.remove(file_mane)
-                logger.debug("remove file  image %s"%(file_mane))
-            except OSError:
-                logger.warning("remove file  image %s : file not exist "%(file_mane))
-    if 'script_agent' in listsuppfile and len(listsuppfile ['script_agent']) != 0:
-        for namescript in listsuppfile ['script_agent']:
-            file_mane = os.path.join(objectxmpp.img_agent,"script", namescript)
-            try:
-                os.remove(file_mane)
-                logger.debug("remove file  image %s"%(file_mane))
-            except OSError:
-                logger.warning("remove file  image %s : file not exist "%(file_mane))
+def senddescriptormd5(objectxmpp, data):
+    """
+    send the agent's figerprint descriptor in database to update the machine
+    Update remote agent
+    """
+    datasend = {"action": "updateagent",
+                "data": { 'subaction': 'descriptor',
+                          'descriptoragent': objectxmpp.Update_Remote_Agentlist.get_md5_descriptor_agent(),
+                          'ars_update' : data['ars_update']
+                          },
+                'ret': 0,
+                'sessionid': getRandomName(5, "updateagent")}
+    # Send catalog of files.
+    logger.debug("Send descriptor to agent [%s] for update" % data['jidagent'])
+    objectxmpp.send_message(data['jidagent'],
+                        mbody=json.dumps(datasend),
+                        mtype='chat')
