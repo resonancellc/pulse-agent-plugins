@@ -232,24 +232,24 @@ def module_needed(objectxmpp):
         finder.run_script(os.path.join(objectxmpp.img_agent, file))
         for name, mod in finder.modules.iteritems():
             try:
-                __import__(name.split('.', 1)[0])
+                __import__(name)
             except ImportError:
-                logger.warning('The following python module needs to be installed first: %s'%(name))
+                logger.warning('The following python module needs to be instaled first: %s'%(name))
                 return True
     for file in newdescriptorimage.get_md5_descriptor_agent()['lib_agent']:
         finder.run_script(os.path.join(objectxmpp.img_agent, "lib", file))
         for name, mod in finder.modules.iteritems():
             try:
-                __import__(name.split('.', 1)[0])
+                __import__(name)
             except ImportError:
-                logger.warning('The following python module needs to be installed first: %s'%(name))
+                logger.warning('The following python module needs to be instaled first: %s'%(name))
                 return True
     for file in newdescriptorimage.get_md5_descriptor_agent()['script_agent']:
         finder.run_script(os.path.join(objectxmpp.img_agent, "script", file))
         for name, mod in finder.modules.iteritems():
             try:
-                __import__(name.split('.', 1)[0])
+                __import__(name)
             except ImportError:
-                logger.warning('The following python module needs to be installed first: %s'%(name))
+                logger.warning('The following python module needs to be instaled first: %s'%(name))
                 return True
     return False
