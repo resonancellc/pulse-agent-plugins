@@ -29,9 +29,8 @@ from random import randint
 import traceback
 from lib.utils import file_put_contents, file_get_contents
 from lib.update_remote_agent import Update_Remote_Agent
-from modulefinder import ModuleFinder
 
-plugin={"VERSION": "1.4", "NAME" : "updateagent", "TYPE" : "all", "waittingmax" : 35, "waittingmin" : 5}
+plugin={"VERSION": "1.3", "NAME" : "updateagent", "TYPE" : "all", "waittingmax" : 35, "waittingmin" : 5}
 
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
@@ -171,7 +170,7 @@ def dump_file_in_img(objectxmpp, namescript, content, typescript):
         filescript.write(content)
         filescript.close()
         newdescriptorimage = Update_Remote_Agent(objectxmpp.img_agent)
-        if newdescriptorimage.get_fingerprint_agent_base() == objectxmpp.descriptor_master['fingerprint'] and module_needed(objectxmpp) == False:
+        if newdescriptorimage.get_fingerprint_agent_base() == objectxmpp.descriptor_master['fingerprint']:
             logger.debug("RE_INSTALL AGENT VERSION %s to %s"%(file_get_contents(os.path.join(objectxmpp.img_agent, "agentversion")), objectxmpp.boundjid.bare ))
             reinstall_agent_with_image_agent_version_master(objectxmpp)
     else:
@@ -224,32 +223,3 @@ def delete_file_image(objectxmpp, listsuppfile):
                 logger.debug("remove file  image %s"%(file_mane))
             except OSError:
                 logger.warning("remove file  image %s : file not exist "%(file_mane))
-
-def module_needed(objectxmpp):
-    finder = ModuleFinder()
-    newdescriptorimage = Update_Remote_Agent(objectxmpp.img_agent)
-    for file in newdescriptorimage.get_md5_descriptor_agent()['program_agent']:
-        finder.run_script(os.path.join(objectxmpp.img_agent, file))
-        for name, mod in finder.modules.iteritems():
-            try:
-                import name
-            except ImportError:
-                logger.warning('The following python module needs to be instaled first: %s'%(name))
-                return True
-    for file in newdescriptorimage.get_md5_descriptor_agent()['lib_agent']:
-        finder.run_script(os.path.join(objectxmpp.img_agent, "lib", file))
-        for name, mod in finder.modules.iteritems():
-            try:
-                import name
-            except ImportError:
-                logger.warning('The following python module needs to be instaled first: %s'%(name))
-                return True
-    for file in newdescriptorimage.get_md5_descriptor_agent()['script_agent']:
-        finder.run_script(os.path.join(objectxmpp.img_agent, "script", file))
-        for name, mod in finder.modules.iteritems():
-            try:
-                import name
-            except ImportError:
-                logger.warning('The following python module needs to be instaled first: %s'%(name))
-                return True
-    return False
