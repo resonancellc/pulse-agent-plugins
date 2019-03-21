@@ -216,12 +216,14 @@ def dump_file_in_img(objectxmpp, namescript, content, typescript):
 
 def senddescriptormd5(objectxmpp, data):
     """
-    send the agent's figerprint descriptor in database to update the machine
+    send the agent's figerprint  descriptor in database to the machine for update 
     Update remote agent
     """
+    objectxmpp.Update_Remote_Agentbase = Update_Remote_Agent(objectxmpp.config.diragentbase)
+    descriptoragentbase = objectxmpp.Update_Remote_Agentbase.get_md5_descriptor_agent()
     datasend = {"action": "updateagent",
                 "data": { 'subaction': 'descriptor',
-                          'descriptoragent': objectxmpp.Update_Remote_Agentlist.get_md5_descriptor_agent(),
+                          'descriptoragent': descriptoragentbase,
                           'ars_update' : data['ars_update']
                           },
                 'ret': 0,
