@@ -31,7 +31,7 @@ from lib.utils import file_put_contents, file_get_contents, getRandomName, simpl
 from lib.update_remote_agent import Update_Remote_Agent
 import time
 
-plugin={"VERSION": "1.32",
+plugin={"VERSION": "1.33",
         'VERSIONAGENT' : '1.9.9',
         "NAME" : "updateagent",
         "TYPE" : "all", 
@@ -100,7 +100,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                 if (objectxmpp.descriptor_master['fingerprint'] == descriptorimage['fingerprint']) and\
                    ( objectxmpp.descriptor_master['fingerprint'] != descriptoragent['fingerprint']):
                     # on peut mettre a jour l'agent suite a une suppression de fichier inutile
-                    objectxmpp.reinstall_agent(objectxmpp)
+                    objectxmpp.reinstall_agent()
 
             logger.debug("to updating files %s"%json.dumps(difference, indent = 4))
             try :
@@ -128,6 +128,17 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                              mtype='chat')
                     return
                 else:
+                    objdescriptorimage = Update_Remote_Agent(objectxmpp.img_agent)
+                    descriptorimage = objdescriptorimage.get_md5_descriptor_agent()
+
+                    objectxmpp.Update_Remote_Agentlist = Update_Remote_Agent(objectxmpp.pathagent)
+                    descriptoragent = objectxmpp.Update_Remote_Agentlist.get_md5_descriptor_agent()
+
+                    # on regarde si il y a des diff entre img, base, et agent
+                    if (objectxmpp.descriptor_master['fingerprint'] == descriptorimage['fingerprint']) and\
+                    ( objectxmpp.descriptor_master['fingerprint'] != descriptoragent['fingerprint']):
+                        # on peut mettre a jour l'agent suite a une suppression de fichier inutile
+                        objectxmpp.reinstall_agent()
                     return
             except Exception as e:
                 logger.error(str(e))
