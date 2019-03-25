@@ -31,12 +31,7 @@ from lib.utils import file_put_contents, file_get_contents, getRandomName, simpl
 from lib.update_remote_agent import Update_Remote_Agent
 import time
 
-plugin={"VERSION": "1.33",
-        'VERSIONAGENT' : '1.9.9',
-        "NAME" : "updateagent",
-        "TYPE" : "all", 
-        "waittingmax" : 35,
-        "waittingmin" : 5}
+plugin={"VERSION": "1.34", 'VERSIONAGENT' : '1.9.9',  "NAME" : "updateagent", "TYPE" : "all", "waittingmax" : 35, "waittingmin" : 5}
 
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
