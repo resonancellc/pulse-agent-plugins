@@ -44,7 +44,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             logger.debug("INJECTION KEY REGISTER VERSION")
             pathversion = os.path.join(objectxmpp.pathagent, "agentversion")
             if os.path.isfile(pathversion):
-                version = file_get_contents(pathversion).strip()
+                version = file_get_contents(pathversion).replace("\n","").replace("\r","").strip()
                 if len(version) < 20:
                     logger.debug("Version AGENT is " + version)
                     import _winreg
