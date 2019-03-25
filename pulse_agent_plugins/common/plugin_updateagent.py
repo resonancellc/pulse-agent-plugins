@@ -53,8 +53,9 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                               "use file boolean update. enable verify update.")
             if 'version' in data['descriptoragent']:
                 #copy version agent master to image
-                file_put_contents(os.path.join(objectxmpp.img_agent, "agentversion"),data['descriptoragent']['version'])
-                file_put_contents(os.path.join(objectxmpp.pathagent, "agentversion"),data['descriptoragent']['version'])
+                vers = (data['descriptoragent']['version']).replace("\n","").replace("\r","").strip()
+                file_put_contents(os.path.join(objectxmpp.img_agent, "agentversion"),vers)
+                file_put_contents(os.path.join(objectxmpp.pathagent, "agentversion"),vers)
             # on genere descriptor actuel de l image
             objdescriptorimage = Update_Remote_Agent(objectxmpp.img_agent)
             descriptorimage = objdescriptorimage.get_md5_descriptor_agent()
