@@ -26,11 +26,12 @@ import time
 import logging
 import os
 
-plugin = {"VERSION" : "1.10", "NAME" : "guacamole",  "TYPE" : "all"}
+plugin = {"VERSION" : "1.11", "NAME" : "guacamole",  "TYPE" : "all"}
 
 
+logger = logging.getLogger()
 def action( xmppobject, action, sessionid, data, message, dataerreur ):
-    print json.dumps(data, indent=4)
+    #print json.dumps(data, indent=4)
 
     if xmppobject.config.agenttype in ['relayserver']:
 
@@ -72,7 +73,7 @@ def action( xmppobject, action, sessionid, data, message, dataerreur ):
         except Exception as e:
             db.close()
             dataerreur['data']['msg'] = "MySQL Error: %s" % str(e)
-            traceback.print_exc(file=sys.stdout)
+            logger.error("\n%s"%(traceback.format_exc()))
             raise
 
         datareversessh = {
@@ -122,7 +123,7 @@ def action( xmppobject, action, sessionid, data, message, dataerreur ):
         if data['options'] == "vnclistenmode":
             if sys.platform.startswith('win'):
                 try:
-                    logging.getLogger().info("start VNC listener")
+                    logger.info("start VNC listener")
                     program = os.path.join(os.environ["ProgramFiles"], 'TightVNC', 'tvnserver.exe')
                     #select display for vnc
                     cmd = """\"%s\" -controlservice -disconnectall"""%(program)
@@ -132,27 +133,27 @@ def action( xmppobject, action, sessionid, data, message, dataerreur ):
                     cmd = """\"%s\" -controlservice -connect localhost"""%(program)
                     simplecommand(cmd)
                 except Exception, e:
-                    logging.getLogger().error( "Error: %s" % str(e))
-                    traceback.print_exc(file=sys.stdout)
+                    logger.error( "Error start VNC listener TightVNC: %s" % str(e))
+                    logger.error("\n%s"%(traceback.format_exc()))
                     raise
             if sys.platform.startswith('darwin'):
                 try:
                     simplecommand("pkill OSXvnc-server -connecthost localhost")
                     simplecommand("\"/Applications/Vine Server.app/Contents/MacOS/OSXvnc-server\" -connectHost localhost")
                 except Exception, e:
-                    logging.getLogger().error( "Error: %s" % str(e))
-                    traceback.print_exc(file=sys.stdout)
+                    logger.error( "Error start VNC listener OSXvnc-server: %s" % str(e))
+                    logger.error("\n%s"%(traceback.format_exc()))
                     raise
             else:
                 try:
                     simplecommand("vncconfig -nowin -connect localhost")
                 except Exception, e:
-                    logging.getLogger().error( "Error: %s" % str(e))
-                    traceback.print_exc(file=sys.stdout)
+                    logging.getLogger().error( "Error start VNC listener vncconfig: %s" % str(e))
+                    logger.error("\n%s"%(traceback.format_exc()))
                     raise
 
         returnmessage = dataerreur
         returnmessage['data'] = data
         returnmessage['ret'] = 0
 
-        print json.dumps(returnmessage, indent = 4)
+        #print json.dumps(returnmessage, indent = 4)
