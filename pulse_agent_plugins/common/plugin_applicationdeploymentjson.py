@@ -135,19 +135,18 @@ def takeresource(datasend, objectxmpp, sessionid):
     logger.debug('take ressourse : %s'%datasendl['data']['jidrelay'])
     jidrs = JID(datasendl['data']['jidrelay'])
     jidr = "%s@%s"%(jidrs.user, jidrs.domain)
-    if jidr != objectxmpp.boundjid.bare:
-        # libere la resources sur ARS par message (rend 1 resource)
-        msgresource = {'action': "cluster",
-                       'sessionid': sessionid,
-                       'data' :  {"subaction" : "takeresource",
-                                  "data" : {'user' : datasendl['data']['advanced']['login']}},
-                       'ret' : 0,
-                       'base64' : False}
-        objectxmpp.send_message(mto = datasendl['data']['jidrelay'],
-                                mbody = json.dumps(msgresource),
-                                mtype = 'chat')
-#    else:
-#        resource = objectxmpp.checklevelcharge(1)
+    msgresource = {'action': "cluster",
+                    'sessionid': sessionid,
+                    'data' :  {"subaction" : "takeresource",
+                                "data" : {'user' : datasendl['data']['advanced']['login'],
+                                        'machinejid' : datasendl['data']['jidmachine']
+                                }
+                    },
+                    'ret' : 0,
+                    'base64' : False}
+    objectxmpp.send_message(mto = datasendl['data']['jidrelay'],
+                            mbody = json.dumps(msgresource),
+                            mtype = 'chat')
     objectxmpp.xmpplog('take resource : %s'%datasendl['data']['jidrelay'],
                        type = 'deploy',
                        sessionname = sessionid,
@@ -171,18 +170,18 @@ def removeresource(datasend, objectxmpp, sessionid):
     logger.debug('restores ressource : %s'%datasendl['data']['jidrelay'])
     jidrs = JID(datasendl['data']['jidrelay'])
     jidr = "%s@%s"%(jidrs.user, jidrs.domain)
-    if jidr != objectxmpp.boundjid.bare:
-        # libere la resources sur ARS par message (rend 1 resource)
-        msgresource = {'action': "cluster",
-                       'sessionid': sessionid,
-                       'data' :  { "subaction" : "removeresource", "data" : {'user' : datasendl['data']['advanced']['login']}},
-                       'ret' : 0,
-                       'base64' : False}
-        objectxmpp.send_message(mto = datasendl['data']['jidrelay'],
-                                mbody = json.dumps(msgresource),
-                                mtype = 'chat')
-#    else :
-#        resource = objectxmpp.checklevelcharge(-1)
+    msgresource = {'action': "cluster",
+                    'sessionid': sessionid,
+                    'data' :  { "subaction" : "removeresource",
+                                "data" : {'user' : datasendl['data']['advanced']['login'],
+                                            'machinejid' : datasendl['data']['jidmachine']
+                                }
+                    },
+                    'ret' : 0,
+                    'base64' : False}
+    objectxmpp.send_message(mto = datasendl['data']['jidrelay'],
+                            mbody = json.dumps(msgresource),
+                            mtype = 'chat')
     objectxmpp.xmpplog('restores ressource : %s'%datasendl['data']['jidrelay'],
                        type = 'deploy',
                        sessionname = sessionid,
