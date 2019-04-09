@@ -1146,7 +1146,8 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                     data['pushinit'] = False
                     objectxmpp.session.createsessiondatainfo(sessionid,  datasession = data, timevalid = 180)
                 if len(objectxmpp.session.resource) > objectxmpp.config.concurrentdeployments:
-                    objectxmpp.levelcharge = objectxmpp.levelcharge + 1
+                    objectxmpp.checklevelcharge(ressource = 1)
+                    objectxmpp.levelcharge['machinelist'].append(data["jidmachine"])
 
                     data["differed"] = True
                     data["sessionid"] = sessionid
@@ -1198,7 +1199,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     date = None ,
                                     fromuser = data['login'],
                                     touser = "")
-            objectxmpp.levelcharge = objectxmpp.levelcharge - 1
+            #objectxmpp.levelcharge = objectxmpp.levelcharge - 1
         if 'advanced' in data and 'limit_rate_ko' in data['advanced'] :
             if data['advanced']['limit_rate_ko'] != 0:
                 #limit_rate_ko in avansed deploy

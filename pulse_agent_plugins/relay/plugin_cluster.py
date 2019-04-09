@@ -95,25 +95,24 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             objectxmpp.jidclusterlistrelayservers[message['from']] = data['data']
             logger.debug("new ARS list friend of cluster : %s"% objectxmpp.jidclusterlistrelayservers)
         elif data['subaction'] == "removeresource":
-            resource = objectxmpp.checklevelcharge(ressource = -1)
+            #resource = objectxmpp.checklevelcharge(ressource = -1)
             objectxmpp.delmachineinlevelmachinelist(data['data']['jidmachine'])
-            logger.debug("levelcharge %s %s"%(objectxmpp.boundjid.bare,
-                                              json.dumps(objectxmpp.levelcharge, indent =4)))
             refreshremotears(objectxmpp, action, sessionid)
-            objectxmpp.xmpplog('plugin Cluster : charge ARS (%s): %s'%(objectxmpp.boundjid.bare, resource),
-                                type = 'deploy',
-                                sessionname = sessionid,
-                                priority = -1,
-                                action = "",
-                                who = objectxmpp.boundjid.bare,
-                                how = "",
-                                why = "",
-                                module = "Deployment | Cluster | Notify",
-                                date = None ,
-                                fromuser = data['data']['user'],
-                                touser = "")
+            if 'data' in data and 'user' in data['data']:
+                objectxmpp.xmpplog('plugin Cluster : charge ARS (%s): %s'%(objectxmpp.boundjid.bare, resource),
+                                    type = 'deploy',
+                                    sessionname = sessionid,
+                                    priority = -1,
+                                    action = "",
+                                    who = objectxmpp.boundjid.bare,
+                                    how = "",
+                                    why = "",
+                                    module = "Deployment | Cluster | Notify",
+                                    date = None ,
+                                    fromuser = data['data']['user'],
+                                    touser = "")
         elif data['subaction'] == "takeresource":
-            resource = objectxmpp.checklevelcharge(ressource = 1)
+            #resource = objectxmpp.checklevelcharge(ressource = 1)
             objectxmpp.addmachineinlevelmachinelist(data['data']['jidmachine'])
             logger.debug("levelcharge %s %s"%(objectxmpp.boundjid.bare,
                                               json.dumps(objectxmpp.levelcharge, indent =4)))
