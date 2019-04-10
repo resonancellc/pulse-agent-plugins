@@ -99,7 +99,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             objectxmpp.delmachineinlevelmachinelist(data['data']['jidmachine'])
             refreshremotears(objectxmpp, action, sessionid)
             if 'data' in data and 'user' in data['data']:
-                objectxmpp.xmpplog('plugin Cluster : charge ARS (%s): %s'%(objectxmpp.boundjid.bare, resource),
+                objectxmpp.xmpplog('plugin Cluster : charge ARS (%s): %s'%(objectxmpp.boundjid.bare, objectxmpp.checklevelcharge()),
                                     type = 'deploy',
                                     sessionname = sessionid,
                                     priority = -1,
@@ -117,7 +117,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             logger.debug("levelcharge %s %s"%(objectxmpp.boundjid.bare,
                                               json.dumps(objectxmpp.levelcharge, indent =4)))
             refreshremotears(objectxmpp, action, sessionid)
-            objectxmpp.xmpplog('plugin Cluster : charge ARS (%s): %s'%(objectxmpp.boundjid.bare, resource),
+            objectxmpp.xmpplog('plugin Cluster : charge ARS (%s): %s'%(objectxmpp.boundjid.bare, objectxmpp.checklevelcharge()),
                                 type = 'deploy',
                                 sessionname = sessionid,
                                 priority = -1,
