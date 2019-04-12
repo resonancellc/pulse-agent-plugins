@@ -104,6 +104,10 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             logger.debug("levelcharge %s %s"%(objectxmpp.boundjid.bare,
                                               json.dumps(objectxmpp.levelcharge, indent =4)))
             refreshremotears(objectxmpp, action, sessionid)
+            if 'user' in data['data']:
+                user = data['data']['user']
+            else:
+                user = "master"
             objectxmpp.xmpplog('plugin Cluster : charge ARS (%s): %s'%(objectxmpp.boundjid.bare,
                                                                        objectxmpp.checklevelcharge() +
                                                                        objectxmpp.managefifo.getcount()),
@@ -116,7 +120,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                 why = "",
                                 module = "Deployment | Cluster | Notify",
                                 date = None ,
-                                fromuser = data['data']['user'],
+                                fromuser = user,
                                 touser = "")
         elif data['subaction'] == "takeresource":
             #resource = objectxmpp.checklevelcharge(ressource = 1)
@@ -124,6 +128,10 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             logger.debug("levelcharge %s %s"%(objectxmpp.boundjid.bare,
                                               json.dumps(objectxmpp.levelcharge, indent =4)))
             refreshremotears(objectxmpp, action, sessionid)
+            if 'user' in data['data']:
+                user = data['data']['user']
+            else:
+                user = "master"
             objectxmpp.xmpplog('plugin Cluster : charge ARS (%s): %s'%( objectxmpp.boundjid.bare, 
                                                                         objectxmpp.checklevelcharge() + 
                                                                         objectxmpp.managefifo.getcount()),
@@ -136,5 +144,5 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                 why = "",
                                 module = "Deployment | Cluster | Notify",
                                 date = None ,
-                                fromuser = data['data']['user'],
+                                fromuser = user,
                                 touser = "")
