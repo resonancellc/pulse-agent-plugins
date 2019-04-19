@@ -38,7 +38,7 @@ import time
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
 
-plugin = {"VERSION" : "3.22", "NAME" : "applicationdeploymentjson", "VERSIONAGENT" : "2.0.0", "TYPE" : "all"}
+plugin = {"VERSION" : "3.23", "NAME" : "applicationdeploymentjson", "VERSIONAGENT" : "2.0.0", "TYPE" : "all"}
 
 
 """
@@ -1180,20 +1180,20 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                 if len(objectxmpp.sessionaccumulator) > objectxmpp.config.concurrentdeployments or \
                    len(objectxmpp.levelcharge['machinelist']) > objectxmpp.config.concurrentdeployments:
                     maxval = maximum(len(objectxmpp.levelcharge['machinelist']),len(objectxmpp.sessionaccumulator)) 
-                    objectxmpp.xmpplog("Spooling resource %s > concurent %s"%(maxval,
-                                                                              objectxmpp.config.concurrentdeployments),
-                                                                              type = 'deploy',
-                                                                              sessionname = sessionid,
-                                                                              priority = -1,
-                                                                              action = "",
-                                                                              who = strjidagent,
-                                                                              how = "",
-                                                                              why = "",
-                                                                              module = "Deployment | Transfert | Notify",
-                                                                              date = None ,
-                                                                              fromuser = data['login'],
-                                                                              touser = "")
-
+                    objectxmpp.xmpplog("<span style='color: Orange;'>"\
+                        "Spooling resource %s > concurent %s</span>"%(maxval,
+                                                                      objectxmpp.config.concurrentdeployments),
+                                                                      type = 'deploy',
+                                                                      sessionname = sessionid,
+                                                                      priority = -1,
+                                                                      action = "",
+                                                                      who = strjidagent,
+                                                                      how = "",
+                                                                      why = "",
+                                                                      module = "Deployment | Transfert | Notify",
+                                                                      date = None ,
+                                                                      fromuser = data['login'],
+                                                                      touser = "")
                     data["differed"] = True
                     data["sessionid"] = sessionid
                     data["action"] = action
@@ -1202,27 +1202,26 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                     except  Exception as e:
                         logger.warning(str(e))
                         traceback.print_exc(file=sys.stdout)
-                    msglevelspoolig = ""
+                    msglevelspoolig =  '<span style="color: Orange;">spooling the deployment in fifo '
                     if 'spooling' in data["descriptor"]["info"]\
                         and data["descriptor"]["info"]['spooling'] == 'high':
                         objectxmpp.managefifo.setfifo(data, 'high')
-                        msglevelspoolig = 'spooling the deployment %s (high priority)'%sessionid
+                        msglevelspoolig = '%s (high priority session %s)</span>'%(msglevelspoolig, sessionid)
                     else:
                         objectxmpp.managefifo.setfifo(data)
-                        msglevelspoolig = 'spooling the deployment %s (ordinary priority)'%sessionid
-                    if msglevelspoolig != "":
-                        objectxmpp.xmpplog(msglevelspoolig,
-                                            type = 'deploy',
-                                            sessionname = sessionid,
-                                            priority = -1,
-                                            action = "",
-                                            who = strjidagent,
-                                            how = "",
-                                            why = "",
-                                            module = "Deployment | Transfert | Notify",
-                                            date = None ,
-                                            fromuser = data['login'],
-                                            touser = "")
+                        msglevelspoolig = '%s (ordinary priority session %s)</span>'%(msglevelspoolig, sessionid)
+                    objectxmpp.xmpplog(msglevelspoolig,
+                                        type = 'deploy',
+                                        sessionname = sessionid,
+                                        priority = -1,
+                                        action = "",
+                                        who = strjidagent,
+                                        how = "",
+                                        why = "",
+                                        module = "Deployment | Transfert | Notify",
+                                        date = None ,
+                                        fromuser = data['login'],
+                                        touser = "")
                     return
             except Exception as e:
                 logger.debug("in set fifo%s"%str(e))
@@ -1233,18 +1232,18 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         # Start deploiement
         if 'differed' in data:
             removeresource(data, objectxmpp, sessionid)
-            objectxmpp.xmpplog('und spooling the deployment %s'%sessionid,
-                                    type = 'deploy',
-                                    sessionname = sessionid,
-                                    priority = -1,
-                                    action = "",
-                                    who = strjidagent,
-                                    how = "",
-                                    why = "",
-                                    module = "Deployment | Transfert | Notify",
-                                    date = None ,
-                                    fromuser = data['login'],
-                                    touser = "")
+            objectxmpp.xmpplog( 'launch the %s deployment in spooling mode'%sessionid,
+                                type = 'deploy',
+                                sessionname = sessionid,
+                                priority = -1,
+                                action = "",
+                                who = strjidagent,
+                                how = "",
+                                why = "",
+                                module = "Deployment | Transfert | Notify",
+                                date = None ,
+                                fromuser = data['login'],
+                                touser = "")
             #objectxmpp.levelcharge = objectxmpp.levelcharge - 1
         if 'advanced' in data and 'limit_rate_ko' in data['advanced'] :
             if data['advanced']['limit_rate_ko'] != 0:
