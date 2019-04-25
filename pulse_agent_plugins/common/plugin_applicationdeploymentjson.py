@@ -994,7 +994,8 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         # on utilisera une base non sql pour conservé les descripteurs en attente de deploiement.
         # ainsi on assurera une persistance en cas d'arrêt de ARS. les deploiements encore dans la base seront
         # effectués a la remise en fonction de ARS.
-
+        if not "login" in data:
+            data['login']= ""
         #si parameter avanced spooling est définie, alors il remplace celui info du package
         if 'advanced' in data and 'spooling' in data['advanced'] :
             prioritylist = ["high", "ordinary"]
@@ -1136,6 +1137,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                     return
             except Exception as e:
                 logger.debug("%s"%str(e))
+                logger.error("\n%s"%(traceback.format_exc()))
                 pass
 
         # Start deploiement
