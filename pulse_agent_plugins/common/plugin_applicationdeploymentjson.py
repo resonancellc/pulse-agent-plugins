@@ -38,7 +38,7 @@ import time
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
 
-plugin = {"VERSION" : "3.19", "NAME" : "applicationdeploymentjson", "VERSIONAGENT" : "2.0.0", "TYPE" : "all"}
+plugin = {"VERSION" : "3.20", "NAME" : "applicationdeploymentjson", "VERSIONAGENT" : "2.0.0", "TYPE" : "all"}
 
 
 """
@@ -1018,6 +1018,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         if not ('step' in data or 'differed' in data):
             # difered and if
             if message['from'] == "master@pulse/MASTER":
+                objectxmpp.sessionaccumulator[sessionid] = time.time()
                 # le message de deploiement provient de master
                 # mettre level charge dans le if
                 data['resource'] = False
@@ -1027,7 +1028,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                     data['cluster'] = objectxmpp.boundjid.bare
                     logger.debug("list ARS concurent : %s"%objectxmpp.jidclusterlistrelayservers)
 
-                    levelchoisie = objectxmpp.levelcharge
+                    levelchoisie = objectxmpp.levelcharge['charge']
                     arsselection = objectxmpp.boundjid.bare
                     for ars in objectxmpp.jidclusterlistrelayservers:
                         if objectxmpp.jidclusterlistrelayservers[ars]['chargenumber'] < levelchoisie :
@@ -1035,7 +1036,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                             arsselection = ars
 
                     if arsselection != objectxmpp.boundjid.bare:
-                        logger.debug("Charge ARS ( %s ) is %s"%(objectxmpp.boundjid.bare, objectxmpp.levelcharge))
+                        logger.debug("Charge ARS ( %s ) is %s"%(objectxmpp.boundjid.bare, objectxmpp.levelcharge['charge']))
                         ###if (arsselection
                         logger.debug("DISPACHE VERS AUTRE ARS POUR LE DEPLOIEMENT : %s (charge level : %s) "%(arsselection, levelchoisie) )
                     ## modify descriptor for new ARS
@@ -1079,9 +1080,8 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                         date = None ,
                                         fromuser = data['login'],
                                         touser = "")
-
             try:
-                objectxmpp.xmpplog("Spooling resource %s > concurent %s"%(len(objectxmpp.session.resource), objectxmpp.config.concurrentdeployments),
+                objectxmpp.xmpplog("Spooling resource %s > concurent %s"%(len(objectxmpp.levelcharge['machinelist']), objectxmpp.config.concurrentdeployments),
                                             type = 'deploy',
                                             sessionname = sessionid,
                                             priority = -1,
@@ -1094,14 +1094,19 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                             fromuser = data['login'],
                                             touser = "")
  
-                objectxmpp.session.resource.add(sessionid)
                 if not objectxmpp.session.isexist(sessionid):
                     logger.debug("creation session %s"%sessionid)
                     data['pushinit'] = False
                     objectxmpp.session.createsessiondatainfo(sessionid,  datasession = data, timevalid = 180)
-                if len(objectxmpp.session.resource) > objectxmpp.config.concurrentdeployments:
-                    objectxmpp.checklevelcharge(ressource = 1)
-                    objectxmpp.levelcharge['machinelist'].append(data["jidmachine"])
+
+                q=time.time()
+                #on considere 10 seconde les input de deployement for premettre au ressource d etre prise
+                for sesssionindex in objectxmpp.sessionaccumulator.copy():
+                    if (q-objectxmpp.sessionaccumulator[sesssionindex])>10:
+                        del objectxmpp.sessionaccumulator[sesssionindex]
+
+                if len(objectxmpp.sessionaccumulator) > objectxmpp.config.concurrentdeployments or \
+                   len(objectxmpp.levelcharge['machinelist']) > objectxmpp.config.concurrentdeployments:
 
                     data["differed"] = True
                     data["sessionid"] = sessionid
@@ -1132,10 +1137,11 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                             date = None ,
                                             fromuser = data['login'],
                                             touser = "")
-                    takeresource(data, objectxmpp, sessionid)
                     return
             except Exception as e:
-                logger.debug("%s"%str(e))
+                logger.debug("in set fifo%s"%str(e))
+                #if not return deploy continue
+                return
                 pass
 
         # Start deploiement
