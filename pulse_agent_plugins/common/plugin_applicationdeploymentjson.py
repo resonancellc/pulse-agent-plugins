@@ -1180,8 +1180,9 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                         touser = "")
                     return
             except Exception as e:
-                logger.debug("in set fifo%s"%str(e))
-                #if not return deploy continue
+                logger.debug("error setfifo : %s"%str(e))
+                logger.error("\n%s"%(traceback.format_exc()))
+                # if not return deploy continue
                 return
                 pass
 
