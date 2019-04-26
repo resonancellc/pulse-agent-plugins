@@ -35,12 +35,20 @@ import copy
 import traceback
 from sleekxmpp.xmlstream import  JID
 import time
+from subprocess import STDOUT, check_output
+
+if sys.platform.startswith('linux') or sys.platform.startswith('darwin'):
+    import grp
+    import pwd
+elif sys.platform.startswith('win'):
+    pass
+
+
+plugin = {"VERSION" : "3.24", "NAME" : "applicationdeploymentjson", "VERSIONAGENT" : "2.0.0", "TYPE" : "all"}
+
+
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
-
-plugin = {"VERSION" : "3.23", "NAME" : "applicationdeploymentjson", "VERSIONAGENT" : "2.0.0", "TYPE" : "all"}
-
-
 """
 Plugin for deploying a package
 """
@@ -60,10 +68,41 @@ def clear_chargeapparente(objectxmpp):
             objectxmpp.charge_apparente_cluster[ars]['charge']=0
 
 def add_chargeapparente(objectxmpp, ars):
+    #create structure if not exist
     if not ars in objectxmpp.charge_apparente_cluster:
         objectxmpp.charge_apparente_cluster[ars] = {}
         objectxmpp.charge_apparente_cluster[ars]['charge'] = 0
         objectxmpp.charge_apparente_cluster[ars]['time'] = time.time()
+
+def changown_dir_of_file(dest, nameuser = None):
+    if nameuser is None:
+        if sys.platform.startswith('linux'):
+            nameuser = "pulseuser"
+        else:
+            nameuser = "pulse"
+    dest = os.path.dirname(dest)
+    if sys.platform.startswith('linux') or sys.platform.startswith('darwin'):
+        if sys.platform.startswith('linux'):
+        try:
+            uid = pwd.getpwnam(nameuser).pw_uid
+            gid = grp.getgrnam(nameuser).gr_gid
+            os.chown(dest, uid, gid)
+            for dirpath, dirnames, filenames in os.walk(dest):
+                for dname in dirnames:
+                    os.chown(os.path.join(dirpath, dname), uid, gid)
+                for fname in filenames:
+                    os.chown(os.path.join(dirpath, fname), uid, gid)
+        except Exception as e:
+            logger.error("%s changown_dir_of_file : %s"%(dest, str(e) ))
+    elif sys.platform.startswith('win'):
+        try:
+            result = check_output(["icacls",
+                                    dest,
+                                    "/setowner",
+                                    nameuser,
+                                    "/t"], stderr=STDOUT)
+        except subprocess.CalledProcessError as e:
+            logger.error("%s changown_dir_of_file : %s"%(dest, str(e.output)))
 
 def cleandescriptor(datasend):
 
@@ -387,6 +426,7 @@ def recuperefile(datasend, objectxmpp, ippackage, portpackage, sessionid):
                                     fromuser = datasend['data']['advanced']['login'],
                                     touser = "")
                 curlgetdownloadfile( dest, urlfile, insecure = True, limit_rate_ko = limit_rate_ko)
+                changown_dir_of_file(dest)# owner pulse or pulseuser.
             except Exception as e:
                 traceback.print_exc(file=sys.stdout)
                 logger.debug(str(e))
