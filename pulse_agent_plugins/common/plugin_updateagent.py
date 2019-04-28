@@ -31,12 +31,7 @@ from lib.utils import file_put_contents, file_get_contents, getRandomName, simpl
 from lib.update_remote_agent import Update_Remote_Agent
 import time
 
-plugin={"VERSION": "1.32",
-        'VERSIONAGENT' : '1.9.9',
-        "NAME" : "updateagent",
-        "TYPE" : "all", 
-        "waittingmax" : 35,
-        "waittingmin" : 5}
+plugin={"VERSION": "1.34", 'VERSIONAGENT' : '1.9.9',  "NAME" : "updateagent", "TYPE" : "all", "waittingmax" : 35, "waittingmin" : 5}
 
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
@@ -53,8 +48,9 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                               "use file boolean update. enable verify update.")
             if 'version' in data['descriptoragent']:
                 #copy version agent master to image
-                file_put_contents(os.path.join(objectxmpp.img_agent, "agentversion"),data['descriptoragent']['version'])
-                file_put_contents(os.path.join(objectxmpp.pathagent, "agentversion"),data['descriptoragent']['version'])
+                vers = (data['descriptoragent']['version']).replace("\n","").replace("\r","").strip()
+                file_put_contents(os.path.join(objectxmpp.img_agent, "agentversion"),vers)
+                file_put_contents(os.path.join(objectxmpp.pathagent, "agentversion"),vers)
             # on genere descriptor actuel de l image
             objdescriptorimage = Update_Remote_Agent(objectxmpp.img_agent)
             descriptorimage = objdescriptorimage.get_md5_descriptor_agent()
@@ -100,7 +96,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                 if (objectxmpp.descriptor_master['fingerprint'] == descriptorimage['fingerprint']) and\
                    ( objectxmpp.descriptor_master['fingerprint'] != descriptoragent['fingerprint']):
                     # on peut mettre a jour l'agent suite a une suppression de fichier inutile
-                    objectxmpp.reinstall_agent(objectxmpp)
+                    objectxmpp.reinstall_agent()
 
             logger.debug("to updating files %s"%json.dumps(difference, indent = 4))
             try :
@@ -128,6 +124,17 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                              mtype='chat')
                     return
                 else:
+                    objdescriptorimage = Update_Remote_Agent(objectxmpp.img_agent)
+                    descriptorimage = objdescriptorimage.get_md5_descriptor_agent()
+
+                    objectxmpp.Update_Remote_Agentlist = Update_Remote_Agent(objectxmpp.pathagent)
+                    descriptoragent = objectxmpp.Update_Remote_Agentlist.get_md5_descriptor_agent()
+
+                    # on regarde si il y a des diff entre img, base, et agent
+                    if (objectxmpp.descriptor_master['fingerprint'] == descriptorimage['fingerprint']) and\
+                    ( objectxmpp.descriptor_master['fingerprint'] != descriptoragent['fingerprint']):
+                        # on peut mettre a jour l'agent suite a une suppression de fichier inutile
+                        objectxmpp.reinstall_agent()
                     return
             except Exception as e:
                 logger.error(str(e))
@@ -216,12 +223,14 @@ def dump_file_in_img(objectxmpp, namescript, content, typescript):
 
 def senddescriptormd5(objectxmpp, data):
     """
-    send the agent's figerprint descriptor in database to update the machine
+    send the agent's figerprint  descriptor in database to the machine for update 
     Update remote agent
     """
+    objectxmpp.Update_Remote_Agentbase = Update_Remote_Agent(objectxmpp.config.diragentbase)
+    descriptoragentbase = objectxmpp.Update_Remote_Agentbase.get_md5_descriptor_agent()
     datasend = {"action": "updateagent",
                 "data": { 'subaction': 'descriptor',
-                          'descriptoragent': objectxmpp.Update_Remote_Agentlist.get_md5_descriptor_agent(),
+                          'descriptoragent': descriptoragentbase,
                           'ars_update' : data['ars_update']
                           },
                 'ret': 0,

@@ -1,3 +1,11 @@
+pulse-agent-plugins 1.11
+=========================
+* [FEATURE] Use scp and rsync instead of http in Pull mode
+* [FEATURE] Peer deployment
+* [BUGFIX] Fix logs rotation for relay server
+* [BUGFIX] Reduce size of inventories
+
+
 pulse-agent-plugins 1.10
 =========================
 * [FEATURE] Stop transfer on push deployment aborts
@@ -26,14 +34,14 @@ pulse-agent-plugins 1.9
 pulse-agent-plugins 1.8
 =========================
 * [FEATURE] Force reconfiguration of agent
-* [BUGFIX] Ensure VNC listener start after guacamole
+* [BUGFIX]  Ensure VNC listener start after guacamole
 
 pulse-agent-plugins 1.7
 =========================
 * [FEATURE] Improve execution of commands by using synchronous operations
 * [FEATURE] First version of Pulse Kiosk
-* [BUGFIX] Fix encoding for remote console
-* [BUGFIX] Use first display for clients with more than one display
+* [BUGFIX]  Fix encoding for remote console
+* [BUGFIX]  Use first display for clients with more than one display
 
 pulse-agent-plugins 1.6
 =========================

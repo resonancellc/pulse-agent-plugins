@@ -38,7 +38,7 @@ import time
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
 
-plugin = {"VERSION" : "3.17", "NAME" : "applicationdeploymentjson", "TYPE" : "all"}
+plugin = {"VERSION" : "3.20", "NAME" : "applicationdeploymentjson", "VERSIONAGENT" : "2.0.0", "TYPE" : "all"}
 
 
 """
@@ -134,20 +134,19 @@ def takeresource(datasend, objectxmpp, sessionid):
 
     logger.debug('take ressourse : %s'%datasendl['data']['jidrelay'])
     jidrs = JID(datasendl['data']['jidrelay'])
-    jidr = "%s@%s"%(jidrs.user, jidrs.domain)
-    if jidr != objectxmpp.boundjid.bare:
-        # libere la resources sur ARS par message (rend 1 resource)
-        msgresource = {'action': "cluster",
-                       'sessionid': sessionid,
-                       'data' :  {"subaction" : "takeresource",
-                                  "data" : {'user' : datasendl['data']['advanced']['login']}},
-                       'ret' : 0,
-                       'base64' : False}
-        objectxmpp.send_message(mto = datasendl['data']['jidrelay'],
-                                mbody = json.dumps(msgresource),
-                                mtype = 'chat')
-#    else:
-#        resource = objectxmpp.checklevelcharge(1)
+    jidr = "%s@%s"%(jidrs.user, jidrs.domain) 
+    msgresource = {'action': "cluster",
+                    'sessionid': sessionid,
+                    'data' :  {"subaction" : "takeresource",
+                                "data" : {'user' : datasendl['data']['advanced']['login'],
+                                        'machinejid' : datasendl['data']['jidmachine']
+                                }
+                    },
+                    'ret' : 0,
+                    'base64' : False}
+    objectxmpp.send_message(mto = datasendl['data']['jidrelay'],
+                            mbody = json.dumps(msgresource),
+                            mtype = 'chat')
     objectxmpp.xmpplog('take resource : %s'%datasendl['data']['jidrelay'],
                        type = 'deploy',
                        sessionname = sessionid,
@@ -171,18 +170,18 @@ def removeresource(datasend, objectxmpp, sessionid):
     logger.debug('restores ressource : %s'%datasendl['data']['jidrelay'])
     jidrs = JID(datasendl['data']['jidrelay'])
     jidr = "%s@%s"%(jidrs.user, jidrs.domain)
-    if jidr != objectxmpp.boundjid.bare:
-        # libere la resources sur ARS par message (rend 1 resource)
-        msgresource = {'action': "cluster",
-                       'sessionid': sessionid,
-                       'data' :  { "subaction" : "removeresource", "data" : {'user' : datasendl['data']['advanced']['login']}},
-                       'ret' : 0,
-                       'base64' : False}
-        objectxmpp.send_message(mto = datasendl['data']['jidrelay'],
-                                mbody = json.dumps(msgresource),
-                                mtype = 'chat')
-#    else :
-#        resource = objectxmpp.checklevelcharge(-1)
+    msgresource = {'action': "cluster",
+                    'sessionid': sessionid,
+                    'data' :  { "subaction" : "removeresource",
+                                "data" : {'user' : datasendl['data']['advanced']['login'],
+                                            'machinejid' : datasendl['data']['jidmachine']
+                                }
+                    },
+                    'ret' : 0,
+                    'base64' : False}
+    objectxmpp.send_message(mto = datasendl['data']['jidrelay'],
+                            mbody = json.dumps(msgresource),
+                            mtype = 'chat')
     objectxmpp.xmpplog('restores ressource : %s'%datasendl['data']['jidrelay'],
                        type = 'deploy',
                        sessionname = sessionid,
@@ -1020,6 +1019,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         if not ('step' in data or 'differed' in data):
             # difered and if
             if message['from'] == "master@pulse/MASTER":
+                objectxmpp.sessionaccumulator[sessionid] = time.time()
                 # le message de deploiement provient de master
                 # mettre level charge dans le if
                 data['resource'] = False
@@ -1029,7 +1029,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                     data['cluster'] = objectxmpp.boundjid.bare
                     logger.debug("list ARS concurent : %s"%objectxmpp.jidclusterlistrelayservers)
 
-                    levelchoisie = objectxmpp.levelcharge
+                    levelchoisie = objectxmpp.levelcharge['charge']
                     arsselection = objectxmpp.boundjid.bare
                     for ars in objectxmpp.jidclusterlistrelayservers:
                         if objectxmpp.jidclusterlistrelayservers[ars]['chargenumber'] < levelchoisie :
@@ -1037,7 +1037,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                             arsselection = ars
 
                     if arsselection != objectxmpp.boundjid.bare:
-                        logger.debug("Charge ARS ( %s ) is %s"%(objectxmpp.boundjid.bare, objectxmpp.levelcharge))
+                        logger.debug("Charge ARS ( %s ) is %s"%(objectxmpp.boundjid.bare, objectxmpp.levelcharge['charge']))
                         ###if (arsselection
                         logger.debug("DISPACHE VERS AUTRE ARS POUR LE DEPLOIEMENT : %s (charge level : %s) "%(arsselection, levelchoisie) )
                     ## modify descriptor for new ARS
@@ -1081,9 +1081,8 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                         date = None ,
                                         fromuser = data['login'],
                                         touser = "")
-
             try:
-                objectxmpp.xmpplog("Spooling resource %s > concurent %s"%(len(objectxmpp.session.resource), objectxmpp.config.concurrentdeployments),
+                objectxmpp.xmpplog("Spooling resource %s > concurent %s"%(len(objectxmpp.levelcharge['machinelist']), objectxmpp.config.concurrentdeployments),
                                             type = 'deploy',
                                             sessionname = sessionid,
                                             priority = -1,
@@ -1095,14 +1094,20 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                             date = None ,
                                             fromuser = data['login'],
                                             touser = "")
-
-                objectxmpp.session.resource.add(sessionid)
+ 
                 if not objectxmpp.session.isexist(sessionid):
                     logger.debug("creation session %s"%sessionid)
                     data['pushinit'] = False
                     objectxmpp.session.createsessiondatainfo(sessionid,  datasession = data, timevalid = 180)
-                if len(objectxmpp.session.resource) > objectxmpp.config.concurrentdeployments:
-                    objectxmpp.levelcharge = objectxmpp.levelcharge + 1
+
+                q=time.time()
+                #on considere 10 seconde les input de deployement for premettre au ressource d etre prise
+                for sesssionindex in objectxmpp.sessionaccumulator.copy():
+                    if (q-objectxmpp.sessionaccumulator[sesssionindex])>10:
+                        del objectxmpp.sessionaccumulator[sesssionindex]
+
+                if len(objectxmpp.sessionaccumulator) > objectxmpp.config.concurrentdeployments or \
+                   len(objectxmpp.levelcharge['machinelist']) > objectxmpp.config.concurrentdeployments:
 
                     data["differed"] = True
                     data["sessionid"] = sessionid
@@ -1133,11 +1138,11 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                             date = None ,
                                             fromuser = data['login'],
                                             touser = "")
-                    takeresource(data, objectxmpp, sessionid)
                     return
             except Exception as e:
-                logger.debug("%s"%str(e))
-                logger.error("\n%s"%(traceback.format_exc()))
+                logger.debug("in set fifo%s"%str(e))
+                #if not return deploy continue
+                return
                 pass
 
         # Start deploiement
@@ -1155,7 +1160,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     date = None ,
                                     fromuser = data['login'],
                                     touser = "")
-            objectxmpp.levelcharge = objectxmpp.levelcharge - 1
+            #objectxmpp.levelcharge = objectxmpp.levelcharge - 1
         if 'advanced' in data and 'limit_rate_ko' in data['advanced'] :
             if data['advanced']['limit_rate_ko'] != 0:
                 #limit_rate_ko in avansed deploy
@@ -1522,9 +1527,10 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                 return
                             #push transfert
                             takeresource(data_in_session, objectxmpp, sessionid)
-                            if objectxmpp.config.pushmethod == "scp":
+                            if hasattr(objectxmpp.config, 'pushmethod') and objectxmpp.config.pushmethod == "scp":
                                 cmdexec = cmdscp
                             else:
+                                objectxmpp.config.pushmethod = "rsync"
                                 cmdexec = cmdrsyn
                             logger.debug("tranfert cmd :\n %s"%cmdexec)
                             objectxmpp.xmpplog( "cmd : <span style=\"font-weight: bold;font-style: italic; color: blue;\">" + cmdexec + "</span>",
