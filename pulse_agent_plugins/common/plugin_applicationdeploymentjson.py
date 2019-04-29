@@ -1143,7 +1143,6 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                 logger.debug("in set fifo%s"%str(e))
                 #if not return deploy continue
                 return
-                pass
 
         # Start deploiement
         if 'differed' in data:
