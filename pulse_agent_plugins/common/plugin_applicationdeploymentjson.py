@@ -1021,6 +1021,8 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         if not "login" in data:
             data['login']= ""
         #initialise charge_apparente_cluster si non initialiser
+        if not "login" in data:
+            data['login']= ""
         add_chargeapparente(objectxmpp, strjidagent)
         clear_chargeapparente(objectxmpp)
 
