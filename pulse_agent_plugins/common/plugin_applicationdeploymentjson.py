@@ -100,7 +100,7 @@ def changown_dir_of_file(dest, nameuser = None):
                                     "/setowner",
                                     nameuser,
                                     "/t"], stderr=STDOUT)
-        except CalledProcessError as e:
+        except subprocess.CalledProcessError as e:
             logger.error("%s changown_dir_of_file : %s"%(dest, str(e.output)))
 
 def cleandescriptor(datasend):
