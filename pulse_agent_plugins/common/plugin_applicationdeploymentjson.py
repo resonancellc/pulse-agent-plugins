@@ -82,7 +82,6 @@ def changown_dir_of_file(dest, nameuser = None):
             nameuser = "pulse"
     dest = os.path.dirname(dest)
     if sys.platform.startswith('linux') or sys.platform.startswith('darwin'):
-        if sys.platform.startswith('linux'):
         try:
             uid = pwd.getpwnam(nameuser).pw_uid
             gid = grp.getgrnam(nameuser).gr_gid
