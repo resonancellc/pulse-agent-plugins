@@ -1019,6 +1019,8 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         # ainsi on assurera une persistance en cas d'arrêt de ARS. les deploiements encore dans la base seront 
         # effectués a la remise en fonction de ARS.
         #initialise charge_apparente_cluster si non initialiser
+        if not "login" in data:
+            data['login']= ""
         add_chargeapparente(objectxmpp, strjidagent)
         clear_chargeapparente(objectxmpp)
 
