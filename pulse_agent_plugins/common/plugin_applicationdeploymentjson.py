@@ -35,7 +35,7 @@ import copy
 import traceback
 from sleekxmpp.xmlstream import  JID
 import time
-from subprocess import STDOUT, check_output
+from subprocess import STDOUT, check_output, CalledProcessError
 
 if sys.platform.startswith('linux') or sys.platform.startswith('darwin'):
     import grp
@@ -100,7 +100,7 @@ def changown_dir_of_file(dest, nameuser = None):
                                     "/setowner",
                                     nameuser,
                                     "/t"], stderr=STDOUT)
-        except subprocess.CalledProcessError as e:
+        except CalledProcessError as e:
             logger.error("%s changown_dir_of_file : %s"%(dest, str(e.output)))
 
 def cleandescriptor(datasend):
