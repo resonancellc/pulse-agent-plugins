@@ -44,7 +44,7 @@ elif sys.platform.startswith('win'):
     pass
 
 
-plugin = {"VERSION" : "3.24", "NAME" : "applicationdeploymentjson", "VERSIONAGENT" : "2.0.0", "TYPE" : "all"}
+plugin = {"VERSION" : "3.25", "NAME" : "applicationdeploymentjson", "VERSIONAGENT" : "2.0.0", "TYPE" : "all"}
 
 
 logger = logging.getLogger()
