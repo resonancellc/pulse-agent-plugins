@@ -35,7 +35,7 @@ import copy
 import traceback
 from sleekxmpp.xmlstream import  JID
 import time
-from subprocess import STDOUT, check_output
+from subprocess import STDOUT, check_output, CalledProcessError
 
 if sys.platform.startswith('linux') or sys.platform.startswith('darwin'):
     import grp
@@ -100,7 +100,7 @@ def changown_dir_of_file(dest, nameuser = None):
                                     "/setowner",
                                     nameuser,
                                     "/t"], stderr=STDOUT)
-        except subprocess.CalledProcessError as e:
+        except CalledProcessError as e:
             logger.error("%s changown_dir_of_file : %s"%(dest, str(e.output)))
 
 def cleandescriptor(datasend):
@@ -1057,8 +1057,6 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         # on utilisera une base non sql pour conservé les descripteurs en attente de deploiement.
         # ainsi on assurera une persistance en cas d'arrêt de ARS. les deploiements encore dans la base seront
         # effectués a la remise en fonction de ARS.
-        if not "login" in data:
-            data['login']= ""
         #initialise charge_apparente_cluster si non initialiser
         if not "login" in data:
             data['login']= ""
