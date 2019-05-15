@@ -58,7 +58,10 @@ def action( xmppobject, action, sessionid, data, message, dataerreur ):
                 results = cursor.fetchall()
                 localport = results[0][0]
                 if data['cux_type'] == 'SSH':
-                    remoteport = 22
+                    if hasattr(xmppobject.config, 'clients_ssh_port'):
+                        remoteport = xmppobject.config.clients_ssh_port
+                    else:
+                        remoteport = 22
                     reversetype = 'R'
                 elif data['cux_type'] == 'RDP':
                     remoteport = 3389
@@ -66,7 +69,10 @@ def action( xmppobject, action, sessionid, data, message, dataerreur ):
                 elif data['cux_type'] == 'VNC':
                     # Specific VNC case. We will use a listener
                     remoteport = localport
-                    localport = 5500
+                    if hasattr(xmppobject.config, 'clients_vnc_port'):
+                        localport = xmppobject.config.clients_vnc_port
+                    else:
+                        localport = 5500
                     reversetype = 'L'
 
         except Exception as e:

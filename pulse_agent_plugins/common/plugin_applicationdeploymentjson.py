@@ -1510,6 +1510,10 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                 cmdpre = "scp -C -r "
                                 cmdrsyn = "rsync -z --rsync-path=%s "%data_in_session['rsyncpath']
                                 msg = "push transfert package :%s to %s"%(data_in_session['name'],data_in_session['jidmachine'])
+                            if hasattr(xmppobject.config, 'clients_ssh_port'):
+                                clientssshport = xmppobject.config.clients_ssh_port
+                            else:
+                                clientssshport = "22"
                             optionscp = "-o IdentityFile=/root/.ssh/id_rsa "\
                                      "-o StrictHostKeyChecking=no "\
                                      "-o UserKnownHostsFile=/dev/null "\
@@ -1519,7 +1523,9 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                      "-o CheckHostIP=no "\
                                      "-o LogLevel=ERROR "\
                                      "-o ConnectTimeout=10 "\
-                                        "%s %s@%s:\"\\\"%s\\\"\""%( pathin,
+                                     "-o Port=%s "\
+                                        "%s %s@%s:\"\\\"%s\\\"\""%( clientssshport,
+                                                        pathin,
                                                         data_in_session['userssh'],
                                                         data_in_session['ipmachine'],
                                                         data_in_session['folders_packages'])
@@ -1548,8 +1554,13 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                             "-o ServerAliveInterval=10 "\
                                             "-o CheckHostIP=no "\
                                             "-o LogLevel=ERROR "\
-                                            "-o ConnectTimeout=10\" "\
-                                            "-av --chmod=777 %s/ %s@%s:'%s'"%(pathin,data_in_session['userssh'],data_in_session['ipmachine'],pathnew)
+                                            "-o ConnectTimeout=10 "\
+                                            "-o Port=%s\" "\
+                                            "-av --chmod=777 %s/ %s@%s:'%s'"%( clientssshport,
+                                                                pathin,
+                                                                data_in_session['userssh'],
+                                                                data_in_session['ipmachine'],
+                                                                pathnew)
                             cmdscp = cmdpre + optionscp
                             cmdrsyn = cmdrsyn + optionrsync
 

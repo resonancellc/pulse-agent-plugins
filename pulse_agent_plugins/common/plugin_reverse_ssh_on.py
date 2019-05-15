@@ -197,6 +197,10 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur ):
         if data['options'] == "createreversessh":
             install_key_ssh_relayserver(data['key'], private=True)
             install_key_ssh_relayserver(data['keypub'])
+            if hasattr(xmppobject.config, 'clients_ssh_port'):
+                clientssshport = xmppobject.config.clients_ssh_port
+            else:
+                clientssshport = "22"
             try:
                 reversetype = data['reversetype']
             except Exception:
@@ -204,7 +208,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur ):
             try:
                 remoteport = data['remoteport']
             except Exception:
-                remoteport = '22'
+                remoteport = clientssshport
 
             objectxmpp.xmpplog( 'create reverse ssh on machine : %s '\
                                   'type reverse : %s port :%s'%(message['to'], reversetype, data['port']),

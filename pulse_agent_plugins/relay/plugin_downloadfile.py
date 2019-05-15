@@ -111,11 +111,15 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                              mbody = json.dumps(body),
                              mtype = 'chat')
     reversessh = False
-    localport = 22
+    if hasattr(xmppobject.config, 'clients_ssh_port'):
+        localport = xmppobject.config.clients_ssh_port
+        paramglobal['remoteport'] = xmppobject.config.clients_ssh_port
+    else:
+        localport = 22
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.settimeout(5.0)
     try:
-        sock.connect((data['ipmachine'], 22))
+        sock.connect((data['ipmachine'], localport))
     except socket.error:
         localport = randint(49152, 65535)
         reversessh = True
