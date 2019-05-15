@@ -44,7 +44,7 @@ elif sys.platform.startswith('win'):
     pass
 
 
-plugin = {"VERSION" : "3.24", "NAME" : "applicationdeploymentjson", "VERSIONAGENT" : "2.0.0", "TYPE" : "all"}
+plugin = {"VERSION" : "3.25", "NAME" : "applicationdeploymentjson", "VERSIONAGENT" : "2.0.0", "TYPE" : "all"}
 
 
 logger = logging.getLogger()
@@ -76,10 +76,7 @@ def add_chargeapparente(objectxmpp, ars):
 
 def changown_dir_of_file(dest, nameuser = None):
     if nameuser is None:
-        if sys.platform.startswith('linux'):
-            nameuser = "pulseuser"
-        else:
-            nameuser = "pulse"
+        nameuser = "pulseuser"
     dest = os.path.dirname(dest)
     if sys.platform.startswith('linux') or sys.platform.startswith('darwin'):
         try:
@@ -382,7 +379,7 @@ def recuperefile(datasend, objectxmpp, ippackage, portpackage, sessionid):
                                     fromuser = datasend['data']['advanced']['login'],
                                     touser = "")
                 curlgetdownloadfile( dest, urlfile, insecure = True, limit_rate_ko = limit_rate_ko)
-                changown_dir_of_file(dest)# owner pulse or pulseuser.
+                changown_dir_of_file(dest)
             except Exception as e:
                 traceback.print_exc(file=sys.stdout)
                 logger.debug(str(e))
@@ -1403,14 +1400,12 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                             logger.debug("os client machine %s"%data_in_session['os'])
                             data_in_session['os_version'] = data['os_version']
                             #set  user ssh
+                            data_in_session['userssh'] = "pulseuser"
                             if data_in_session['os'].startswith('linux'):
-                                data_in_session['userssh'] = "pulseuser"
                                 data_in_session['rsyncpath'] = "rsync"
                             elif data_in_session['os'].startswith('win'):
-                                data_in_session['userssh'] = "pulse"
                                 data_in_session['rsyncpath'] = "C:\\\\Windows\\\\SysWOW64\\\\rsync.exe"
                             elif data_in_session['os'].startswith('darwin'):
-                                data_in_session['userssh'] = "pulse"
                                 data_in_session['rsyncpath'] = "rsync"
                         # information set in session data
                         objsession.setdatasession(data_in_session)

@@ -32,7 +32,7 @@ import socket
 from random import randint
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
-plugin = { "VERSION" : "1.67", "NAME" : "downloadfile", "TYPE" : "relayserver" }
+plugin = { "VERSION" : "2.0", "NAME" : "downloadfile", "TYPE" : "relayserver" }
 paramglobal = {"timeupreverssh" : 20 , "portsshmaster" : 22, "filetmpconfigssh" : "/tmp/tmpsshconf", "remoteport" : 22}
 def create_path(type ="windows", host="", ipordomain="", path=""):
     """
@@ -143,9 +143,9 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         if str(data['osmachine']).startswith('Linux'):
             source = create_path(type = "linux", host = "pulseuser", ipordomain=data['ipmachine'], path = r'%s'%data['path_src_machine'])
         elif str(data['osmachine']).startswith('darwin'):
-            source = create_path(type = "linux", host = "pulse", ipordomain=data['ipmachine'], path = r'%s'%data['path_src_machine'])
+            source = create_path(type = "linux", host = "pulseuser", ipordomain=data['ipmachine'], path = r'%s'%data['path_src_machine'])
         else:
-            source = create_path(type = "windows", host = "pulse", ipordomain = data['ipmachine'], path = r'%s'%data['path_src_machine'])
+            source = create_path(type = "windows", host = "pulseuser", ipordomain = data['ipmachine'], path = r'%s'%data['path_src_machine'])
 
 
         cretefileconfigrescp = "Host %s\nPort %s\nHost %s\nPort %s\n"%(data['ipmaster'], paramglobal['portsshmaster'], data['ipmachine'], localport)
@@ -154,9 +154,9 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         if str(data['osmachine']).startswith('Linux'):
             source = create_path(type = "linux", host = "pulseuser", ipordomain="localhost", path = r'%s'%data['path_src_machine'])
         elif str(data['osmachine']).startswith('darwin'):
-            source = create_path(type = "linux", host = "pulse", ipordomain="localhost", path = r'%s'%data['path_src_machine'])
+            source = create_path(type = "linux", host = "pulseuser", ipordomain="localhost", path = r'%s'%data['path_src_machine'])
         else:
-            source = create_path(type = "windows", host = "pulse", ipordomain = "localhost", path = r'%s'%data['path_src_machine'])
+            source = create_path(type = "windows", host = "pulseuser", ipordomain = "localhost", path = r'%s'%data['path_src_machine'])
 
 
         cretefileconfigrescp = "Host %s\nPort %s\nHost %s\nPort %s\n"%(data['ipmaster'], paramglobal['portsshmaster'], "localhost", localport)

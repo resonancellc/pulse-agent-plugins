@@ -30,7 +30,7 @@ from lib.utils import file_get_contents, file_put_contents, simplecommandstr
 import shutil
 import logging
 
-plugin = {"VERSION" : "2.10", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
+plugin = {"VERSION" : "2.11", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
 
 def checkresult(result):
     if result['codereturn'] != 0:
@@ -95,11 +95,11 @@ def install_key_ssh_relayserver(keypriv, private=False):
             os.makedirs(os.path.join(os.path.expanduser('~pulseuser'), ".ssh/"))
         filekey = os.path.join(os.path.expanduser('~pulseuser'), ".ssh", keyname)
     elif sys.platform.startswith('win'):
-        filekey = os.path.join(os.environ["ProgramFiles"], "Pulse", ".ssh", keyname)
+        filekey = os.path.join(os.path.expanduser('~pulseuser'), ".ssh", keyname)
     elif sys.platform.startswith('darwin'):
-        if not os.path.isdir(os.path.join(os.path.expanduser('~pulse'), ".ssh")):
-            os.makedirs(os.path.join(os.path.expanduser('~pulse'), ".ssh"))
-        filekey = os.path.join(os.path.expanduser('~pulse'), ".ssh", keyname)
+        if not os.path.isdir(os.path.join(os.path.expanduser('~pulseuser'), ".ssh")):
+            os.makedirs(os.path.join(os.path.expanduser('~pulseuser'), ".ssh"))
+        filekey = os.path.join(os.path.expanduser('~pulseuser'), ".ssh", keyname)
     else:
         return
 
@@ -269,7 +269,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur ):
                                 fromuser = "",
                                 touser = "")
             elif sys.platform.startswith('win'):
-                filekey = os.path.join(os.environ["ProgramFiles"], "Pulse", ".ssh", "id_rsa")
+                filekey = os.path.join(os.path.expanduser('~pulseuser'), ".ssh", "id_rsa")
                 os_platform = os.environ['PROCESSOR_ARCHITECTURE']
                 try:
                     os_platform = os.environ["PROCESSOR_ARCHITEW6432"] # Will raise exception if x86 arch
@@ -329,11 +329,11 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur ):
                                 touser = "")
 
             elif sys.platform.startswith('darwin'):
-                filekey = os.path.join(os.path.expanduser('~pulse'), ".ssh", "id_rsa")
+                filekey = os.path.join(os.path.expanduser('~pulseuser'), ".ssh", "id_rsa")
                 dd = """#!/bin/bash
                 /usr/bin/ssh -t -t -%s %s:localhost:%s -o StrictHostKeyChecking=no -i "%s" -l reversessh %s&
                 """%(reversetype, data['port'], remoteport, filekey, data['relayserverip'])
-                reversesshsh = os.path.join(os.path.expanduser('~pulse'), "reversessh.sh")
+                reversesshsh = os.path.join(os.path.expanduser('~pulseuser'), "reversessh.sh")
                 file_put_contents(reversesshsh,  dd)
                 os.chmod(reversesshsh, 0o700)
                 args = shlex.split(reversesshsh)
