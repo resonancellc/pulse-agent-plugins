@@ -72,7 +72,7 @@ def action( xmppobject, action, sessionid, data, message, dataerreur ):
                     if hasattr(xmppobject.config, 'clients_vnc_port'):
                         localport = xmppobject.config.clients_vnc_port
                     else:
-                        localport = 5500
+                        localport = 5900
                     reversetype = 'L'
 
         except Exception as e:
