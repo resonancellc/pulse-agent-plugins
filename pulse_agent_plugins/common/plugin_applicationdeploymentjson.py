@@ -1510,8 +1510,8 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                 cmdpre = "scp -C -r "
                                 cmdrsyn = "rsync -z --rsync-path=%s "%data_in_session['rsyncpath']
                                 msg = "push transfert package :%s to %s"%(data_in_session['name'],data_in_session['jidmachine'])
-                            if hasattr(xmppobject.config, 'clients_ssh_port'):
-                                clientssshport = xmppobject.config.clients_ssh_port
+                            if hasattr(objectxmpp.config, 'clients_ssh_port'):
+                                clientssshport = objectxmpp.config.clients_ssh_port
                             else:
                                 clientssshport = "22"
                             optionscp = "-o IdentityFile=/root/.ssh/id_rsa "\

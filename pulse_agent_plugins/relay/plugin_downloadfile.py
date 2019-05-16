@@ -111,9 +111,9 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                              mbody = json.dumps(body),
                              mtype = 'chat')
     reversessh = False
-    if hasattr(xmppobject.config, 'clients_ssh_port'):
-        localport = xmppobject.config.clients_ssh_port
-        paramglobal['remoteport'] = xmppobject.config.clients_ssh_port
+    if hasattr(objectxmpp.config, 'clients_ssh_port'):
+        localport = objectxmpp.config.clients_ssh_port
+        paramglobal['remoteport'] = objectxmpp.config.clients_ssh_port
     else:
         localport = 22
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
