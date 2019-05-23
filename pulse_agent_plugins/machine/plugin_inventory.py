@@ -39,7 +39,7 @@ if sys.platform.startswith('win'):
 DEBUGPULSEPLUGIN = 25
 ERRORPULSEPLUGIN = 40
 WARNINGPULSEPLUGIN = 30
-plugin = {"VERSION": "1.16", "NAME" :"inventory", "TYPE":"machine"}
+plugin = {"VERSION": "1.17", "NAME" :"inventory", "TYPE":"machine"}
 
 def compact_xml(inputfile):
     parser = ET.XMLParser(remove_blank_text=True, remove_comments=True)
@@ -49,7 +49,15 @@ def compact_xml(inputfile):
 
 
 def action(xmppobject, action, sessionid, data, message, dataerreur):
-    logging.log(DEBUGPULSEPLUGIN,"plugin %s"% (plugin))
+    logging.getLogger().debug("###################################################")
+    logging.getLogger().debug("call %s"%(plugin))
+    logging.getLogger().debug("###################################################")
+    try:
+        compteurcallplugin = getattr(xmppobject, "num_call%s"%action)
+        if compteurcallplugin == 0:
+            logging.getLogger().debug("configure plugin %s"%action)
+    except:
+        pass
     try:
         xmppobject.sub_inventory
     except :
