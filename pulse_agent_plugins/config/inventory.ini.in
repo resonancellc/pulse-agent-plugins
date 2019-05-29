@@ -5,3 +5,10 @@
 # max_key_index = 2
 # If a key is in HKEY_CURRENT_USER, the current_user must be specified
 # current_user = siveo
+# Send the inventory directly or via XMPP
+# via_xmpp = True
+# If via_xmpp = False, the url to send the inventory to
+# eg. urlinventory = http:\\pulse01:9999\
+# urlinventory =
+# The collector can either be glpi or ocs
+# collector = glpi
