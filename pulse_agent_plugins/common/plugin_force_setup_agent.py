@@ -22,16 +22,34 @@
 
 import logging
 import os
-plugin = {"VERSION" : "1.1", "NAME" : "force_setup_agent",  "TYPE" : "all"}
+import json
+plugin = {"VERSION" : "1.2", "NAME" : "force_setup_agent",  "TYPE" : "all"}
 
+logger = logging.getLogger()
 
 def action( objectxmpp, action, sessionid, data, message, dataerreur):
-    logging.getLogger().debug("###################################################")
-    logging.getLogger().debug("call %s from %s"%(plugin,message['from']))
-    logging.getLogger().debug("###################################################")
+    logger.debug("###################################################")
+    logger.debug("call %s from %s"%(plugin,message['from']))
+    logger.debug("###################################################")
     namefilebool = os.path.join(os.path.dirname(os.path.realpath(__file__)),"..", "BOOLCONNECTOR")
     file= open(namefilebool,"w")
     file.close()
     force_reconfiguration = os.path.join(os.path.dirname(os.path.realpath(__file__)),"..", "action_force_reconfiguration")
     file= open(force_reconfiguration,"w")
     file.close()
+    msg="QA : Reconfigure machine agent imedialy"
+    logger.debug(msg)
+    objectxmpp.xmpplog( msg,
+                        type = "Master",
+                        sessionname = sessionid,
+                        priority = 0,
+                        action = "Manuel",
+                        who = str(objectxmpp.boundjid.bare),
+                        how = "",
+                        why = "Master",
+                        module = "QuickAction | Notify | Reconfigure",
+                        date = None ,
+                        fromuser = "",
+                        touser = "Master")
+    #check network and reconfigure machine
+    objectxmpp.networkMonitor()

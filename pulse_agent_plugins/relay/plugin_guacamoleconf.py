@@ -26,7 +26,7 @@ import traceback
 from random import randint
 import socket
 
-plugin = {"VERSION": "1.12", "NAME" :"guacamoleconf", "TYPE":"relayserver"}
+plugin = {"VERSION": "1.13", "NAME" :"guacamoleconf", "TYPE":"relayserver"}
 
 def insertprotocole(protocole, hostname):
     return """INSERT INTO guacamole_connection (connection_name, protocol) VALUES ( '%s_%s', '%s');"""%(protocole.upper(), hostname, protocole.lower())
@@ -118,14 +118,7 @@ def action(objetxmpp, action, sessionid, data, message, dataerreur, result):
                     else:
                     # adapte compte suivant os
                         if option[4:] == "username":
-                            if data['os'].lower().startswith('linux'):
-                                username = "pulseuser"
-                            elif data['os'].lower().startswith('win'):
-                                username = "pulse"
-                            elif data['os'].lower().startswith('darwin'):
-                                username = "pulse"
-                            else:
-                                username = "pulse"
+                            username = "pulseuser"
                             cursor.execute(insertparameter(result['data']['connection'][proto.upper()], "username", username))
                         else:
                             cursor.execute(insertparameter(result['data']['connection'][proto.upper()], option[4:], getattr(objetxmpp.config,option)))

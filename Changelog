@@ -2,8 +2,13 @@ pulse-agent-plugins 1.11
 =========================
 * [FEATURE] Use scp and rsync instead of http in Pull mode
 * [FEATURE] Peer deployment
-* [BUGFIX] Fix logs rotation for relay server
-* [BUGFIX] Reduce size of inventories
+* [FEATURE] Allow install of plugin if a specific version of client is met
+* [FEATURE] Use a separate program to switch agent to downloaded image
+* [BUGFIX]  Fix logs rotation for relay server
+* [BUGFIX]  Reduce size of inventories
+* [BUGFIX]  Fix the release of resources after a deployment
+* [BUGFIX]  Reset the load of relay servers on mmc agent restart
+* [BUGFIX]  Fix the permissions on transferred packages
 
 
 pulse-agent-plugins 1.10

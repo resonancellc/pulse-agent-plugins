@@ -35,15 +35,70 @@ import copy
 import traceback
 from sleekxmpp.xmlstream import  JID
 import time
+from subprocess import STDOUT, check_output, CalledProcessError
+
+if sys.platform.startswith('linux') or sys.platform.startswith('darwin'):
+    import grp
+    import pwd
+elif sys.platform.startswith('win'):
+    pass
+
+
+plugin = {"VERSION" : "3.25", "NAME" : "applicationdeploymentjson", "VERSIONAGENT" : "2.0.0", "TYPE" : "all"}
+
+
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
-
-plugin = {"VERSION" : "3.19", "NAME" : "applicationdeploymentjson", "VERSIONAGENT" : "2.0.0", "TYPE" : "all"}
-
-
 """
 Plugin for deploying a package
 """
+def maximum(x,y) :
+    if x>y :
+        return(x)
+    else :
+        return(y)
+
+def clear_chargeapparente(objectxmpp):
+    timechargeapparente = 3 #duree de la valeur de la charge apparente.
+    q=time.time()
+    for ars in objectxmpp.charge_apparente_cluster.copy():
+        if (q - objectxmpp.charge_apparente_cluster[ars]['time']) >=timechargeapparente:
+            # il faut remettre la charge apparente a time.time
+            objectxmpp.charge_apparente_cluster[ars]['time'] = q
+            objectxmpp.charge_apparente_cluster[ars]['charge']=0
+
+def add_chargeapparente(objectxmpp, ars):
+    #create structure if not exist
+    if not ars in objectxmpp.charge_apparente_cluster:
+        objectxmpp.charge_apparente_cluster[ars] = {}
+        objectxmpp.charge_apparente_cluster[ars]['charge'] = 0
+        objectxmpp.charge_apparente_cluster[ars]['time'] = time.time()
+
+def changown_dir_of_file(dest, nameuser = None):
+    if nameuser is None:
+        nameuser = "pulseuser"
+    dest = os.path.dirname(dest)
+    if sys.platform.startswith('linux') or sys.platform.startswith('darwin'):
+        try:
+            uid = pwd.getpwnam(nameuser).pw_uid
+            gid = grp.getgrnam(nameuser).gr_gid
+            os.chown(dest, uid, gid)
+            for dirpath, dirnames, filenames in os.walk(dest):
+                for dname in dirnames:
+                    os.chown(os.path.join(dirpath, dname), uid, gid)
+                for fname in filenames:
+                    os.chown(os.path.join(dirpath, fname), uid, gid)
+        except Exception as e:
+            logger.error("%s changown_dir_of_file : %s"%(dest, str(e) ))
+    elif sys.platform.startswith('win'):
+        try:
+            result = check_output(["icacls",
+                                    dest,
+                                    "/setowner",
+                                    nameuser,
+                                    "/t"], stderr=STDOUT)
+        except CalledProcessError as e:
+            logger.error("%s changown_dir_of_file : %s"%(dest, str(e.output)))
 
 def cleandescriptor(datasend):
 
@@ -135,19 +190,18 @@ def takeresource(datasend, objectxmpp, sessionid):
     logger.debug('take ressourse : %s'%datasendl['data']['jidrelay'])
     jidrs = JID(datasendl['data']['jidrelay'])
     jidr = "%s@%s"%(jidrs.user, jidrs.domain) 
-    if jidr != objectxmpp.boundjid.bare:
-        # libere la resources sur ARS par message (rend 1 resource)
-        msgresource = {'action': "cluster",
-                       'sessionid': sessionid,
-                       'data' :  {"subaction" : "takeresource",
-                                  "data" : {'user' : datasendl['data']['advanced']['login']}},
-                       'ret' : 0,
-                       'base64' : False}
-        objectxmpp.send_message(mto = datasendl['data']['jidrelay'],
-                                mbody = json.dumps(msgresource),
-                                mtype = 'chat')
-#    else:
-#        resource = objectxmpp.checklevelcharge(1)
+    msgresource = {'action': "cluster",
+                    'sessionid': sessionid,
+                    'data' :  {"subaction" : "takeresource",
+                                "data" : {'user' : datasendl['data']['advanced']['login'],
+                                        'machinejid' : datasendl['data']['jidmachine']
+                                }
+                    },
+                    'ret' : 0,
+                    'base64' : False}
+    objectxmpp.send_message(mto = datasendl['data']['jidrelay'],
+                            mbody = json.dumps(msgresource),
+                            mtype = 'chat')
     objectxmpp.xmpplog('take resource : %s'%datasendl['data']['jidrelay'],
                        type = 'deploy',
                        sessionname = sessionid,
@@ -171,18 +225,18 @@ def removeresource(datasend, objectxmpp, sessionid):
     logger.debug('restores ressource : %s'%datasendl['data']['jidrelay'])
     jidrs = JID(datasendl['data']['jidrelay'])
     jidr = "%s@%s"%(jidrs.user, jidrs.domain)
-    if jidr != objectxmpp.boundjid.bare:
-        # libere la resources sur ARS par message (rend 1 resource)
-        msgresource = {'action': "cluster",
-                       'sessionid': sessionid,
-                       'data' :  { "subaction" : "removeresource", "data" : {'user' : datasendl['data']['advanced']['login']}},
-                       'ret' : 0,
-                       'base64' : False}
-        objectxmpp.send_message(mto = datasendl['data']['jidrelay'],
-                                mbody = json.dumps(msgresource),
-                                mtype = 'chat')
-#    else :
-#        resource = objectxmpp.checklevelcharge(-1)
+    msgresource = {'action': "cluster",
+                    'sessionid': sessionid,
+                    'data' :  { "subaction" : "removeresource",
+                                "data" : {'user' : datasendl['data']['advanced']['login'],
+                                            'machinejid' : datasendl['data']['jidmachine']
+                                }
+                    },
+                    'ret' : 0,
+                    'base64' : False}
+    objectxmpp.send_message(mto = datasendl['data']['jidrelay'],
+                            mbody = json.dumps(msgresource),
+                            mtype = 'chat')
     objectxmpp.xmpplog('restores ressource : %s'%datasendl['data']['jidrelay'],
                        type = 'deploy',
                        sessionname = sessionid,
@@ -198,6 +252,7 @@ def removeresource(datasend, objectxmpp, sessionid):
     return datasend
 
 def initialisesequence(datasend, objectxmpp, sessionid ):
+    strjidagent = str(objectxmpp.boundjid.bare)
     datasend['data']['stepcurrent'] = 0 #step initial
     if not objectxmpp.session.isexist(sessionid):
         logger.debug("creation session %s"%sessionid)
@@ -210,7 +265,7 @@ def initialisesequence(datasend, objectxmpp, sessionid ):
                         sessionname = sessionid,
                         priority = -1,
                         action = "",
-                        who = objectxmpp.boundjid.bare,
+                        who = strjidagent,
                         how = "",
                         why = "",
                         module = "Deployment| Notify | Execution | Scheduled",
@@ -237,7 +292,7 @@ def initialisesequence(datasend, objectxmpp, sessionid ):
                                 sessionname = datasend['sessionid'],
                                 priority = -1,
                                 action = "",
-                                who = objectxmpp.boundjid.bare,
+                                who = strjidagent,
                                 how = "",
                                 why = "",
                                 module = "Deployment | Kiosk",
@@ -275,6 +330,7 @@ def curlgetdownloadfile( destfile, urlfile, insecure = True, limit_rate_ko= None
         c.close()
 
 def recuperefile(datasend, objectxmpp, ippackage, portpackage, sessionid):
+    strjidagent = str(objectxmpp.boundjid.bare)
     if not os.path.isdir(datasend['data']['pathpackageonmachine']):
         os.makedirs(datasend['data']['pathpackageonmachine'], mode=0777)
     uuidpackage = datasend['data']['path'].split('/')[-1]
@@ -285,7 +341,7 @@ def recuperefile(datasend, objectxmpp, ippackage, portpackage, sessionid):
                        sessionname = datasend['sessionid'],
                        priority = -1,
                        action = "",
-                       who = objectxmpp.boundjid.bare,
+                       who = strjidagent,
                        how = "",
                        why = "",
                        module = "Deployment | Download | Transfert",
@@ -315,7 +371,7 @@ def recuperefile(datasend, objectxmpp, ippackage, portpackage, sessionid):
                                     sessionname = datasend['sessionid'],
                                     priority = -1,
                                     action = "",
-                                    who = objectxmpp.boundjid.bare,
+                                    who = strjidagent,
                                     how = "",
                                     why = "",
                                     module = "Deployment | Download | Transfert",
@@ -323,6 +379,7 @@ def recuperefile(datasend, objectxmpp, ippackage, portpackage, sessionid):
                                     fromuser = datasend['data']['advanced']['login'],
                                     touser = "")
                 curlgetdownloadfile( dest, urlfile, insecure = True, limit_rate_ko = limit_rate_ko)
+                changown_dir_of_file(dest)
             except Exception as e:
                 traceback.print_exc(file=sys.stdout)
                 logger.debug(str(e))
@@ -331,7 +388,7 @@ def recuperefile(datasend, objectxmpp, ippackage, portpackage, sessionid):
                                     sessionname = datasend['sessionid'],
                                     priority = -1,
                                     action = "",
-                                    who = objectxmpp.boundjid.bare,
+                                    who = strjidagent,
                                     how = "",
                                     why = "",
                                     module = "Deployment | Download | Transfert | Notify | Error",
@@ -343,7 +400,7 @@ def recuperefile(datasend, objectxmpp, ippackage, portpackage, sessionid):
                                     sessionname = datasend['sessionid'],
                                     priority = -1,
                                     action = "",
-                                    who = objectxmpp.boundjid.bare,
+                                    who = strjidagent,
                                     how = "",
                                     why = "",
                                     module = "Deployment | Error | Terminate | Notify",
@@ -378,6 +435,7 @@ def signalendsessionforARS(datasend , objectxmpp, sessionid, error = False):
 
 
 def action( objectxmpp, action, sessionid, data, message, dataerreur):
+    strjidagent = str(objectxmpp.boundjid.bare)
     if objectxmpp.config.agenttype in ['machine']:
         logger.debug("###################################################")
         logger.debug("call %s from %s"%(plugin,message['from']))
@@ -397,24 +455,24 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     sessionname = sessionid,
                                     priority = -1,
                                     action = "",
-                                    who = objectxmpp.boundjid.bare,
+                                    who = strjidagent,
                                     how = "",
                                     why = "",
                                     module = "Deployment | Error  | Notify | Execution",
                                     date = None ,
-                                    fromuser = "AM %s"% objectxmpp.boundjid.bare,
+                                    fromuser = "AM %s"% strjidagent,
                                     touser = "")
                     objectxmpp.xmpplog('DEPLOYMENT TERMINATE',
                                     type = 'deploy',
                                     sessionname = sessionid,
                                     priority = -1,
                                     action = "",
-                                    who = objectxmpp.boundjid.bare,
+                                    who = strjidagent,
                                     how = "",
                                     why = "",
                                     module = "Deployment | Terminate |Notify",
                                     date = None ,
-                                    fromuser = "AM %s"% objectxmpp.boundjid.bare,
+                                    fromuser = "AM %s"% strjidagent,
                                     touser = "")
                     signalendsessionforARS(data , objectxmpp, sessionid, error = True)
                     return
@@ -434,24 +492,24 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     sessionname = sessionid,
                                     priority = -1,
                                     action = "",
-                                    who = objectxmpp.boundjid.bare,
+                                    who = strjidagent,
                                     how = "",
                                     why = "",
                                     module = "Deployment | Error | Notify",
                                     date = None ,
-                                    fromuser = "AM %s"% objectxmpp.boundjid.bare,
+                                    fromuser = "AM %s"% strjidagent,
                                     touser = "")
                 objectxmpp.xmpplog('DEPLOYMENT TERMINATE',
                                     type = 'deploy',
                                     sessionname = sessionid,
                                     priority = -1,
                                     action = "",
-                                    who = objectxmpp.boundjid.bare,
+                                    who = strjidagent,
                                     how = "",
                                     why = "",
                                     module = "Deployment | Terminate | Notify",
                                     date = None ,
-                                    fromuser = "AM %s"% objectxmpp.boundjid.bare,
+                                    fromuser = "AM %s"% strjidagent,
                                     touser = "")
                 #clear sessionscheduler
                 objectxmpp.Deploybasesched.del_sesionscheduler(sessionid)
@@ -463,24 +521,24 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     sessionname = sessionid,
                                     priority = -1,
                                     action = "",
-                                    who = objectxmpp.boundjid.bare,
+                                    who = strjidagent,
                                     how = "",
                                     why = "",
                                     module = "Deployment | Error | Notify",
                                     date = None ,
-                                    fromuser = "AM %s"% objectxmpp.boundjid.bare,
+                                    fromuser = "AM %s"% strjidagent,
                                     touser = "")
                 objectxmpp.xmpplog('DEPLOYMENT TERMINATE',
                                     type = 'deploy',
                                     sessionname = sessionid,
                                     priority = -1,
                                     action = "",
-                                    who = objectxmpp.boundjid.bare,
+                                    who = strjidagent,
                                     how = "",
                                     why = "",
                                     module = "Deployment | Terminate | Notify",
                                     date = None ,
-                                    fromuser = "AM %s"% objectxmpp.boundjid.bare,
+                                    fromuser = "AM %s"% strjidagent,
                                     touser = "")
                 objectxmpp.Deploybasesched.del_sesionscheduler(sessionid)
                 signalendsessionforARS(data , objectxmpp, sessionid, error = True)
@@ -497,7 +555,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                 sessionname = sessionid,
                                 priority = -1,
                                 action = "",
-                                who = objectxmpp.boundjid.bare,
+                                who = strjidagent,
                                 how = "",
                                 why = "",
                                 module = "Deployment | Error | Dependencies | Transfert| Notify",
@@ -510,7 +568,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     sessionname = sessionid,
                                     priority = -1,
                                     action = "",
-                                    who = objectxmpp.boundjid.bare,
+                                    who = strjidagent,
                                     how = "",
                                     why = "",
                                     module = "Deployment | Dependencies | Transfert | Notify",
@@ -522,7 +580,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                 sessionname = sessionid,
                                 priority = -1,
                                 action = "",
-                                who = objectxmpp.boundjid.bare,
+                                who = strjidagent,
                                 how = "",
                                 why = "",
                                 module = "Deployment | Terminate | Notify",
@@ -548,12 +606,12 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     sessionname = sessionid,
                                     priority = -1,
                                     action = "",
-                                    who = objectxmpp.boundjid.bare,
+                                    who = strjidagent,
                                     how = "",
                                     why = "",
                                     module = "Deployment | Error",
                                     date = None ,
-                                    fromuser = "AM %s"% objectxmpp.boundjid.bare,
+                                    fromuser = "AM %s"% strjidagent,
                                     touser = "")
                     if sessionid in objectxmpp.back_to_deploy:
                         objectxmpp.xmpplog('<span style="font-weight: bold;color : red;">List of abandoned dependencies %s</span>'%objectxmpp.back_to_deploy[sessionid]['Dependency'],
@@ -561,24 +619,24 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     sessionname = sessionid,
                                     priority = -1,
                                     action = "",
-                                    who = objectxmpp.boundjid.bare,
+                                    who = strjidagent,
                                     how = "",
                                     why = "",
                                     module = "Deployment | Dependencies | Transfert | Notify",
                                     date = None ,
-                                    fromuser = "AM %s"% objectxmpp.boundjid.bare,
+                                    fromuser = "AM %s"% strjidagent,
                                     touser = "")
                     objectxmpp.xmpplog('DEPLOYMENT TERMINATE',
                                     type = 'deploy',
                                     sessionname = sessionid,
                                     priority = -1,
                                     action = "",
-                                    who = objectxmpp.boundjid.bare,
+                                    who = strjidagent,
                                     how = "",
                                     why = "",
                                     module = "Deployment | Terminate | Notify",
                                     date = None ,
-                                    fromuser = "AM %s"% objectxmpp.boundjid.bare,
+                                    fromuser = "AM %s"% strjidagent,
                                     touser = "")
                     objectxmpp.session.clearnoevent(sessionid)
                     cleanbacktodeploy(objectxmpp)
@@ -593,12 +651,12 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     sessionname = sessionid,
                                     priority = -1,
                                     action = "",
-                                    who = objectxmpp.boundjid.bare,
+                                    who = strjidagent,
                                     how = "",
                                     why = "",
                                     module = "Deployment | Terminate | Notify",
                                     date = None ,
-                                    fromuser = "AM %s"% objectxmpp.boundjid.bare,
+                                    fromuser = "AM %s"% strjidagent,
                                     touser = "")
                 objectxmpp.session.clearnoevent(sessionid)
                 cleanbacktodeploy(objectxmpp)
@@ -613,12 +671,12 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                         sessionname = sessionid,
                                         priority = -1,
                                         action = "",
-                                        who = objectxmpp.boundjid.bare,
+                                        who = strjidagent,
                                         how = "",
                                         why = "",
                                         module = "Deployment | Dependency",
                                         date = None ,
-                                        fromuser = "AM %s"% objectxmpp.boundjid.bare,
+                                        fromuser = "AM %s"% strjidagent,
                                         touser = "")
                     try:
                         objectxmpp.back_to_deploy[sessionid]['Dependency'].remove(loaddependency)
@@ -722,12 +780,12 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                         sessionname = sessionid,
                                         priority = -1,
                                         action = "",
-                                        who = objectxmpp.boundjid.bare,
+                                        who = strjidagent,
                                         how = "",
                                         why = "",
                                         module = "Deployment | Dependency",
                                         date = None ,
-                                        fromuser = "AM %s"% objectxmpp.boundjid.bare,
+                                        fromuser = "AM %s"% strjidagent,
                                         touser = "")
                             return
                         # If it lacks a dependency descriptor it is requested to relay server
@@ -755,7 +813,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                         sessionname = sessionid,
                                         priority = -1,
                                         action = "",
-                                        who = objectxmpp.boundjid.bare,
+                                        who = strjidagent,
                                         how = "",
                                         why = "",
                                         module = "Deployment",
@@ -774,7 +832,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                         #sessionname = sessionid,
                                         #priority = -1,
                                         #action = "",
-                                        #who = objectxmpp.boundjid.bare,
+                                        #who = strjidagent,
                                         #how = "",
                                         #why = "",
                                         #module = "Deployment",
@@ -829,7 +887,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     sessionname = sessionid,
                                     priority = 0,
                                     action = "",
-                                    who = objectxmpp.boundjid.bare,
+                                    who = strjidagent,
                                     how = "",
                                     why = "",
                                     module = "Deployment",
@@ -860,12 +918,12 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     sessionname = sessionid,
                                     priority = -1,
                                     action = "",
-                                    who = objectxmpp.boundjid.bare,
+                                    who = strjidagent,
                                     how = "",
                                     why = "",
                                     module = "Deployment | Terminate | Notify",
                                     date = None ,
-                                    fromuser = "AM %s"% objectxmpp.boundjid.bare,
+                                    fromuser = "AM %s"% strjidagent,
                                     touser = "")
                 signalendsessionforARS(data , objectxmpp, sessionid, error = True)
                 return
@@ -903,12 +961,12 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     sessionname = sessionid,
                                     priority = -1,
                                     action = "",
-                                    who = objectxmpp.boundjid.bare,
+                                    who = strjidagent,
                                     how = "",
                                     why = "",
                                     module = "Deployment | Terminate | Notify",
                                     date = None ,
-                                    fromuser = "AM %s"% objectxmpp.boundjid.bare,
+                                    fromuser = "AM %s"% strjidagent,
                                     touser = "")
                     signalendsessionforARS(data , objectxmpp, sessionid, error = True)
 
@@ -949,7 +1007,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     sessionname = sessionid,
                                     priority = -1,
                                     action = "",
-                                    who = objectxmpp.boundjid.bare,
+                                    who = strjidagent,
                                     how = "",
                                     why = "",
                                     module = "Deployment | Notify",
@@ -972,6 +1030,8 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         # le descripteur transmit a alors une clef cluster avec comme valeur le (jid de ARS) qui soustraite le déploiement.
         # ARS qui recois ce descripteur assure le déploiement.
 
+
+
         # qui deploy dans le cluster.
         # Pour déterminer ARS qui deploye dans le cluster, on choisie ARS avec le plus petit coefficient de charge.
         # le coefficient de charge de deploiement de chaque ARS est connu par tout les ARS du cluster.
@@ -981,7 +1041,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         # Ce qui definie la charge d'un aRs, c'est le nombre de deploiement en cours( transfert de fichier non fait ou non terminer.)
         # si le transfert de fichiers est fait et terminé , alors ce deploiement n'est plus totalisé comme une charge pour ARS.
         # donc le coefficient de charge est diminué une fois un transfert de fichier terminé.
-        # alors tous les autre ARS du cluster recoive une notification permettant de tenir à jour ce coefficient. 
+        # alors tous les autre ARS du cluster recoive une notification permettant de tenir à jour ce coefficient.
 
         # consernant les deploiement avec dépendances, tous les deployement des packages sont effectué par un meme ARS.
 
@@ -991,9 +1051,14 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         # On a donc besoin d'un systeme de lissage de la charge ponctuel, pour que celle-ci soit dilué dans le temps.
         # pour cela, on définie un nombre maximun de deploiement simultané.
         # les deploiement sont empilés dans une pile LILO, puis dépilé est deployé pour avoir toujour une charge inférieur au nombre de deploiement simultanée demandé.
-        # on utilisera une base non sql pour conservé les descripteurs en attente de deploiement. 
-        # ainsi on assurera une persistance en cas d'arrêt de ARS. les deploiements encore dans la base seront 
+        # on utilisera une base non sql pour conservé les descripteurs en attente de deploiement.
+        # ainsi on assurera une persistance en cas d'arrêt de ARS. les deploiements encore dans la base seront
         # effectués a la remise en fonction de ARS.
+        #initialise charge_apparente_cluster si non initialiser
+        if not "login" in data:
+            data['login']= ""
+        add_chargeapparente(objectxmpp, strjidagent)
+        clear_chargeapparente(objectxmpp)
 
         #si parameter avanced spooling est définie, alors il remplace celui info du package 
         if 'advanced' in data and 'spooling' in data['advanced'] :
@@ -1007,7 +1072,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     sessionname = sessionid,
                                     priority = -1,
                                     action = "",
-                                    who = objectxmpp.boundjid.bare,
+                                    who = strjidagent,
                                     how = "",
                                     why = "",
                                     module = "Deployment | Transfert | Notify",
@@ -1019,30 +1084,35 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         if not ('step' in data or 'differed' in data):
             # difered and if
             if message['from'] == "master@pulse/MASTER":
+                objectxmpp.sessionaccumulator[sessionid] = time.time()
                 # le message de deploiement provient de master
                 # mettre level charge dans le if
                 data['resource'] = False
                 if not 'cluster' in data and len(objectxmpp.jidclusterlistrelayservers) > 0:
                     # determination de ARS qui deploy
-
-                    data['cluster'] = objectxmpp.boundjid.bare
+                    data['cluster'] = strjidagent
                     logger.debug("list ARS concurent : %s"%objectxmpp.jidclusterlistrelayservers)
 
-                    levelchoisie = objectxmpp.levelcharge
-                    arsselection = objectxmpp.boundjid.bare
+                    levelchoisie = objectxmpp.levelcharge['charge'] +\
+                                    objectxmpp.charge_apparente_cluster[strjidagent]['charge']
+                    arsselection = strjidagent
+                    # on clear toutes les charges apparentes de plud de 5 seconde
                     for ars in objectxmpp.jidclusterlistrelayservers:
-                        if objectxmpp.jidclusterlistrelayservers[ars]['chargenumber'] < levelchoisie :
+                        if not ars in objectxmpp.charge_apparente_cluster:
+                            add_chargeapparente(objectxmpp, ars)
+                        charge = objectxmpp.jidclusterlistrelayservers[ars]['chargenumber'] +\
+                                 objectxmpp.charge_apparente_cluster[ars]['charge']
+                        if charge < levelchoisie :
                             levelchoisie = objectxmpp.jidclusterlistrelayservers[ars]['chargenumber']
                             arsselection = ars
-
-                    if arsselection != objectxmpp.boundjid.bare:
-                        logger.debug("Charge ARS ( %s ) is %s"%(objectxmpp.boundjid.bare, objectxmpp.levelcharge))
+                    if arsselection != strjidagent:
+                        logger.debug("Charge ARS ( %s ) is %s"%(strjidagent, objectxmpp.levelcharge['charge']))
                         ###if (arsselection
-                        logger.debug("DISPACHE VERS AUTRE ARS POUR LE DEPLOIEMENT : %s (charge level : %s) "%(arsselection, levelchoisie) )
+                        logger.debug("DISPACHE VERS AUTRE ARS POUR LE DEPLOIEMENT : %s (charge level distant is : %s) "%(arsselection, levelchoisie) )
                     ## modify descriptor for new ARS
-                    data['jidrelay'] = str(arsselection)
+                    data['jidrelay'] = arsselection
                     data['iprelay'] = objectxmpp.infomain['packageserver']['public_ip']
-                    data['descriptor']['jidrelay'] = str(arsselection)
+                    data['descriptor']['jidrelay'] = arsselection
                     data['descriptor']['iprelay'] = objectxmpp.infomain['packageserver']['public_ip']
                     data['descriptor']['portpackageserver'] = objectxmpp.infomain['packageserver']['port']
                     data['ippackageserver'] = objectxmpp.infomain['packageserver']['public_ip']
@@ -1058,51 +1128,64 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                     objectxmpp.send_message( mto   = arsselection,
                                             mbody = json.dumps(datasend),
                                             mtype = 'chat')
+
+                    if not arsselection in objectxmpp.charge_apparente_cluster:
+                        add_chargeapparente(objectxmpp, arsselection)
+                    q=time.time()
+                    clear_chargeapparente(objectxmpp)
+                    objectxmpp.charge_apparente_cluster[arsselection]['charge'] +=1
+                    objectxmpp.charge_apparente_cluster[arsselection]['time'] = q
                     return
                 else:
                     if not 'cluster' in data:
-                        data['cluster'] = objectxmpp.boundjid.bare
+                        data['cluster'] = strjidagent
                         data['resource'] = False
 
-            if 'cluster' in data and data['cluster'] != objectxmpp.boundjid.bare:
-                logger.debug("DEPLOIEMENT : ARS %s DISPACHE TO  ARS %s "%(data['cluster'], objectxmpp.boundjid.bare ) )
+            if 'cluster' in data and data['cluster'] != strjidagent:
+                logger.debug("Cluster [(ARS %s) Delegate to deploy on (ARS %s)]"%(data['cluster'],  strjidagent) )
                 #waitt master log start deploy
                 time.sleep(2)
-                objectxmpp.xmpplog('Cluster (ARS %s) Delegate to deploy on (ARS %s)'%(data['cluster'],objectxmpp.boundjid.bare),
+                objectxmpp.xmpplog('Cluster (ARS %s) Delegate to deploy on (ARS %s)'%(data['cluster'],strjidagent),
                                         type = 'deploy',
                                         sessionname = sessionid,
                                         priority = -1,
                                         action = "",
-                                        who = objectxmpp.boundjid.bare,
+                                        who = strjidagent,
                                         how = "",
                                         why = "",
                                         module = "Deployment | Cluster | Notify",
                                         date = None ,
                                         fromuser = data['login'],
                                         touser = "")
-
             try:
-                objectxmpp.xmpplog("Spooling resource %s > concurent %s"%(len(objectxmpp.session.resource), objectxmpp.config.concurrentdeployments),
-                                            type = 'deploy',
-                                            sessionname = sessionid,
-                                            priority = -1,
-                                            action = "",
-                                            who = objectxmpp.boundjid.bare,
-                                            how = "",
-                                            why = "",
-                                            module = "Deployment | Transfert | Notify",
-                                            date = None ,
-                                            fromuser = data['login'],
-                                            touser = "")
- 
-                objectxmpp.session.resource.add(sessionid)
                 if not objectxmpp.session.isexist(sessionid):
                     logger.debug("creation session %s"%sessionid)
                     data['pushinit'] = False
                     objectxmpp.session.createsessiondatainfo(sessionid,  datasession = data, timevalid = 180)
-                if len(objectxmpp.session.resource) > objectxmpp.config.concurrentdeployments:
-                    objectxmpp.levelcharge = objectxmpp.levelcharge + 1
 
+                q=time.time()
+                #on considere 10 seconde les input de deployement for premettre au ressource d etre prise
+                for sesssionindex in objectxmpp.sessionaccumulator.copy():
+                    if (q-objectxmpp.sessionaccumulator[sesssionindex])>10:
+                        del objectxmpp.sessionaccumulator[sesssionindex]
+
+                if len(objectxmpp.sessionaccumulator) > objectxmpp.config.concurrentdeployments or \
+                   len(objectxmpp.levelcharge['machinelist']) > objectxmpp.config.concurrentdeployments:
+                    maxval = maximum(len(objectxmpp.levelcharge['machinelist']),len(objectxmpp.sessionaccumulator)) 
+                    objectxmpp.xmpplog("<span style='color: Orange;'>"\
+                        "Spooling resource %s > concurent %s</span>"%(maxval,
+                                                                      objectxmpp.config.concurrentdeployments),
+                                                                      type = 'deploy',
+                                                                      sessionname = sessionid,
+                                                                      priority = -1,
+                                                                      action = "",
+                                                                      who = strjidagent,
+                                                                      how = "",
+                                                                      why = "",
+                                                                      module = "Deployment | Transfert | Notify",
+                                                                      date = None ,
+                                                                      fromuser = data['login'],
+                                                                      touser = "")
                     data["differed"] = True
                     data["sessionid"] = sessionid
                     data["action"] = action
@@ -1111,49 +1194,49 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                     except  Exception as e:
                         logger.warning(str(e))
                         traceback.print_exc(file=sys.stdout)
-                    msglevelspoolig = ""
+                    msglevelspoolig =  '<span style="color: Orange;">spooling the deployment in fifo '
                     if 'spooling' in data["descriptor"]["info"]\
                         and data["descriptor"]["info"]['spooling'] == 'high':
                         objectxmpp.managefifo.setfifo(data, 'high')
-                        msglevelspoolig = 'spooling the deployment %s (high priority)'%sessionid
+                        msglevelspoolig = '%s (high priority session %s)</span>'%(msglevelspoolig, sessionid)
                     else:
                         objectxmpp.managefifo.setfifo(data)
-                        msglevelspoolig = 'spooling the deployment %s (ordinary priority)'%sessionid
-                    if msglevelspoolig != "":
-                        objectxmpp.xmpplog(msglevelspoolig,
-                                            type = 'deploy',
-                                            sessionname = sessionid,
-                                            priority = -1,
-                                            action = "",
-                                            who = objectxmpp.boundjid.bare,
-                                            how = "",
-                                            why = "",
-                                            module = "Deployment | Transfert | Notify",
-                                            date = None ,
-                                            fromuser = data['login'],
-                                            touser = "")
-                    takeresource(data, objectxmpp, sessionid)
+                        msglevelspoolig = '%s (ordinary priority session %s)</span>'%(msglevelspoolig, sessionid)
+                    objectxmpp.xmpplog(msglevelspoolig,
+                                        type = 'deploy',
+                                        sessionname = sessionid,
+                                        priority = -1,
+                                        action = "",
+                                        who = strjidagent,
+                                        how = "",
+                                        why = "",
+                                        module = "Deployment | Transfert | Notify",
+                                        date = None ,
+                                        fromuser = data['login'],
+                                        touser = "")
                     return
             except Exception as e:
-                logger.debug("%s"%str(e))
-                pass
+                logger.debug("error setfifo : %s"%str(e))
+                logger.error("\n%s"%(traceback.format_exc()))
+                # if not return deploy continue
+                return
 
         # Start deploiement
         if 'differed' in data:
             removeresource(data, objectxmpp, sessionid)
-            objectxmpp.xmpplog('und spooling the deployment %s'%sessionid,
-                                    type = 'deploy',
-                                    sessionname = sessionid,
-                                    priority = -1,
-                                    action = "",
-                                    who = objectxmpp.boundjid.bare,
-                                    how = "",
-                                    why = "",
-                                    module = "Deployment | Transfert | Notify",
-                                    date = None ,
-                                    fromuser = data['login'],
-                                    touser = "")
-            objectxmpp.levelcharge = objectxmpp.levelcharge - 1
+            objectxmpp.xmpplog( 'launch the %s deployment in spooling mode'%sessionid,
+                                type = 'deploy',
+                                sessionname = sessionid,
+                                priority = -1,
+                                action = "",
+                                who = strjidagent,
+                                how = "",
+                                why = "",
+                                module = "Deployment | Transfert | Notify",
+                                date = None ,
+                                fromuser = data['login'],
+                                touser = "")
+            #objectxmpp.levelcharge = objectxmpp.levelcharge - 1
         if 'advanced' in data and 'limit_rate_ko' in data['advanced'] :
             if data['advanced']['limit_rate_ko'] != 0:
                 #limit_rate_ko in avansed deploy
@@ -1163,7 +1246,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     sessionname = sessionid,
                                     priority = -1,
                                     action = "",
-                                    who = objectxmpp.boundjid.bare,
+                                    who = strjidagent,
                                     how = "",
                                     why = "",
                                     module = "Deployment | Transfert | Notify",
@@ -1184,7 +1267,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     sessionname = sessionid,
                                     priority = -1,
                                     action = "",
-                                    who = objectxmpp.boundjid.bare,
+                                    who = strjidagent,
                                     how = "",
                                     why = "",
                                     module = "Deployment | Transfert | Notify",
@@ -1197,7 +1280,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     sessionname = sessionid,
                                     priority = -1,
                                     action = "",
-                                    who = objectxmpp.boundjid.bare,
+                                    who = strjidagent,
                                     how = "",
                                     why = "",
                                     module = "Deployment | Transfert | Notify",
@@ -1210,7 +1293,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     sessionname = sessionid,
                                     priority = -1,
                                     action = "",
-                                    who = objectxmpp.boundjid.bare,
+                                    who = strjidagent,
                                     how = "",
                                     why = "",
                                     module = "Deployment | Transfert | Notify",
@@ -1232,7 +1315,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                         sessionname = sessionid,
                                         priority = -1,
                                         action = "",
-                                        who = objectxmpp.boundjid.bare,
+                                        who = strjidagent,
                                         how = "",
                                         why = "",
                                         module = "Deployment | Transfert | Notify",
@@ -1274,7 +1357,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                             'data' : { 'jidAM' : data['jidmachine']
                             }
                     }
-                    objectxmpp.send_message(  mto = objectxmpp.boundjid.bare,
+                    objectxmpp.send_message(  mto = strjidagent,
                                                 mbody = json.dumps(body),
                                                 mtype = 'chat')
                     # give time to apply the key
@@ -1317,14 +1400,12 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                             logger.debug("os client machine %s"%data_in_session['os'])
                             data_in_session['os_version'] = data['os_version']
                             #set  user ssh
+                            data_in_session['userssh'] = "pulseuser"
                             if data_in_session['os'].startswith('linux'):
-                                data_in_session['userssh'] = "pulseuser"
                                 data_in_session['rsyncpath'] = "rsync"
                             elif data_in_session['os'].startswith('win'):
-                                data_in_session['userssh'] = "pulse"
                                 data_in_session['rsyncpath'] = "C:\\\\Windows\\\\SysWOW64\\\\rsync.exe"
                             elif data_in_session['os'].startswith('darwin'):
-                                data_in_session['userssh'] = "pulse"
                                 data_in_session['rsyncpath'] = "rsync"
                         # information set in session data
                         objsession.setdatasession(data_in_session)
@@ -1339,7 +1420,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     sessionname = sessionid,
                                     priority = 0,
                                     action = "",
-                                    who = objectxmpp.boundjid.bare,
+                                    who = strjidagent,
                                     how = "",
                                     why = "",
                                     module = "Deployment | Error",
@@ -1377,7 +1458,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                         # - And return the path or install the packages.
                         # We leave and await message of the missing condition.
                         return
-                    
+
                     # We have all the information we continue deploy
                     # You have to prepare the transfer of packages.
                     # You must have a list of all the packages to install.
@@ -1396,7 +1477,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                     logger.debug("APPEL POUR PHASE DE TRANSFERTS" )
                     # call for aller step suivant transfert file
                     msg_self_call = create_message_self_for_transfertfile(sessionid)
-                    objectxmpp.send_message(mto = objectxmpp.boundjid.bare,
+                    objectxmpp.send_message(mto = strjidagent,
                                             mbody = json.dumps(msg_self_call),
                                             mtype = 'chat')
                 else:
@@ -1429,6 +1510,10 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                 cmdpre = "scp -C -r "
                                 cmdrsyn = "rsync -z --rsync-path=%s "%data_in_session['rsyncpath']
                                 msg = "push transfert package :%s to %s"%(data_in_session['name'],data_in_session['jidmachine'])
+                            if hasattr(objectxmpp.config, 'clients_ssh_port'):
+                                clientssshport = objectxmpp.config.clients_ssh_port
+                            else:
+                                clientssshport = "22"
                             optionscp = "-o IdentityFile=/root/.ssh/id_rsa "\
                                      "-o StrictHostKeyChecking=no "\
                                      "-o UserKnownHostsFile=/dev/null "\
@@ -1438,7 +1523,9 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                      "-o CheckHostIP=no "\
                                      "-o LogLevel=ERROR "\
                                      "-o ConnectTimeout=10 "\
-                                        "%s %s@%s:\"\\\"%s\\\"\""%( pathin,
+                                     "-o Port=%s "\
+                                        "%s %s@%s:\"\\\"%s\\\"\""%( clientssshport,
+                                                        pathin,
                                                         data_in_session['userssh'],
                                                         data_in_session['ipmachine'],
                                                         data_in_session['folders_packages'])
@@ -1467,8 +1554,13 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                             "-o ServerAliveInterval=10 "\
                                             "-o CheckHostIP=no "\
                                             "-o LogLevel=ERROR "\
-                                            "-o ConnectTimeout=10\" "\
-                                            "-av --chmod=777 %s/ %s@%s:'%s'"%(pathin,data_in_session['userssh'],data_in_session['ipmachine'],pathnew)
+                                            "-o ConnectTimeout=10 "\
+                                            "-o Port=%s\" "\
+                                            "-av --chmod=777 %s/ %s@%s:'%s'"%( clientssshport,
+                                                                pathin,
+                                                                data_in_session['userssh'],
+                                                                data_in_session['ipmachine'],
+                                                                pathnew)
                             cmdscp = cmdpre + optionscp
                             cmdrsyn = cmdrsyn + optionrsync
 
@@ -1478,7 +1570,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                                 sessionname = sessionid,
                                                 priority = -1,
                                                 action = "",
-                                                who = objectxmpp.boundjid.bare,
+                                                who = strjidagent,
                                                 how = "",
                                                 why = "",
                                                 module = "Deployment | Error | Download | Transfert",
@@ -1490,12 +1582,12 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     sessionname = sessionid,
                                     priority = -1,
                                     action = "",
-                                    who = objectxmpp.boundjid.bare,
+                                    who = strjidagent,
                                     how = "",
                                     why = "",
                                     module = "Deployment | Terminate |Notify",
                                     date = None ,
-                                    fromuser = "AM %s"% objectxmpp.boundjid.bare,
+                                    fromuser = "AM %s"% strjidagent,
                                     touser = "")
                                 data_in_session['environ'] = {}
                                 cleandescriptor( data_in_session )
@@ -1531,7 +1623,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                                 sessionname = sessionid,
                                                 priority = -1,
                                                 action = "",
-                                                who = objectxmpp.boundjid.bare,
+                                                who = strjidagent,
                                                 how = "",
                                                 why = "",
                                                 module = "Deployment | Error | Download | Transfert",
@@ -1544,7 +1636,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                                 sessionname = sessionid,
                                                 priority = -1,
                                                 action = "",
-                                                who = objectxmpp.boundjid.bare,
+                                                who = strjidagent,
                                                 how = "",
                                                 why = "",
                                                 module = "Deployment | Error | Download | Transfert",
@@ -1559,7 +1651,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                                 sessionname = sessionid,
                                                 priority = -1,
                                                 action = "",
-                                                who = objectxmpp.boundjid.bare,
+                                                who = strjidagent,
                                                 how = "",
                                                 why = "",
                                                 module = "Deployment | Error | Download | Transfert",
@@ -1571,12 +1663,12 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                                     sessionname = sessionid,
                                                     priority = -1,
                                                     action = "",
-                                                    who = objectxmpp.boundjid.bare,
+                                                    who = strjidagent,
                                                     how = "",
                                                     why = "",
                                                     module = "Deployment | Terminate |Notify",
                                                     date = None ,
-                                                    fromuser = "AM %s"% objectxmpp.boundjid.bare,
+                                                    fromuser = "AM %s"% strjidagent,
                                                     touser = "")
                                 data_in_session['environ'] = {}
                                 cleandescriptor( data_in_session )
@@ -1605,16 +1697,16 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                                     sessionname = sessionid,
                                                     priority = -1,
                                                     action = "",
-                                                    who = objectxmpp.boundjid.bare,
+                                                    who = strjidagent,
                                                     how = "",
                                                     why = "",
                                                     module = "Deployment | Terminate |Notify",
                                                     date = None ,
-                                                    fromuser = "ARS %s"% objectxmpp.boundjid.bare,
+                                                    fromuser = "ARS %s"% strjidagent,
                                                     touser = "")
                             logger.debug("CALL FOR NEXT PACKAGE")
                             # call for aller step suivant
-                            objectxmpp.send_message(mto = objectxmpp.boundjid.bare,
+                            objectxmpp.send_message(mto = strjidagent,
                                                 mbody = json.dumps(create_message_self_for_transfertfile(sessionid)),
                                                 mtype = 'chat')
                         else:
