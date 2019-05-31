@@ -76,10 +76,8 @@ def add_chargeapparente(objectxmpp, ars):
 
 def changown_dir_of_file(dest, nameuser = None):
     if nameuser is None:
-        if sys.platform.startswith('linux'):
-            nameuser = "pulseuser"
-        else:
-            nameuser = "pulse"
+    	nameuser = "pulseuser"
+
     dest = os.path.dirname(dest)
     if sys.platform.startswith('linux') or sys.platform.startswith('darwin'):
         try:
