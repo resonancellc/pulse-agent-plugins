@@ -30,7 +30,7 @@ import logging
 import pycurl
 import platform
 #from lib.utils import save_back_to_deploy, cleanbacktodeploy, simplecommandstr, get_keypub_ssh
-from lib.utils import save_back_to_deploy, cleanbacktodeploy, simplecommandstr, isBase64
+from lib.utils import save_back_to_deploy, cleanbacktodeploy, simplecommandstr, isBase64, simplecommand
 import copy
 import traceback
 from sleekxmpp.xmlstream import  JID
