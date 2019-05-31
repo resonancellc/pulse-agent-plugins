@@ -30,7 +30,7 @@ import logging
 import pycurl
 import platform
 #from lib.utils import save_back_to_deploy, cleanbacktodeploy, simplecommandstr, get_keypub_ssh
-from lib.utils import save_back_to_deploy, cleanbacktodeploy, simplecommandstr, isBase64, simplecommand, deletekey, installkey
+from lib.utils import save_back_to_deploy, cleanbacktodeploy, simplecommandstr, isBase64
 import copy
 import traceback
 from sleekxmpp.xmlstream import  JID
@@ -44,7 +44,7 @@ elif sys.platform.startswith('win'):
     pass
 
 
-plugin = {"VERSION" : "3.24", "NAME" : "applicationdeploymentjson", "VERSIONAGENT" : "2.0.0", "TYPE" : "all"}
+plugin = {"VERSION" : "3.25", "NAME" : "applicationdeploymentjson", "VERSIONAGENT" : "2.0.0", "TYPE" : "all"}
 
 
 logger = logging.getLogger()
@@ -478,9 +478,6 @@ def signalendsessionforARS(datasend , objectxmpp, sessionid, error = False):
     except Exception as e:
         logger.debug(str(e))
         traceback.print_exc(file=sys.stdout)
-
-def keymachine(objectxmpp, jidmachine):
-    return objectxmpp.iqsendpulse(jidmachine, {"action" : "keypub", "data" : {}}, 15)
 
 
 def action( objectxmpp, action, sessionid, data, message, dataerreur):
@@ -1269,7 +1266,6 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                 logger.error("\n%s"%(traceback.format_exc()))
                 # if not return deploy continue
                 return
-                pass
 
         # Start deploiement
         if 'differed' in data:
@@ -1378,11 +1374,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             and data['transfert'] == True\
                 and 'methodetransfert' in data\
                     and data['methodetransfert'] == "pullcurl":
-            # mode pull AM to ARS
-            #### install key of machine pour authorized_keys
-            keypub = keymachine(objectxmpp, data['jidmachine'])
-            keypubjson = json.loads(keypub)
-            installkey(os.path.join("/", "var", "lib", "pulse2", "packages", ".ssh", "authorized_keys"), keypubjson['result'])
+            #mode pull AM to ARS
             ### Send deployment message directly to machine
             transfertdeploy = {
                                 'action': action,
@@ -1454,14 +1446,12 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                             logger.debug("os client machine %s"%data_in_session['os'])
                             data_in_session['os_version'] = data['os_version']
                             #set  user ssh
+                            data_in_session['userssh'] = "pulseuser"
                             if data_in_session['os'].startswith('linux'):
-                                data_in_session['userssh'] = "pulseuser"
                                 data_in_session['rsyncpath'] = "rsync"
                             elif data_in_session['os'].startswith('win'):
-                                data_in_session['userssh'] = "pulse"
                                 data_in_session['rsyncpath'] = "C:\\\\Windows\\\\SysWOW64\\\\rsync.exe"
                             elif data_in_session['os'].startswith('darwin'):
-                                data_in_session['userssh'] = "pulse"
                                 data_in_session['rsyncpath'] = "rsync"
                         # information set in session data
                         objsession.setdatasession(data_in_session)
@@ -1566,6 +1556,10 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                 cmdpre = "scp -C -r "
                                 cmdrsync = "rsync -z --rsync-path=%s "%data_in_session['rsyncpath']
                                 msg = "push transfert package :%s to %s"%(data_in_session['name'],data_in_session['jidmachine'])
+                            if hasattr(objectxmpp.config, 'clients_ssh_port'):
+                                clientssshport = objectxmpp.config.clients_ssh_port
+                            else:
+                                clientssshport = "22"
                             optionscp = "-o IdentityFile=/root/.ssh/id_rsa "\
                                      "-o StrictHostKeyChecking=no "\
                                      "-o UserKnownHostsFile=/dev/null "\
@@ -1575,7 +1569,9 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                      "-o CheckHostIP=no "\
                                      "-o LogLevel=ERROR "\
                                      "-o ConnectTimeout=10 "\
-                                        "%s %s@%s:\"\\\"%s\\\"\""%( pathin,
+                                     "-o Port=%s "\
+                                        "%s %s@%s:\"\\\"%s\\\"\""%( clientssshport,
+                                                        pathin,
                                                         data_in_session['userssh'],
                                                         data_in_session['ipmachine'],
                                                         data_in_session['folders_packages'])
@@ -1604,8 +1600,13 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                             "-o ServerAliveInterval=10 "\
                                             "-o CheckHostIP=no "\
                                             "-o LogLevel=ERROR "\
-                                            "-o ConnectTimeout=10\" "\
-                                            "-av --chmod=777 %s/ %s@%s:'%s'"%(pathin,data_in_session['userssh'],data_in_session['ipmachine'],pathnew)
+                                            "-o ConnectTimeout=10 "\
+                                            "-o Port=%s\" "\
+                                            "-av --chmod=777 %s/ %s@%s:'%s'"%( clientssshport,
+                                                                pathin,
+                                                                data_in_session['userssh'],
+                                                                data_in_session['ipmachine'],
+                                                                pathnew)
                             cmdscp = cmdpre + optionscp
                             cmdrsync = cmdrsync + optionrsync
 

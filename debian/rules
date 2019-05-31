@@ -27,7 +27,14 @@ build:
 	cp -fv pulse_agent_plugins/common/scheduling_*.py usr/lib/python2.7/dist-packages/pulse_xmpp_agent/descriptor_scheduler_relay/
 	mkdir -p var/lib/pulse2/clients/config
 	cp pulse_agent_plugins/config/guacamoleconf.ini.in var/lib/pulse2/clients/config
+	cp pulse_agent_plugins/config/downloadfile.ini.in var/lib/pulse2/clients/config
+	cp pulse_agent_plugins/config/downloadfileexpert.ini.in var/lib/pulse2/clients/config
 	cp pulse_agent_plugins/config/inventory.ini.in var/lib/pulse2/clients/config
+	cp pulse_agent_plugins/config/applicationdeploymentjson.ini.in var/lib/pulse2/clients/config
+	cp pulse_agent_plugins/config/guacamole.ini.in var/lib/pulse2/clients/config
+	cp pulse_agent_plugins/config/reverse_ssh_on.ini.in var/lib/pulse2/clients/config
+	rm -fv var/lib/pulse2/xmpp_baseplugin/plugin_updateagent.py
+
 clean:
 	dh_testdir
 	dh_testroot

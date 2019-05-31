@@ -30,7 +30,7 @@ import uuid
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
 
-plugin = { "VERSION" : "1.471", "NAME" : "installkey", "TYPE" : "all" }
+plugin = { "VERSION" : "2.0", "NAME" : "installkey", "TYPE" : "all" }
 
 def action( objectxmpp, action, sessionid, data, message, dataerreur):
     logging.getLogger().debug("###################################################")
@@ -93,10 +93,10 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             except:
                 # pulse account doesn't exist
                 pulseuserpassword = uuid.uuid4().hex
-                pulseuserhome = os.path.join(os.environ["ProgramFiles"], 'Pulse')
-                result = simplecommand(encode_strconsole('net user "pulse" "%s" /ADD /COMMENT:"Pulse user with admin rights on the system" /PROFILEPATH:"%s"' % (pulseuserpassword, pulseuserhome)))
+                pulseuserhome = os.path.join('C:/', 'Users', 'pulseuser')
+                result = simplecommand(encode_strconsole('net user "pulseuser" "%s" /ADD /COMMENT:"Pulse user with admin rights on the system" /PROFILEPATH:"%s"' % (pulseuserpassword, pulseuserhome)))
                 logging.getLogger().debug("Creation of pulse user: %s" %result)
-            authorized_keys_path = os.path.join(os.environ["ProgramFiles"], 'Pulse', '.ssh','authorized_keys' )
+            authorized_keys_path = os.path.join(os.path.expanduser('~pulseuser'), '.ssh','authorized_keys' )
             if not os.path.isdir(os.path.dirname(authorized_keys_path)):
                 os.makedirs(os.path.dirname(authorized_keys_path), 0700)
             if not os.path.isfile(authorized_keys_path):
@@ -107,7 +107,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             os.chdir(currentdir)
             logging.getLogger().debug("Reset of permissions on ssh keys and folders: %s" %result)
         elif sys.platform.startswith('darwin'):
-            authorized_keys_path = os.path.join(os.path.join(os.path.expanduser('~pulse'), '.ssh', 'authorized_keys') )
+            authorized_keys_path = os.path.join(os.path.join(os.path.expanduser('~pulseuser'), '.ssh', 'authorized_keys') )
         else:
             return
 
