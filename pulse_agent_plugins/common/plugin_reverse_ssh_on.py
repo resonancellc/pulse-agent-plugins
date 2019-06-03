@@ -95,7 +95,7 @@ def install_key_ssh_relayserver(keypriv, private=False):
             os.makedirs(os.path.join(os.path.expanduser('~pulseuser'), ".ssh/"))
         filekey = os.path.join(os.path.expanduser('~pulseuser'), ".ssh", keyname)
     elif sys.platform.startswith('win'):
-        filekey = os.path.join(os.path.expanduser('~pulseuser'), ".ssh", keyname)
+        filekey = os.path.join("c:\Users\pulseuser", ".ssh", keyname)
     elif sys.platform.startswith('darwin'):
         if not os.path.isdir(os.path.join(os.path.expanduser('~pulseuser'), ".ssh")):
             os.makedirs(os.path.join(os.path.expanduser('~pulseuser'), ".ssh"))
