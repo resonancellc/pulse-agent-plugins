@@ -44,7 +44,7 @@ elif sys.platform.startswith('win'):
     pass
 
 
-plugin = {"VERSION" : "3.25", "NAME" : "applicationdeploymentjson", "VERSIONAGENT" : "2.0.0", "TYPE" : "all"}
+plugin = {"VERSION" : "3.26", "NAME" : "applicationdeploymentjson", "VERSIONAGENT" : "2.0.0", "TYPE" : "all"}
 
 
 logger = logging.getLogger()
@@ -345,7 +345,7 @@ def pull_package_transfert_rsync(datasend, objectxmpp, ippackage, sessionid,cmdm
             path_key_priv =  os.path.join("/", "root", ".ssh", "id_rsa")
             localdest = " '%s/%s'"%(managepackage.packagedir(), packagename)
         elif sys.platform.startswith('win'):
-            path_key_priv =  os.path.join(os.environ["ProgramFiles"], "Pulse", ".ssh", "id_rsa")
+            path_key_priv =  os.path.join("c:\Users\pulseuser", ".ssh", "id_rsa")
             localdest = " '%s/%s'"%(managepackage.packagedir(), packagename)
             execrsync = "C:\\\\Windows\\\\SysWOW64\\\\rsync.exe"
             execscp   = os.path.join(os.environ["ProgramFiles"], "OpenSSH", "scp.exe")
