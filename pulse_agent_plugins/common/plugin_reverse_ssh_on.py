@@ -273,7 +273,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur ):
                                 fromuser = "",
                                 touser = "")
             elif sys.platform.startswith('win'):
-                filekey = os.path.join(os.path.expanduser('~pulseuser'), ".ssh", "id_rsa")
+                filekey = os.path.join("c:\Users\pulseuser", ".ssh", "id_rsa")
                 os_platform = os.environ['PROCESSOR_ARCHITECTURE']
                 try:
                     os_platform = os.environ["PROCESSOR_ARCHITEW6432"] # Will raise exception if x86 arch
