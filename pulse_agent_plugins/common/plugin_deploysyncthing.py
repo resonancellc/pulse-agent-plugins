@@ -35,7 +35,7 @@ from lib.managepackage import managepackage, search_list_of_deployment_packages
 import shutil
 from sleekxmpp import jid
 
-plugin={"VERSION": "1.029", 'VERSIONAGENT' : '2.0.0', "NAME" : "deploysyncthing", "TYPE" : "all"}
+plugin={"VERSION": "1.038", 'VERSIONAGENT' : '2.0.0', "NAME" : "deploysyncthing", "TYPE" : "all"}
 
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
@@ -73,10 +73,21 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
     logger.debug("###################################################")
     logger.debug("call %s from %s"%(plugin, message['from']))
     logger.debug("###################################################")
-    print json.dumps(data, indent = 4)
+    data['sessionid'] = sessionid
+    datastring =  json.dumps(data, indent = 4)
     if objectxmpp.config.agenttype in ['machine']:
         logger.debug("#################AGENT MACHINE#####################")
-
+        if "subaction" in data :
+            if data['subaction'] == "notify_machine_deploy_syncthing":
+                print objectxmpp.syncthing.get_db_completion(data['id_deploy'], objectxmpp.syncthing.device_id)
+                # savedata fichier sessionid.ars
+                namesessionidars = os.path.join(objectxmpp.dirsyncthing,"%s.ars"%sessionid)
+                file_put_contents(namesessionidars, datastring)
+                logger.debug("creation file %s"%namesessionidars)
+        else:
+            namesessioniddescriptor = os.path.join(objectxmpp.dirsyncthing,"%s.descriptor"%sessionid)
+            file_put_contents(namesessioniddescriptor, json.dumps(data, indent =4))
+            logger.debug("creation file %s"%namesessioniddescriptor)
     else:
         logger.debug("##############AGENT RELAY SERVER###################")
         """ les devices des autre ARS sont connue, on initialise uniquement le folder."""
@@ -134,7 +145,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                     typefolder="slave"
                 #creation du folder
                 newfolder = objectxmpp.syncthing.\
-                    create_template_struct_folder(data['packagedeploy'],# ou data['repertoiredeploy']
+                    create_template_struct_folder(data['repertoiredeploy'], # or data['packagedeploy'] 
                                                   repertorypartage,
                                                   id=data['repertoiredeploy'],
                                                   typefolder=typefolder )
@@ -157,7 +168,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                            "namedeploy" : data['namedeploy'],
                                            "packagedeploy" : data['packagedeploy'],
                                            "ARS" : machine['rel'],
-                                           'descriptor' : machine['result']}}
+                                           "mach" : machine['mach']}}
                     objectxmpp.send_message(mto=machine['mach'],
                                             mbody=json.dumps(datasend),
                                             mtype='chat')
