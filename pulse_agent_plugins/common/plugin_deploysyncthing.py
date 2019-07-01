@@ -50,7 +50,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         logger.debug("#################AGENT MACHINE#####################")
         if "subaction" in data :
             if data['subaction'] == "notify_machine_deploy_syncthing":
-                print objectxmpp.syncthing.get_db_completion(data['id_deploy'], objectxmpp.syncthing.device_id)
+                objectxmpp.syncthing.get_db_completion(data['id_deploy'], objectxmpp.syncthing.device_id)
                 # savedata fichier sessionid.ars
                 namesessionidars = os.path.join(objectxmpp.dirsyncthing,"%s.ars"%sessionid)
                 file_put_contents(namesessionidars, datastring)
@@ -66,7 +66,6 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             basesyncthing = "/var/lib/syncthing/partagedeploy"
             if not os.path.exists(basesyncthing):
                 os.makedirs(basesyncthing)
-    
             if "subaction" in data :#
                 if data['subaction'] == "syncthingdeploycluster":
                     packagedir = managepackage.packagedir()
@@ -77,36 +76,25 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                     cmd = "touch %s"%os.path.join(repertorypartage,'.stfolder')
                     logger.debug("cmd : %s"%cmd)
                     obj = simplecommand(cmd)
-                    if int(obj['code']) == 0:
-                        print "creation  .stfolder"
-                    else:
-                        print obj['result']
-
+                    if int(obj['code']) != 0:
+                        logger.warning(obj['result'])
                     list_of_deployment_packages =\
                         search_list_of_deployment_packages(data['packagedeploy']).\
                             search()
-                    print list_of_deployment_packages
-                    print repertorypartage
-                    print packagedir
-                    print basesyncthing
-                    print "copy to repertorypartage"
+                    logger.warning("copy to repertorypartage")
                     #on copy les packages dans le repertoire de  partages"
                     for z in list_of_deployment_packages:
                         repsrc = os.path.join(packagedir,str(z) )
                         cmd = "rsync -r %s %s/"%( repsrc , repertorypartage)
                         logger.debug("cmd : %s"%cmd)
                         obj = simplecommand(cmd)
-                        if int(obj['code']) == 0:
-                            print "copy success"
-                        else:
-                            print obj['result']
+                        if int(obj['code']) != 0:
+                            logger.warning(obj['result'])
                     cmd ="chown syncthing:syncthing -R %s"%repertorypartage
                     logger.debug("cmd : %s"%cmd)
                     obj = simplecommand(cmd)
-                    if int(obj['code']) == 0:
-                        print "repertoire syncthing"
-                    else:
-                        print obj['result']
+                    if int(obj['code']) != 0:
+                        logger.warning(obj['result'])
                     # creation fichier .stfolder
 
                     #addition des devices. add device ARS si non exist.
@@ -123,7 +111,6 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                                     typefolder=typefolder )
 
                     objectxmpp.syncthing.add_folder_dict_if_not_exist_id(newfolder)
-
                     #add device cluster ars in new partage folder
                     for keyclustersyncthing in data['listkey']:
                         objectxmpp.syncthing.add_device_in_folder_if_not_exist( data['repertoiredeploy'],
@@ -156,23 +143,11 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                             "packagedeploy" : data['packagedeploy'],
                                             "ARS" : machine['rel'],
                                             "mach" : machine['mach']}}
-                        # "cluster" : data['clusterdescriptor']
                         objectxmpp.send_message(mto=machine['mach'],
                                                 mbody=json.dumps(datasend),
                                                 mtype='chat')
-                        print "______________________________________________________________"
-                        print "____addition device %s %s____"%(machine['devi'],
-                                                               machine['mach'])
-                        print "______________________________________________________________"
-
-
-                    ##reinitialisation syncthing conf
-                    #if objectxmpp.syncthing.add_folder_dict_if_not_exist_id(newfolder):
-                        #objectxmpp.syncthing.validate_chang_config()
-
-                    #print "addition partage"
-                    #print json.dumps(objectxmpp.syncthing.config, indent = 4)
-                    #print json.dumps(newfolder, indent = 4)
+                        logger.debug("addition device %s for machine %s"%(machine['devi'],
+                                                                          machine['mach']))
         except:
             logger.error("\n%s"%(traceback.format_exc()))
             raise
