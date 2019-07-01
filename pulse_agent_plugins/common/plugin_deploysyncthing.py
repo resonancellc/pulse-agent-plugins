@@ -35,39 +35,10 @@ from lib.managepackage import managepackage, search_list_of_deployment_packages
 import shutil
 from sleekxmpp import jid
 
-plugin={"VERSION": "1.040", 'VERSIONAGENT' : '2.0.0', "NAME" : "deploysyncthing", "TYPE" : "all"}
+plugin={"VERSION": "1.041", 'VERSIONAGENT' : '2.0.0', "NAME" : "deploysyncthing", "TYPE" : "all"}
 
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
-
-def adddevicesyncthing(objectxmpp,
-                       keydevicesyncthing, 
-                       namerelay, 
-                       introducer = False):
-    resource = jid.JID(namerelay).resource
-    if resource == "dev-mmc":
-        resource = "pulse"
-    if resource=="":
-        resource = namerelay
-    if not is_exist_device_in_config(objectxmpp, keydevicesyncthing):
-        logger.debug("add device syncthing %s"%keydevicesyncthing)
-        dsyncthing_tmp = objectxmpp.syncthing.\
-            create_template_struct_device( resource,
-                                            str(keydevicesyncthing),
-                                            introducer = introducer,
-                                            autoAcceptFolders=False)
-        logger.debug("add device [%s]syncthing to ars %s\n%s"%(keydevicesyncthing,
-                                                                namerelay,
-                                                                json.dumps(dsyncthing_tmp,
-                                                                        indent = 4)))
-        objectxmpp.syncthing.config['devices'].append(dsyncthing_tmp)
-        logger.debug("synchro config %s"%objectxmpp.syncthing.is_config_sync())
-
-def is_exist_device_in_config(objectxmpp, keydevicesyncthing):
-    for device in objectxmpp.syncthing.devices:
-        if device['deviceID'] == keydevicesyncthing:
-            return True
-    return False
 
 def action( objectxmpp, action, sessionid, data, message, dataerreur):
     logger.debug("###################################################")
@@ -150,15 +121,30 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                                     repertorypartage,
                                                     id=data['repertoiredeploy'],
                                                     typefolder=typefolder )
+
+                    objectxmpp.syncthing.add_folder_dict_if_not_exist_id(newfolder)
+
                     #add device cluster ars in new partage folder
                     for keyclustersyncthing in data['listkey']:
-                        objectxmpp.syncthing.add_device_in_folder(newfolder, keyclustersyncthing)
+                        objectxmpp.syncthing.add_device_in_folder_if_not_exist( data['repertoiredeploy'],
+                                                                                keyclustersyncthing,
+                                                                                introducedBy = "")
 
                     for machine in data['machinespartage']:
                         #add device dans folder
-                        objectxmpp.syncthing.add_device_in_folder(newfolder, machine['devi'])
+                        objectxmpp.syncthing.add_device_in_folder_if_not_exist( data['repertoiredeploy'],
+                                                                                machine['devi'],
+                                                                                introducedBy = "")
                         #add device
-                        adddevicesyncthing(objectxmpp, machine['devi'],  machine['mach'])
+                        namemachine = jid.JID(machine['mach']).resource
+                        if namemachine == "dev-mmc":
+                            namemachine = "pulse"
+                        if namemachine=="":
+                            namemachine = machine['mach']
+
+                        objectxmpp.syncthing.add_device_syncthing( machine['devi'],
+                                                                   namemachine)
+
                         #create message for machine
                         datasend = {'action' : "deploysyncthing",
                                     "sessionid" : machine['ses'],
@@ -174,13 +160,18 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                         objectxmpp.send_message(mto=machine['mach'],
                                                 mbody=json.dumps(datasend),
                                                 mtype='chat')
+                        print "______________________________________________________________"
+                        print "____addition device %s %s____"%(machine['devi'],
+                                                               machine['mach'])
+                        print "______________________________________________________________"
 
-                    #reinitialisation syncthing conf
-                    if objectxmpp.syncthing.add_folder_dict_if_not_exist_id(newfolder):
-                        objectxmpp.syncthing.validate_chang_config()
 
-                    print "addition partage"
-                    print json.dumps(objectxmpp.syncthing.config, indent = 4)
+                    ##reinitialisation syncthing conf
+                    #if objectxmpp.syncthing.add_folder_dict_if_not_exist_id(newfolder):
+                        #objectxmpp.syncthing.validate_chang_config()
+
+                    #print "addition partage"
+                    #print json.dumps(objectxmpp.syncthing.config, indent = 4)
                     #print json.dumps(newfolder, indent = 4)
         except:
             logger.error("\n%s"%(traceback.format_exc()))
