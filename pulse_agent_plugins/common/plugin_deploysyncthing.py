@@ -35,7 +35,7 @@ from lib.managepackage import managepackage, search_list_of_deployment_packages
 import shutil
 from sleekxmpp import jid
 
-plugin={"VERSION": "1.041", 'VERSIONAGENT' : '2.0.0', "NAME" : "deploysyncthing", "TYPE" : "all"}
+plugin={"VERSION": "1.042", 'VERSIONAGENT' : '2.0.0', "NAME" : "deploysyncthing", "TYPE" : "all"}
 
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
@@ -55,10 +55,34 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                 namesessionidars = os.path.join(objectxmpp.dirsyncthing,"%s.ars"%sessionid)
                 file_put_contents(namesessionidars, datastring)
                 logger.debug("creation file %s"%namesessionidars)
+                objectxmpp.xmpplog("creation file %s"%namesessionidars,
+                                    type='deploy',
+                                    sessionname=sessionid,
+                                    priority=-1,
+                                    action="",
+                                    who="",
+                                    how="",
+                                    why=objectxmpp.boundjid.bare,
+                                    module="Deployment | Syncthing",
+                                    date=None,
+                                    fromuser=data['login'],
+                                    touser="")
         else:
             namesessioniddescriptor = os.path.join(objectxmpp.dirsyncthing,"%s.descriptor"%sessionid)
             file_put_contents(namesessioniddescriptor, json.dumps(data, indent =4))
             logger.debug("creation file %s"%namesessioniddescriptor)
+            objectxmpp.xmpplog( "creation file %s"%namesessioniddescriptor,
+                                type='deploy',
+                                sessionname=sessionid,
+                                priority=-1,
+                                action="",
+                                who="",
+                                how="",
+                                why=objectxmpp.boundjid.bare,
+                                module="Deployment | Syncthing",
+                                date=None,
+                                fromuser=data['login'],
+                                touser="")
     else:
         try:
             logger.debug("##############AGENT RELAY SERVER###################")
@@ -90,6 +114,20 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                         obj = simplecommand(cmd)
                         if int(obj['code']) != 0:
                             logger.warning(obj['result'])
+                        else:
+                            objectxmpp.xmpplog( "ARS %s repertory partage %s"%(objectxmpp.boundjid.bare,\
+                                                repertorypartage),
+                                                type='deploy',
+                                                sessionname=sessionid,
+                                                priority=-1,
+                                                action="",
+                                                who="",
+                                                how="",
+                                                why=objectxmpp.boundjid.bare,
+                                                module="Deployment | Syncthing",
+                                                date=None,
+                                                fromuser=data['login'],
+                                                touser="")
                     cmd ="chown syncthing:syncthing -R %s"%repertorypartage
                     logger.debug("cmd : %s"%cmd)
                     obj = simplecommand(cmd)
