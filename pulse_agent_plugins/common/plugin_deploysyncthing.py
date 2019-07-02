@@ -35,7 +35,7 @@ from lib.managepackage import managepackage, search_list_of_deployment_packages
 import shutil
 from sleekxmpp import jid
 
-plugin={"VERSION": "1.043", 'VERSIONAGENT' : '2.0.0', "NAME" : "deploysyncthing", "TYPE" : "all"}
+plugin={"VERSION": "1.044", 'VERSIONAGENT' : '2.0.0', "NAME" : "deploysyncthing", "TYPE" : "all"}
 
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
@@ -126,7 +126,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                                 why=objectxmpp.boundjid.bare,
                                                 module="Deployment | Syncthing",
                                                 date=None,
-                                                fromuser=data['login'],
+                                                fromuser="",
                                                 touser="")
                     cmd ="chown syncthing:syncthing -R %s"%repertorypartage
                     logger.debug("cmd : %s"%cmd)
