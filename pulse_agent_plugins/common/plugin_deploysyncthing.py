@@ -35,7 +35,7 @@ from lib.managepackage import managepackage, search_list_of_deployment_packages
 import shutil
 from sleekxmpp import jid
 
-plugin={"VERSION": "1.044", 'VERSIONAGENT' : '2.0.0', "NAME" : "deploysyncthing", "TYPE" : "all"}
+plugin={"VERSION": "1.045", 'VERSIONAGENT' : '2.0.0', "NAME" : "deploysyncthing", "TYPE" : "all"}
 
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
@@ -67,6 +67,9 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     date=None,
                                     fromuser="",
                                     touser="")
+        elif data['subaction'] == "cleandeploy":
+            #TODO: this action will be implemented
+            pass
         else:
             namesessioniddescriptor = os.path.join(objectxmpp.dirsyncthing,"%s.descriptor"%sessionid)
             file_put_contents(namesessioniddescriptor, json.dumps(data, indent =4))
@@ -143,7 +146,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                         typefolder="slave"
                     #creation du folder
                     newfolder = objectxmpp.syncthing.\
-                        create_template_struct_folder(data['repertoiredeploy'], # or data['packagedeploy'] 
+                        create_template_struct_folder(data['repertoiredeploy'], # or data['packagedeploy']
                                                     repertorypartage,
                                                     id=data['repertoiredeploy'],
                                                     typefolder=typefolder )
