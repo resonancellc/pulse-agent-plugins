@@ -35,7 +35,7 @@ from lib.managepackage import managepackage, search_list_of_deployment_packages
 import shutil
 from sleekxmpp import jid
 
-plugin={"VERSION": "1.045", 'VERSIONAGENT' : '2.0.0', "NAME" : "deploysyncthing", "TYPE" : "all"}
+plugin={"VERSION": "1.046", 'VERSIONAGENT' : '2.0.0', "NAME" : "deploysyncthing", "TYPE" : "all"}
 
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
@@ -46,6 +46,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
     logger.debug("###################################################")
     data['sessionid'] = sessionid
     datastring =  json.dumps(data, indent = 4)
+    print datastring
     if objectxmpp.config.agenttype in ['machine']:
         logger.debug("#################AGENT MACHINE#####################")
         if "subaction" in data :
@@ -69,6 +70,12 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     touser="")
         elif data['subaction'] == "cleandeploy":
             #TODO: this action will be implemented
+            # call suppression partage syncthing
+            if 'iddeploy' in data:
+                print data['iddeploy']
+            print data
+            # objectxmpp.syncthing.delete_folder_id_pulsedeploy(data['iddeploy'])
+            # todo send to machine
             pass
         else:
             namesessioniddescriptor = os.path.join(objectxmpp.dirsyncthing,"%s.descriptor"%sessionid)
