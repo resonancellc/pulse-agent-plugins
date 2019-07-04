@@ -92,7 +92,7 @@ def send_kiosk_data(datastrdata, port = 8766, objectxmpp= None, dataerror = None
             logger.warning("Kiosk is not listen: verify presence kiosk")
             msg = "Kiosk is not listen on machine %s : [%s]\nverrify presence kiosk"%(objectxmpp.boundjid.bare, str(e))
             if objectxmpp is not None and dataerror is not None and message is not None:
-                dataerror['ret'] = -255
+                dataerror['ret'] = 50
                 dataerror['data']['msg'] = msg
                 objectxmpp.send_message(mto=message['from'],
                                         mbody=json.dumps(dataerror),
