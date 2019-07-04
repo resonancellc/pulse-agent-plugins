@@ -35,7 +35,7 @@ from lib.managepackage import managepackage, search_list_of_deployment_packages
 import shutil
 from sleekxmpp import jid
 
-plugin={"VERSION": "1.046", 'VERSIONAGENT' : '2.0.0', "NAME" : "deploysyncthing", "TYPE" : "all"}
+plugin={"VERSION": "1.055", 'VERSIONAGENT' : '2.0.0', "NAME" : "deploysyncthing", "TYPE" : "all"}
 
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
@@ -43,6 +43,7 @@ DEBUGPULSEPLUGIN = 25
 def action( objectxmpp, action, sessionid, data, message, dataerreur):
     logger.debug("###################################################")
     logger.debug("call %s from %s"%(plugin, message['from']))
+    logger.debug("sessionid : %s"%sessionid)
     logger.debug("###################################################")
     data['sessionid'] = sessionid
     datastring =  json.dumps(data, indent = 4)
@@ -50,6 +51,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
     if objectxmpp.config.agenttype in ['machine']:
         logger.debug("#################AGENT MACHINE#####################")
         if "subaction" in data :
+            logger.debug("subaction : %s"%data['subaction'])
             if data['subaction'] == "notify_machine_deploy_syncthing":
                 objectxmpp.syncthing.get_db_completion(data['id_deploy'], objectxmpp.syncthing.device_id)
                 # savedata fichier sessionid.ars
@@ -68,15 +70,12 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     date=None,
                                     fromuser="",
                                     touser="")
-        elif data['subaction'] == "cleandeploy":
-            #TODO: this action will be implemented
-            # call suppression partage syncthing
-            if 'iddeploy' in data:
-                print data['iddeploy']
-            print data
-            # objectxmpp.syncthing.delete_folder_id_pulsedeploy(data['iddeploy'])
-            # todo send to machine
-            pass
+            elif data['subaction'] == "cleandeploy":
+                #TODO: this action will be implemented
+                # call suppression partage syncthing
+                if 'iddeploy' in data:
+                    logger.debug("Delete partage %s if exist"%data['iddeploy'])
+                    objectxmpp.syncthing.delete_folder_id_pulsedeploy(data['iddeploy'])
         else:
             namesessioniddescriptor = os.path.join(objectxmpp.dirsyncthing,"%s.descriptor"%sessionid)
             file_put_contents(namesessioniddescriptor, json.dumps(data, indent =4))
@@ -100,7 +99,8 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             basesyncthing = "/var/lib/syncthing/partagedeploy"
             if not os.path.exists(basesyncthing):
                 os.makedirs(basesyncthing)
-            if "subaction" in data :#
+            if "subaction" in data :
+                logger.debug("subaction : %s"%data['subaction'])
                 if data['subaction'] == "syncthingdeploycluster":
                     packagedir = managepackage.packagedir()
                     # creation fichier de partages syncthing
@@ -125,7 +125,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                         if int(obj['code']) != 0:
                             logger.warning(obj['result'])
                         else:
-                            objectxmpp.xmpplog( "ARS %s repertory partage %s"%(objectxmpp.boundjid.bare,\
+                            objectxmpp.xmpplog( "ARS %s repertory partage %s"%(objectxmpp.boundjid.bare,
                                                 repertorypartage),
                                                 type='deploy',
                                                 sessionname=sessionid,
@@ -186,16 +186,40 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     "ret" : 0,
                                     "base64" : False,
                                     "data" : { "subaction" : "notify_machine_deploy_syncthing",
-                                            "id_deploy" : data['repertoiredeploy'],
-                                            "namedeploy" : data['namedeploy'],
-                                            "packagedeploy" : data['packagedeploy'],
-                                            "ARS" : machine['rel'],
-                                            "mach" : machine['mach']}}
+                                               "id_deploy" : data['repertoiredeploy'],
+                                               "namedeploy" : data['namedeploy'],
+                                               "packagedeploy" : data['packagedeploy'],
+                                               "ARS" : machine['rel'],
+                                               "mach" : machine['mach']}}
                         objectxmpp.send_message(mto=machine['mach'],
                                                 mbody=json.dumps(datasend),
                                                 mtype='chat')
                         logger.debug("addition device %s for machine %s"%(machine['devi'],
                                                                           machine['mach']))
+                elif data['subaction'] == "cleandeploy":
+                    #TODO: this action will be implemented
+                    # call suppression partage syncthing
+                    if 'iddeploy' in data:
+                        logger.debug("Delete partage %s if exist"%data['iddeploy'])
+                        objectxmpp.syncthing.delete_folder_id_pulsedeploy(data['iddeploy'])
+                    messgagesend = {
+                        "sessionid" : sessionid,
+                        "action" : action,
+                        "data" : { "subaction" : "cleandeploy",
+                                "iddeploy" : data['iddeploy'] }
+                    }
+                    machineslist = data['jidmachines'].split(",")
+                    relayslist   = data['jidrelays'].split(",")
+                    nbrelaylist  = len(relayslist)
+                    for index_relay_mach in  range(nbrelaylist):
+                        if relayslist[index_relay_mach] == objectxmpp.boundjid.full:
+                            #send message machine
+                            logger.debug("send Delete partage %s on mach %s"%(data['iddeploy'],
+                                                                              machineslist[index_relay_mach]))
+                            print "send delete floder to machine %s"%machineslist[index_relay_mach]
+                            objectxmpp.send_message(mto=machineslist[index_relay_mach],
+                                                    mbody=json.dumps(messgagesend),
+                                                    mtype='chat')
         except:
             logger.error("\n%s"%(traceback.format_exc()))
             raise
