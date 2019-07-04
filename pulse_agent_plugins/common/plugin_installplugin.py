@@ -20,14 +20,15 @@
 # MA 02110-1301, USA.
 import os
 import logging
+import json
 
 
-plugin={"VERSION": "1.1", "NAME" : "installplugin", "TYPE" : "all"}
+plugin={"VERSION": "1.23", "NAME" : "installplugin", "TYPE" : "all"}
 
-def action( objetxmpp, action, sessionid, data, message, dataerreur ):
+def action( objectxmpp, action, sessionid, data, message, dataerreur ):
     if action == 'installplugin':
         if len(data) != 0 :
-            namefile =  os.path.join(objetxmpp.config.pathplugins, data['pluginname'])
+            namefile =  os.path.join(objectxmpp.config.pathplugins, data['pluginname'])
 
             try:
                 fileplugin = open(namefile, "w")
@@ -36,5 +37,10 @@ def action( objetxmpp, action, sessionid, data, message, dataerreur ):
             except Exception, e:
                 logging.getLogger().debug("error : %s"%str(e))
                 return
-            msg = "install plugin %s on %s"%(data['pluginname'],message['to'].user)
-            objetxmpp.loginfotomaster(msg)
+            dataerreur['ret'] = 0
+            dataerreur['action'] = "resultmsginfoerror"
+            dataerreur['data']['msg'] = "install plugin %s on %s"%(data['pluginname'],message['to'].user)
+            objectxmpp.send_message(mto = message['from'],
+                            mbody = json.dumps(dataerreur),
+                            mtype = 'chat')
+            #objectxmpp.loginfotomaster(msg)
