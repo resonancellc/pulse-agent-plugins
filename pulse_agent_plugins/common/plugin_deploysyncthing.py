@@ -35,7 +35,7 @@ from lib.managepackage import managepackage, search_list_of_deployment_packages
 import shutil
 from sleekxmpp import jid
 
-plugin={"VERSION": "1.055", 'VERSIONAGENT' : '2.0.0', "NAME" : "deploysyncthing", "TYPE" : "all"}
+plugin={"VERSION": "1.056", 'VERSIONAGENT' : '2.0.0', "NAME" : "deploysyncthing", "TYPE" : "all"}
 
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
@@ -75,7 +75,8 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                 # call suppression partage syncthing
                 if 'iddeploy' in data:
                     logger.debug("Delete partage %s if exist"%data['iddeploy'])
-                    objectxmpp.syncthing.delete_folder_id_pulsedeploy(data['iddeploy'])
+                    #objectxmpp.syncthing.delete_folder_id_pulsedeploy(data['iddeploy'])
+                    objectxmpp.syncthing.self.syncthing.del_folder(data['iddeploy'])
         else:
             namesessioniddescriptor = os.path.join(objectxmpp.dirsyncthing,"%s.descriptor"%sessionid)
             file_put_contents(namesessioniddescriptor, json.dumps(data, indent =4))
