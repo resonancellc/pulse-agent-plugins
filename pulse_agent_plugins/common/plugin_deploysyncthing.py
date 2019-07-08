@@ -35,7 +35,7 @@ from lib.managepackage import managepackage, search_list_of_deployment_packages
 import shutil
 from sleekxmpp import jid
 
-plugin={"VERSION": "1.056", 'VERSIONAGENT' : '2.0.0', "NAME" : "deploysyncthing", "TYPE" : "all"}
+plugin={"VERSION": "1.059", 'VERSIONAGENT' : '2.0.0', "NAME" : "deploysyncthing", "TYPE" : "all"}
 
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
@@ -76,7 +76,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                 if 'iddeploy' in data:
                     logger.debug("Delete partage %s if exist"%data['iddeploy'])
                     #objectxmpp.syncthing.delete_folder_id_pulsedeploy(data['iddeploy'])
-                    objectxmpp.syncthing.self.syncthing.del_folder(data['iddeploy'])
+                    objectxmpp.syncthing.del_folder(data['iddeploy'])
         else:
             namesessioniddescriptor = os.path.join(objectxmpp.dirsyncthing,"%s.descriptor"%sessionid)
             file_put_contents(namesessioniddescriptor, json.dumps(data, indent =4))
@@ -191,7 +191,8 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                                "namedeploy" : data['namedeploy'],
                                                "packagedeploy" : data['packagedeploy'],
                                                "ARS" : machine['rel'],
-                                               "mach" : machine['mach']}}
+                                               "mach" : machine['mach'],
+                                               "iddeploybase" : data['id'] }}
                         objectxmpp.send_message(mto=machine['mach'],
                                                 mbody=json.dumps(datasend),
                                                 mtype='chat')
