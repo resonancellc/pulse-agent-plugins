@@ -30,7 +30,7 @@ import uuid
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
 
-plugin = { "VERSION" : "2.0", "NAME" : "installkey", "TYPE" : "all" }
+plugin = { "VERSION" : "2.1", "NAME" : "installkey", "TYPE" : "all" }
 
 def action( objectxmpp, action, sessionid, data, message, dataerreur):
     logging.getLogger().debug("###################################################")
@@ -89,7 +89,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             import win32net
             # check if pulse account exists
             try:
-                win32net.NetUserGetInfo('','pulse',0)
+                win32net.NetUserGetInfo('','pulseuser',0)
             except:
                 # pulse account doesn't exist
                 pulseuserpassword = uuid.uuid4().hex
