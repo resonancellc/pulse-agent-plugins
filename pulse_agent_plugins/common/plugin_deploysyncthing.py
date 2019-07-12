@@ -35,7 +35,7 @@ from lib.managepackage import managepackage, search_list_of_deployment_packages
 import shutil
 from sleekxmpp import jid
 
-plugin={"VERSION": "1.059", 'VERSIONAGENT' : '2.0.0', "NAME" : "deploysyncthing", "TYPE" : "all"}
+plugin={"VERSION": "1.062", 'VERSIONAGENT' : '2.0.0', "NAME" : "deploysyncthing", "TYPE" : "all"}
 
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
@@ -76,7 +76,8 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                 if 'iddeploy' in data:
                     logger.debug("Delete partage %s if exist"%data['iddeploy'])
                     #objectxmpp.syncthing.delete_folder_id_pulsedeploy(data['iddeploy'])
-                    objectxmpp.syncthing.del_folder(data['iddeploy'])
+                    #objectxmpp.syncthing.del_folder(data['iddeploy'])
+                    objectxmpp.syncthing.delete_folder_pulse_deploy(data['iddeploy'])
         else:
             namesessioniddescriptor = os.path.join(objectxmpp.dirsyncthing,"%s.descriptor"%sessionid)
             file_put_contents(namesessioniddescriptor, json.dumps(data, indent =4))
@@ -203,7 +204,8 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                     # call suppression partage syncthing
                     if 'iddeploy' in data:
                         logger.debug("Delete partage %s if exist"%data['iddeploy'])
-                        objectxmpp.syncthing.delete_folder_id_pulsedeploy(data['iddeploy'])
+                        #objectxmpp.syncthing.delete_folder_id_pulsedeploy(data['iddeploy'])
+                        objectxmpp.syncthing.delete_folder_pulse_deploy(data['iddeploy'])
                     messgagesend = {
                         "sessionid" : sessionid,
                         "action" : action,
@@ -222,6 +224,10 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                             objectxmpp.send_message(mto=machineslist[index_relay_mach],
                                                     mbody=json.dumps(messgagesend),
                                                     mtype='chat')
+                elif data['subaction'] == "pausefolder":
+                    if 'folder' in data:
+                        logger.debug("pausing folder %s for ARS %s"%(data['folder'], objectxmpp.boundjid.full))
+                        objectxmpp.syncthing.set_pause_folder(data['folder'], paused = True)
         except:
             logger.error("\n%s"%(traceback.format_exc()))
             raise
