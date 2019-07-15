@@ -100,7 +100,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             logger.debug("new ARS list friend of cluster : %s"% objectxmpp.jidclusterlistrelayservers)
         elif data['subaction'] == "removeresource":
             #resource = objectxmpp.checklevelcharge(ressource = -1)
-            objectxmpp.delmachineinlevelmachinelist(data['data']['machinejid'])
+            objectxmpp.delmachineinlevelmachinelist(message['from'])
             logger.debug("levelcharge %s %s"%(objectxmpp.boundjid.bare,
                                               json.dumps(objectxmpp.levelcharge, indent =4)))
             refreshremotears(objectxmpp, action, sessionid)
