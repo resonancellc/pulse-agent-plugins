@@ -37,7 +37,7 @@ import traceback
 from sleekxmpp.xmlstream import  JID
 import time
 from subprocess import STDOUT, check_output, CalledProcessError
-from utils import 
+
 if sys.platform.startswith('linux') or sys.platform.startswith('darwin'):
     import grp
     import pwd
