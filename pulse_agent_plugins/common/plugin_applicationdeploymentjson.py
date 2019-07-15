@@ -30,13 +30,14 @@ import logging
 import pycurl
 import platform
 #from lib.utils import save_back_to_deploy, cleanbacktodeploy, simplecommandstr, get_keypub_ssh
-from lib.utils import save_back_to_deploy, cleanbacktodeploy, simplecommandstr, isBase64, simplecommand
+from lib.utils import save_back_to_deploy, cleanbacktodeploy, simplecommandstr,\
+    isBase64, simplecommand, decode_strconsole, encode_strconsole
 import copy
 import traceback
 from sleekxmpp.xmlstream import  JID
 import time
 from subprocess import STDOUT, check_output, CalledProcessError
-
+from utils import 
 if sys.platform.startswith('linux') or sys.platform.startswith('darwin'):
     import grp
     import pwd
@@ -44,7 +45,7 @@ elif sys.platform.startswith('win'):
     pass
 
 
-plugin = {"VERSION" : "3.26", "NAME" : "applicationdeploymentjson", "VERSIONAGENT" : "2.0.0", "TYPE" : "all"}
+plugin = {"VERSION" : "3.27", "NAME" : "applicationdeploymentjson", "VERSIONAGENT" : "2.0.0", "TYPE" : "all"}
 
 
 logger = logging.getLogger()
@@ -94,12 +95,14 @@ def changown_dir_of_file(dest, nameuser = None):
     elif sys.platform.startswith('win'):
         try:
             result = check_output(["icacls",
-                                    dest,
+                                    encode_strconsole(dest),
                                     "/setowner",
-                                    nameuser,
+                                    encode_strconsole(nameuser),
                                     "/t"], stderr=STDOUT)
-        except CalledProcessError as e:
-            logger.error("%s changown_dir_of_file : %s"%(dest, str(e.output)))
+        #except CalledProcessError as e:
+            #logger.error("%s changown_dir_of_file : %s"%(dest, str(e.output)))
+        except Exception as e:
+            logger.error("\n%s"%(traceback.format_exc()))
 
 def cleandescriptor(datasend):
 
