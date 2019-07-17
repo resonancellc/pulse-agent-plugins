@@ -99,7 +99,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                 pulseuserpassword = uuid.uuid4().hex[:14]
                 result = simplecommand(encode_strconsole('net user "pulseuser" "%s" /ADD /COMMENT:"Pulse user with admin rights on the system"' % pulseuserpassword))
                 logging.getLogger().info("Creation of pulse user: %s" %result)
-                result = simplecommand(encode_strconsole('powershell -inputformat none -ExecutionPolicy RemoteSigned -command "Import-Module script/create-profile.ps1; New-Profile -Account pulseuser"'))
+                result = simplecommand(encode_strconsole('powershell -inputformat none -ExecutionPolicy RemoteSigned -Command "Import-Module ./script/create-profile.ps1; New-Profile -Account pulseuser"'))
                 logging.getLogger().info("Creation of pulseuser profile: %s" %result)
                 result = simplecommand(encode_strconsole('wmic useraccount where "Name=\'pulseuser\'" set PasswordExpires=False'))
                 adminsgrpsid = win32security.ConvertStringSidToSid('S-1-5-32-544')
@@ -119,6 +119,10 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                 else:
                                     outfile.write(line + '\\n')
                     shutil.move('sshd_config', sshdconfigfile)
+                    currentdir = os.getcwd()
+                    os.chdir(os.path.join(os.environ["ProgramFiles"], 'OpenSSH'))
+                    result = simplecommand(encode_strconsole('powershell -ExecutionPolicy Bypass -Command ". .\FixHostFilePermissions.ps1 -Confirm:$false"'))
+                    os.chdir(currentdir)
                     win32serviceutil.StopService('sshd')
                     win32serviceutil.StopService('ssh-agent')
                     win32serviceutil.StartService('ssh-agent')
