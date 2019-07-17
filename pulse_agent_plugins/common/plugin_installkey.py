@@ -103,7 +103,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                 logging.getLogger().info("Creation of pulseuser profile: %s" %result)
                 result = simplecommand(encode_strconsole('wmic useraccount where "Name=\'pulseuser\'" set PasswordExpires=False'))
                 adminsgrpsid = win32security.ConvertStringSidToSid('S-1-5-32-544')
-                adminsgroup = win32security.LookupAccountSid('',sid)[0]
+                adminsgroup = win32security.LookupAccountSid('',adminsgrpsid)[0]
                 result = simplecommand(encode_strconsole('net localgroup %s "pulseuser" /ADD' % adminsgroup))
                 logging.getLogger().info("Adding pulseuser to administrators group: %s" %result)
 
