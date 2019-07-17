@@ -35,7 +35,7 @@ from lib.managepackage import managepackage, search_list_of_deployment_packages
 import shutil
 from sleekxmpp import jid
 
-plugin={"VERSION": "1.062", 'VERSIONAGENT' : '2.0.0', "NAME" : "deploysyncthing", "TYPE" : "all"}
+plugin={"VERSION": "1.063", 'VERSIONAGENT' : '2.0.0', "NAME" : "deploysyncthing", "TYPE" : "all"}
 
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
@@ -163,24 +163,27 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                     objectxmpp.syncthing.add_folder_dict_if_not_exist_id(newfolder)
                     #add device cluster ars in new partage folder
                     for keyclustersyncthing in data['listkey']:
-                        objectxmpp.syncthing.add_device_in_folder_if_not_exist( data['repertoiredeploy'],
-                                                                                keyclustersyncthing,
-                                                                                introducedBy = "")
+                        if keyclustersyncthing != "\"\"":
+                            objectxmpp.syncthing.add_device_in_folder_if_not_exist( data['repertoiredeploy'],
+                                                                                    keyclustersyncthing,
+                                                                                    introducedBy = "")
 
                     for machine in data['machinespartage']:
                         #add device dans folder
-                        objectxmpp.syncthing.add_device_in_folder_if_not_exist( data['repertoiredeploy'],
-                                                                                machine['devi'],
-                                                                                introducedBy = "")
+                        if machine['devi'] != "\"\"":
+                            objectxmpp.syncthing.add_device_in_folder_if_not_exist( data['repertoiredeploy'],
+                                                                                    machine['devi'],
+                                                                                    introducedBy = "")
                         #add device
                         namemachine = jid.JID(machine['mach']).resource
-                        if namemachine == "dev-mmc":
+                        #if namemachine == "dev-mmc":
+                        if objectxmpp.boundjid.bare == "rspulse@pulse":
                             namemachine = "pulse"
                         if namemachine=="":
                             namemachine = machine['mach']
-
-                        objectxmpp.syncthing.add_device_syncthing( machine['devi'],
-                                                                   namemachine)
+                        if machine['devi'] != "\"\"":
+                            objectxmpp.syncthing.add_device_syncthing( machine['devi'],
+                                                                    namemachine)
 
                         #create message for machine
                         datasend = {'action' : "deploysyncthing",
