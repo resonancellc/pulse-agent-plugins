@@ -1408,7 +1408,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                                 mbody = json.dumps(body),
                                                 mtype = 'chat')
                     # give time to apply the key
-                    time.sleep(4)
+                    time.sleep(8)
                 ## In push method you must know or install the packages on machine agent
                 ## In push mode, the packets are sent to a location depending on reception
                 ## one must make a request to AM to know or sent the files.

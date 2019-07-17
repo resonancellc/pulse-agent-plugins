@@ -128,6 +128,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                     win32serviceutil.StartService('ssh-agent')
                     win32serviceutil.StartService('sshd')
 
+            logging.getLogger().info("Creating authorized_keys file in pulseuser account")
             authorized_keys_path = os.path.join(os.path.expanduser('~pulseuser'), '.ssh','authorized_keys' )
             if not os.path.isdir(os.path.dirname(authorized_keys_path)):
                 os.makedirs(os.path.dirname(authorized_keys_path), 0700)
@@ -137,7 +138,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             os.chdir(os.path.join(os.environ["ProgramFiles"], 'OpenSSH'))
             result = simplecommand(encode_strconsole('powershell -ExecutionPolicy Bypass -Command ". .\FixHostFilePermissions.ps1 -Confirm:$false"'))
             os.chdir(currentdir)
-            logging.getLogger().debug("Reset of permissions on ssh keys and folders: %s" %result)
+            logging.getLogger().info("Reset of permissions on ssh keys and folders: %s" %result)
         elif sys.platform.startswith('darwin'):
             authorized_keys_path = os.path.join(os.path.join(os.path.expanduser('~pulseuser'), '.ssh', 'authorized_keys') )
         else:
