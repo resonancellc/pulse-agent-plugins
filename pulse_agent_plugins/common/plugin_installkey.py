@@ -115,9 +115,9 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                         with open('sshd_config', 'w') as outfile:
                             for line in infile:
                                 if line.startswith('AuthorizedKeysFile'):
-                                    outfile.write('#' + line + '\n')
+                                    outfile.write('#' + line)
                                 else:
-                                    outfile.write(line + '\n')
+                                    outfile.write(line)
                     shutil.move('sshd_config', sshdconfigfile)
                     currentdir = os.getcwd()
                     os.chdir(os.path.join(os.environ["ProgramFiles"], 'OpenSSH'))
@@ -129,7 +129,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                     win32serviceutil.StartService('sshd')
 
             logging.getLogger().info("Creating authorized_keys file in pulseuser account")
-            authorized_keys_path = os.path.join(os.path.expanduser('~pulseuser'), '.ssh','authorized_keys' )
+            authorized_keys_path = os.path.join("c:\Users\pulseuser", '.ssh','authorized_keys' )
             if not os.path.isdir(os.path.dirname(authorized_keys_path)):
                 os.makedirs(os.path.dirname(authorized_keys_path), 0700)
             if not os.path.isfile(authorized_keys_path):
