@@ -35,7 +35,7 @@ from lib.managepackage import managepackage, search_list_of_deployment_packages
 import shutil
 from sleekxmpp import jid
 
-plugin={"VERSION": "1.063", 'VERSIONAGENT' : '2.0.0', "NAME" : "deploysyncthing", "TYPE" : "all"}
+plugin={"VERSION": "1.0641", 'VERSIONAGENT' : '2.0.0', "NAME" : "deploysyncthing", "TYPE" : "all"}
 
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
@@ -177,7 +177,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                         #add device
                         namemachine = jid.JID(machine['mach']).resource
                         #if namemachine == "dev-mmc":
-                        if objectxmpp.boundjid.bare == "rspulse@pulse":
+                        if jid.JID(machine['mach']).bare == "rspulse@pulse":
                             namemachine = "pulse"
                         if namemachine=="":
                             namemachine = machine['mach']
