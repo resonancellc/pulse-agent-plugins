@@ -224,7 +224,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                     objectxmpp.syncthing.post_config(config)
                     time.sleep(1)
                     objectxmpp.syncthing.post_restart()
-                    time.sleep1)
+                    time.sleep(1)
                     objectxmpp.syncthing.reload_config()
                 elif data['subaction'] == "cleandeploy":
                     #TODO: this action will be implemented
