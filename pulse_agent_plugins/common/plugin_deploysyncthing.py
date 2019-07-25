@@ -46,7 +46,8 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
     logger.debug("sessionid : %s"%sessionid)
     logger.debug("###################################################")
     data['sessionid'] = sessionid
-    logger.debug("data in : %s"%json.dumps(data, indent = 4))
+    datastring =  json.dumps(data, indent = 4)
+    logger.debug("data in : %s"%datastring)
     if objectxmpp.config.agenttype in ['machine']:
         logger.debug("#################AGENT MACHINE#####################")
         if "subaction" in data :
@@ -269,7 +270,7 @@ def is_exist_folder_id(idfolder, config):
     return False
 
 def add_folder_dict_if_not_exist_id(dictaddfolder, config):
-    if notis_exist_folder_id(dictaddfolder['id'], config['folders']):
+    if not is_exist_folder_id(dictaddfolder['id'], config['folders']):
         config['folders'].append(dictaddfolder)
         return True
     return False
