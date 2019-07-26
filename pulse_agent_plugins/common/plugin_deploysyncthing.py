@@ -221,7 +221,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                                 mtype='chat')
                         logger.debug("add device %s for machine %s"%(machine['devi'],
                                                                           machine['mach']))
-                    objectxmpp.syncthing.maxRecvKbps( kb=0, config)
+                    objectxmpp.syncthing.maxRecvKbps( kb=0, config=config)
                     objectxmpp.syncthing.post_config(config)
                     time.sleep(3)
                     objectxmpp.syncthing.post_restart()
