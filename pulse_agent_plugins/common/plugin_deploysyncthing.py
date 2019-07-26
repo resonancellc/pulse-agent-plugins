@@ -35,7 +35,7 @@ from lib.managepackage import managepackage, search_list_of_deployment_packages
 import shutil
 from sleekxmpp import jid
 
-plugin={"VERSION": "1.0643", 'VERSIONAGENT' : '2.0.0', "NAME" : "deploysyncthing", "TYPE" : "all"}
+plugin={"VERSION": "1.0644", 'VERSIONAGENT' : '2.0.0', "NAME" : "deploysyncthing", "TYPE" : "all"}
 
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
@@ -165,7 +165,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                                     id=data['repertoiredeploy'],
                                                     typefolder=typefolder )
 
-                    objectxmpp.syncthing.add_folder_dict_if_not_exist_id(newfolder, config)
+                    add_folder_dict_if_not_exist_id(newfolder, config)
                     #add device cluster ars in new partage folder
                     #ajoute des tas de fois cette device dans le folder.
                     for keyclustersyncthing in data['listkey']:
