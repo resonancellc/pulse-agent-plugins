@@ -270,7 +270,7 @@ def is_exist_folder_id(idfolder, config):
     return False
 
 def add_folder_dict_if_not_exist_id(dictaddfolder, config):
-    if not is_exist_folder_id(dictaddfolder['id'], config['folders']):
+    if not is_exist_folder_id(dictaddfolder['id'], config):
         config['folders'].append(dictaddfolder)
         return True
     return False
