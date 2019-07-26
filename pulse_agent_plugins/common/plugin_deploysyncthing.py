@@ -35,7 +35,7 @@ from lib.managepackage import managepackage, search_list_of_deployment_packages
 import shutil
 from sleekxmpp import jid
 
-plugin={"VERSION": "1.0644", 'VERSIONAGENT' : '2.0.0', "NAME" : "deploysyncthing", "TYPE" : "all"}
+plugin={"VERSION": "1.0645", 'VERSIONAGENT' : '2.0.0', "NAME" : "deploysyncthing", "TYPE" : "all"}
 
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
@@ -223,7 +223,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                         logger.debug("add device %s for machine %s"%(machine['devi'],
                                                                           machine['mach']))
                     objectxmpp.syncthing.post_config(config)
-                    time.sleep(1)
+                    time.sleep(3)
                     objectxmpp.syncthing.post_restart()
                     time.sleep(1)
                     objectxmpp.syncthing.reload_config()
