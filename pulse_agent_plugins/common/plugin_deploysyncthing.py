@@ -179,9 +179,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                     for machine in data['machinespartage']:
                         #add device dans folder
                         if machine['devi'] != "\"\"":
-                            logger.info("ADD DEVICE %s in folder %s"%(machine['devi'],
-                                                                        data['repertoiredeploy']))
-                            logger.info("ADD DEVICE MACHINE IN FOLDER %s   %s"%(keyclustersyncthing,
+                            logger.info("ADD DEVICE MACHINE %s in folder %s"%(machine['devi'],
                                                                                                      data['repertoiredeploy']))
 
                             objectxmpp.syncthing.add_device_in_folder_if_not_exist( data['repertoiredeploy'],
