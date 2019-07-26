@@ -35,7 +35,7 @@ from lib.managepackage import managepackage, search_list_of_deployment_packages
 import shutil
 from sleekxmpp import jid
 
-plugin={"VERSION": "1.0649", 'VERSIONAGENT' : '2.0.0', "NAME" : "deploysyncthing", "TYPE" : "all"}
+plugin={"VERSION": "1.0660", 'VERSIONAGENT' : '2.0.0', "NAME" : "deploysyncthing", "TYPE" : "all"}
 
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
@@ -106,7 +106,6 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             if "subaction" in data :
                 logger.debug("subaction : %s"%data['subaction'])
                 if data['subaction'] == "syncthingdeploycluster":
-                    
                     packagedir = managepackage.packagedir()
                     # creation fichier de partages syncthing
                     repertorypartage = os.path.join(basesyncthing,data['repertoiredeploy'] )
@@ -156,9 +155,6 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                         typefolder="master"
                     else:
                         typefolder="slave"
-
-                    config = objectxmpp.syncthing.get_config() # content all config
-
                     #creation du folder
                     newfolder = objectxmpp.syncthing.\
                         create_template_struct_folder(data['repertoiredeploy'], # or data['packagedeploy']
@@ -167,33 +163,30 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                                     typefolder=typefolder )
                     objectxmpp.syncthing.add_folder_dict_if_not_exist_id(newfolder)
 
+
                     #add device cluster ars in new partage folder
                     #ajoute des tas de fois cette device dans le folder.
                     for keyclustersyncthing in data['listkey']:
                         if keyclustersyncthing != "\"\"":
-                            logger.debug("ADD DEVICE  %s in folder %s"%(keyclustersyncthing,
+                            logger.info("\n ADD DEVICE IN FOLDER %s  %s\n"%(keyclustersyncthing,
+                                                                            data['repertoiredeploy']))
+                            logger.info("ADD DEVICE ARS %s in folder %s"%(keyclustersyncthing,
                                                                         data['repertoiredeploy']))
                             objectxmpp.syncthing.add_device_in_folder_if_not_exist( data['repertoiredeploy'],
                                                                                     keyclustersyncthing,
                                                                                     introducedBy = "")
-                            #add_device_in_folder_if_not_exist( data['repertoiredeploy'],
-                                                                #keyclustersyncthing,
-                                                                #config,                                                                                    introducedBy = "")
 
                     for machine in data['machinespartage']:
                         #add device dans folder
                         if machine['devi'] != "\"\"":
-                            logger.debug("ADD DEVICE  %s in folder %s"%(machine['devi'],
+                            logger.info("ADD DEVICE %s in folder %s"%(machine['devi'],
                                                                         data['repertoiredeploy']))
-                            
+                            logger.info("ADD DEVICE MACHINE IN FOLDER %s   %s"%(keyclustersyncthing,
+                                                                                                     data['repertoiredeploy']))
+
                             objectxmpp.syncthing.add_device_in_folder_if_not_exist( data['repertoiredeploy'],
-                                                                                    keyclustersyncthing,
+                                                                                    machine['devi'],
                                                                                     introducedBy = "")
-                            
-                            #add_device_in_folder_if_not_exist( data['repertoiredeploy'],
-                                                               #keyclustersyncthing,
-                                                               #config,
-                                                               #introducedBy = "")
 
                         #add device
                         namemachine = jid.JID(machine['mach']).resource
@@ -214,6 +207,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
 
                             objectxmpp.syncthing.add_device_syncthing(machine['devi'],
                                                   namemachine)
+
                         #create message for machine
                         datasend = {'action' : "deploysyncthing",
                                     "sessionid" : machine['ses'],
@@ -233,7 +227,9 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                         logger.debug("add device %s for machine %s"%(machine['devi'],
                                                                           machine['mach']))
                     objectxmpp.syncthing.maxSendKbps( kb=0)
-                    #objectxmpp.syncthing.post_config(config)
+
+                    objectxmpp.syncthing.validate_chang_config()
+                    #objectxmpp.syncthing.post_config()
                     #time.sleep(3)
                     #objectxmpp.syncthing.post_restart()
                     #time.sleep(1)
