@@ -35,7 +35,7 @@ from lib.managepackage import managepackage, search_list_of_deployment_packages
 import shutil
 from sleekxmpp import jid
 
-plugin={"VERSION": "1.0645", 'VERSIONAGENT' : '2.0.0', "NAME" : "deploysyncthing", "TYPE" : "all"}
+plugin={"VERSION": "1.0646", 'VERSIONAGENT' : '2.0.0', "NAME" : "deploysyncthing", "TYPE" : "all"}
 
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
@@ -203,7 +203,6 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                                   namemachine,
                                                   config)
 
-
                         #create message for machine
                         datasend = {'action' : "deploysyncthing",
                                     "sessionid" : machine['ses'],
@@ -222,12 +221,14 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                                 mtype='chat')
                         logger.debug("add device %s for machine %s"%(machine['devi'],
                                                                           machine['mach']))
+                    objectxmpp.syncthing.maxRecvKbps( kb=0, config)
                     objectxmpp.syncthing.post_config(config)
                     time.sleep(3)
                     objectxmpp.syncthing.post_restart()
                     time.sleep(1)
                     objectxmpp.syncthing.reload_config()
                 elif data['subaction'] == "cleandeploy":
+                    objectxmpp.syncthing.maxRecvKbps( kb=0)
                     #TODO: this action will be implemented
                     # call suppression partage syncthing
                     if 'iddeploy' in data:
@@ -254,8 +255,8 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                                     mtype='chat')
                 elif data['subaction'] == "pausefolder":
                     if 'folder' in data:
-                        logger.debug("pausing folder %s for ARS %s"%(data['folder'], objectxmpp.boundjid.full))
-                        objectxmpp.syncthing.set_pause_folder(data['folder'], paused = True)
+                        #objectxmpp.syncthing.set_pause_folder(data['folder'], paused = True)
+                        objectxmpp.syncthing.maxRecvKbps( kb=1)
         except:
             logger.error("\n%s"%(traceback.format_exc()))
             raise
