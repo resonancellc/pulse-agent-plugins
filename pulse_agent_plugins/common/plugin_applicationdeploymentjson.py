@@ -1788,6 +1788,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                             fromuser = data_in_session['login'],
                                             touser = "")
                             objectxmpp.xmpplog('DEPLOYMENT TERMINATE',
+
                                                 type = 'deploy',
                                                 sessionname = sessionid,
                                                 priority = -1,
