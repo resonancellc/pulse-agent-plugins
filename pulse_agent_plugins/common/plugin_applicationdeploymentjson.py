@@ -29,6 +29,7 @@ from lib.grafcetdeploy import grafcet
 import logging
 import pycurl
 import platform
+from random import randint
 #from lib.utils import save_back_to_deploy, cleanbacktodeploy, simplecommandstr, get_keypub_ssh
 from lib.utils import save_back_to_deploy, cleanbacktodeploy, simplecommandstr,\
     isBase64, simplecommand, decode_strconsole, encode_strconsole
@@ -45,9 +46,9 @@ elif sys.platform.startswith('win'):
     pass
 
 
-plugin = {"VERSION" : "3.27", "NAME" : "applicationdeploymentjson", "VERSIONAGENT" : "2.0.0", "TYPE" : "all"}
+plugin = {"VERSION" : "3.3", "NAME" : "applicationdeploymentjson", "VERSIONAGENT" : "2.0.0", "TYPE" : "all"}
 
-
+Globaldata = { 'port_local' : 22 }
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
 """
@@ -333,19 +334,26 @@ def curlgetdownloadfile( destfile, urlfile, insecure = True, limit_rate_ko= None
         c.perform()
         c.close()
 
-def pull_package_transfert_rsync(datasend, objectxmpp, ippackage, sessionid,cmdmode="rsync"):
+def pull_package_transfert_rsync(datasend, objectxmpp, ippackage, sessionid, cmdmode="rsync"):
     #print json.dumps( datasend, indent = 4)
+    logger.info("###################################################")
+    logger.info("pull_package_transfert_rsync : " + cmdmode)
+    logger.info("###################################################")
     takeresource(datasend, objectxmpp, sessionid)
+    strjidagent = str(objectxmpp.boundjid.bare)
     try:
-        packagename = datasend['data']['descriptor']['info']['packageUuid']
+        #packagename = datasend['data']['descriptor']['info']['packageUuid']
+        packagename = os.path.basename(datasend['data']['pathpackageonmachine'])
         userpackage = "userpackage"
         remotesrc = """%s@%s:'%s' """%(userpackage , ippackage, packagename)
         execrsync = "rsync"
         execscp   = "scp"
         boolcmdexist = True
         boolsuccess  = True
+        error=False
         if sys.platform.startswith('linux'):
-            path_key_priv =  os.path.join("/", "root", ".ssh", "id_rsa")
+            path_key_priv =  os.path.join("/", "var", "lib", "pulse2", ".ssh", "id_rsa")
+            #path_key_priv =  os.path.join("/", "root", ".ssh", "id_rsa")
             localdest = " '%s/%s'"%(managepackage.packagedir(), packagename)
         elif sys.platform.startswith('win'):
             path_key_priv =  os.path.join("c:\Users\pulseuser", ".ssh", "id_rsa")
@@ -356,25 +364,49 @@ def pull_package_transfert_rsync(datasend, objectxmpp, ippackage, sessionid,cmdm
             path_key_priv =  os.path.join("/", "var", "root", ".ssh", "id_rsa")
             localdest = " '%s/%s'"%(managepackage.packagedir(), packagename)
         else :
-            boolcmdexist = False
-
-        if boolcmdexist:
-            cmdtransfert = "%s -C -r "%execscp
-            if cmdmode == "rsync":
-                cmdtransfert =  " %s -z --rsync-path=rsync "%execrsync
-            cmd = """%s -e "ssh -o IdentityFile=%s -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o Batchmode=yes -o PasswordAuthentication=no -o ServerAliveInterval=10 -o CheckHostIP=no -o LogLevel=ERROR -o ConnectTimeout=10" -av --chmod=777 """%(cmdtransfert, path_key_priv)
-            cmdexec =  cmd + remotesrc + localdest
-            obj = simplecommand(cmdexec)
-            return obj['result']
-        else:
-            boolsuccess = False
+            return False
+        cmdtransfert = "%s -C -r "%execscp
+        if cmdmode == "rsync":
+            cmdtransfert =  " %s -z --rsync-path=rsync "%execrsync
+        cmd = """%s -e "ssh -o IdentityFile=%s -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o Batchmode=yes -o PasswordAuthentication=no -o ServerAliveInterval=10 -o CheckHostIP=no -o LogLevel=ERROR -o ConnectTimeout=10" -av --chmod=777 """%(cmdtransfert, path_key_priv)
+        cmdexec =  cmd + remotesrc + localdest
+        objectxmpp.xmpplog("cmd transfert is : \n %s"%cmdexec,
+                    type = 'deploy',
+                    sessionname = datasend['sessionid'],
+                    priority = -1,
+                    action = "",
+                    who = strjidagent,
+                    how = "",
+                    why = "",
+                    module = "Deployment | Download | Transfert",
+                    date = None ,
+                    fromuser = datasend['data']['advanced']['login'],
+                    touser = "")
+        obj = simplecommand(cmdexec)
+        if obj['code'] != 0:
+            objectxmpp.xmpplog("cmd result : \n %s"%obj['result'],
+                    type = 'deploy',
+                    sessionname = datasend['sessionid'],
+                    priority = -1,
+                    action = "",
+                    who = strjidagent,
+                    how = "",
+                    why = "",
+                    module = "Deployment | Download | Transfert",
+                    date = None ,
+                    fromuser = datasend['data']['advanced']['login'],
+                    touser = "")
+            error=True
+            return False
+        error=False
+        return True
     except Exception as e:
         logger.error("\n%s"%(traceback.format_exc()))
-        boolsuccess = False
+        error=True
+        return False
     finally:
         removeresource(datasend, objectxmpp, sessionid)
-        signalendsessionforARS(datasend , objectxmpp, sessionid, error = True)
-        return boolsuccess
+        signalendsessionforARS(datasend , objectxmpp, sessionid, error = error)
 
 def recuperefile(datasend, objectxmpp, ippackage, portpackage, sessionid):
     strjidagent = str(objectxmpp.boundjid.bare)
@@ -401,9 +433,9 @@ def recuperefile(datasend, objectxmpp, ippackage, portpackage, sessionid):
             dest = os.path.join(datasend['data']['pathpackageonmachine'], filepackage)
             urlfile = curlurlbase + filepackage
 
-            #logger.debug("###################################################")
-            #logger.debug("adress telechargement package par le client en curl : " + urlfile)
-            #logger.debug("###################################################")
+            logger.info("###################################################")
+            logger.info("adress telechargement package par le client en curl : " + urlfile)
+            logger.info("###################################################")
             try:
                 if 'limit_rate_ko' in datasend['data']['descriptor']['info'] and \
                                 datasend['data']['descriptor']['info']['limit_rate_ko'] != "" and\
@@ -983,13 +1015,18 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                 'base64' : False
                 }
             datasend['data']['pathpackageonmachine'] = os.path.join( managepackage.packagedir(),data['path'].split('/')[-1])
-            if data['methodetransfert'] == "pullcurl" and data['transfert'] :
+
+            ### data['methodetransfert'] =  'pullrsync'
+            if data['transfert'] and data['methodetransfert'] in ["pullcurl"]:
                 #pull method download file
-                #takeresource(datasend, objectxmpp, sessionid)
-                recupfile = recuperefile(datasend, objectxmpp,  data['ippackageserver'], data['portpackageserver'], sessionid)
+                recupfile = recuperefile(datasend, 
+                                         objectxmpp,  
+                                         data['ippackageserver'], 
+                                         data['portpackageserver'], 
+                                         sessionid)
                 #removeresource(datasend, objectxmpp, sessionid)
                 if not recupfile:
-                    logger.debug("Error curl")
+                    logger.debug("Error Pull method transfert file")
                     datasend = {
                                 'action':  "result" + action,
                                 'sessionid': sessionid,
@@ -1015,7 +1052,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                     date = None ,
                                     fromuser = "AM %s"% strjidagent,
                                     touser = "")
-                    signalendsessionforARS(data , objectxmpp, sessionid, error = True)
+                    #signalendsessionforARS(data , objectxmpp, sessionid, error = True)
 
                     # termine sesion on error
                     # clean session
@@ -1026,13 +1063,11 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                 else:
                     # Pull transfer complete
                     # send message to master for updatenbdeploy
-                    datasend1 = {
-                                'action':  "updatenbdeploy",
-                                'sessionid' : sessionid,
-                                'data' : data['advanced'],
-                                'ret' : 1,
-                                'base64' : False
-                    }
+                    datasend1 = {'action':  "updatenbdeploy",
+                                 'sessionid' : sessionid,
+                                 'data' : data['advanced'],
+                                 'ret' : 1,
+                                 'base64' : False}
                     # send sessionid message to master with cmdid files installed
                     # update base has_login_command count_deploy_progress
                     objectxmpp.send_message(mto=data['jidmaster'],
@@ -1351,11 +1386,11 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.settimeout(5.0)
             try:
-                sock.connect((data['ipmachine'], 22))
+                sock.connect((data['ipmachine'], Globaldata['port_local']))
             except socket.error:
                 if 'transfert' in data  and data['transfert'] == True \
                         and 'methodetransfert' in data \
-                            and data['methodetransfert'] != "pullcurl":
+                            and not data['methodetransfert'] in ["pullcurl",  "pullrsync", "pullscp"]:
                     data['methodetransfert'] = "pullcurl"
                     objectxmpp.xmpplog('Warning push methode impossible for machine nat: force pull curl method',
                                         type = 'deploy',
@@ -1374,422 +1409,469 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         if 'transfert' in data \
             and data['transfert'] == True\
                 and 'methodetransfert' in data\
-                    and data['methodetransfert'] == "pullcurl":
-            #mode pull AM to ARS
-            ### Send deployment message directly to machine
-            transfertdeploy = {
-                                'action': action,
+                    and data['methodetransfert'] in ["pullcurl"]:
+            transfertdeploy = { 'action': action,
                                 'sessionid': sessionid,
                                 'data' : data,
                                 'ret' : 0,
                                 'base64' : False }
-            objectxmpp.send_message(mto = data['jidmachine'],
-                                    mbody = json.dumps(transfertdeploy),
-                                    mtype = 'chat')
+
+            objectxmpp.send_message( mto = data['jidmachine'],
+                                     mbody = json.dumps(transfertdeploy),
+                                     mtype = 'chat')
             if not objectxmpp.session.isexist(sessionid):
                 logger.debug("creation session %s"%sessionid)
                 objectxmpp.session.createsessiondatainfo(sessionid,  datasession = transfertdeploy, timevalid = 180)
-        else:
-            # mode push ARS to AM
-            # UPLOAD FILE PACKAGE to MACHINE, all dependency
-            # We are in the case where it is necessary to install all the packages for the deployment, dependency included
-            if ('pushinit' in data and data['pushinit'] == False)  or not objectxmpp.session.isexist(sessionid):
-                data['pushinit'] = True
-                objectxmpp.session.createsessiondatainfo(sessionid,  datasession = data, timevalid = 180)
-                if 'methodetransfert' in data and data['methodetransfert'] == "pushrsync":
-                    # installkey sur agent machine authorized_keys
-                    logger.debug("Install key ARS in authorized_keys on agent machine")
-                    body = {'action' : 'installkey',
-                            'sessionid': sessionid,
-                            'data' : { 'jidAM' : data['jidmachine']
-                            }
-                    }
-                    objectxmpp.send_message(  mto = strjidagent,
-                                                mbody = json.dumps(body),
-                                                mtype = 'chat')
-                    # give time to apply the key
-                    time.sleep(8)
-                ## In push method you must know or install the packages on machine agent
-                ## In push mode, the packets are sent to a location depending on reception
-                ## one must make a request to AM to know or sent the files.
-                ## request message pacquage location
-                ## create a message with the deploy sessionid.
-                ## action will be a call to a plugin info request here the folder_packages
-                ## le resultat de cet appel est un appel a plugin_applicationdeploymentjson.py avec meme sessionid et info du directory
-                #logger.debug("search directory pakage flolder from AM")
-                askinfo( data['jidmachine'],
-                        sessionid,
-                        objectxmpp,
-                        informationasking = ['folders_packages', 'os'],
-                        replyaction = action)
-            else:
-                # The session exists
+            return
 
-                logger.debug("LA SESSION EXISTE")
-                objsession = objectxmpp.session.sessionfromsessiondata(sessionid)
-                data_in_session = objsession.getdatasession()
+        if 'transfert' in data \
+            and data['transfert'] == True\
+                and 'methodetransfert' in data\
+                    and data['methodetransfert'] in ["pullrsync", "pullscp"] \
+                        and not 'transfertpullrsync' in data:
+            data['transfertpullrsync'] = True
+            # creation d'un reverce ssh
+            # pour avoir 1 canal de transfert.
+            remoteport = randint(49152, 65535)
+            data['remoteport'] = remoteport
+            datareversessh = {  'action': 'reverse_ssh_on',
+                                'sessionid': sessionid,
+                                'data' : { 'request' : 'askinfo',
+                                            'port' : remoteport,
+                                            'host' : data['uuid'],
+                                            'remoteport' :  Globaldata['port_local'],
+                                            'reversetype' : 'R',
+                                            'options' : 'createreversessh',
+                                            'persistance' : 'no' },
+                                'ret' : 0,
+                                'base64' : False }
+            objectxmpp.send_message(mto = message['to'],
+                                    mbody = json.dumps(datareversessh),
+                                    mtype = 'chat')
+            objectxmpp.xmpplog('creation reverse ssh remote (port %s->%s)'%(Globaldata['port_local'], remoteport),
+                                type = 'deploy',
+                                sessionname = sessionid,
+                                priority = -1,
+                                action = "",
+                                who = strjidagent,
+                                how = "",
+                                why = "",
+                                module = "Deployment | Transfert | Notify",
+                                date = None ,
+                                fromuser = data['login'],
+                                touser = "")
+            time.sleep(8)
+        ########################################################
+        #traitement mode push et les mode "pullrsync", "pullscp"
+        ########################################################
 
-                if 'step' not in data:
-                    logger.debug("STEP NOT")
-                    #if 'keyinstall' in data and data['keyinstall'] == True:
-                        ## We manage the message condition installation key
-                        #logger.debug("keyinstall in true")
-                        #data_in_session['keyinstall'] = True
-                        #objsession.setdatasession(data_in_session)
-
-                    if 'actiontype' in data and data['actiontype'] == 'requestinfo' :
-                        if 'folders_packages' in data :
-                            data_in_session['folders_packages'] = data['folders_packages']
-                            logger.debug("folders_packages client machine %s"%data_in_session['folders_packages'])
-                        if 'os' in data:
-                            logger.debug("folders_packages")
-                            data_in_session['os'] = data['os']
-                            logger.debug("os client machine %s"%data_in_session['os'])
-                            data_in_session['os_version'] = data['os_version']
-                            #set  user ssh
-                            data_in_session['userssh'] = "pulseuser"
-                            if data_in_session['os'].startswith('linux'):
-                                data_in_session['rsyncpath'] = "rsync"
-                            elif data_in_session['os'].startswith('win'):
-                                data_in_session['rsyncpath'] = "C:\\\\Windows\\\\SysWOW64\\\\rsync.exe"
-                            elif data_in_session['os'].startswith('darwin'):
-                                data_in_session['rsyncpath'] = "rsync"
-                        # information set in session data
-                        objsession.setdatasession(data_in_session)
-
-                    # We verify that we have all the information for the deployment
-                    if not 'folders_packages' in data_in_session or not 'os' in data_in_session:
-                        # termine deploy on error
-                        # We do not know folders_packages
-                        logger.debug("SORRY DEPLOY TERMINATE FOLDERS_PACKAGE MISSING")
-                        objectxmpp.xmpplog('<span style="color: red;";>[xxx]: Terminate deploy ERROR folders_packages %s missing</span>',
-                                    type = 'deploy',
-                                    sessionname = sessionid,
-                                    priority = 0,
-                                    action = "",
-                                    who = strjidagent,
-                                    how = "",
-                                    why = "",
-                                    module = "Deployment | Error",
-                                    date = None ,
-                                    fromuser = data_in_session['name'],
-                                    touser = "")
-                        #termine session a tester
-
-                        data_in_session['environ'] = {}
-                        cleandescriptor( data_in_session )
-                        datalog = {
-                            'action' : "result%s"%action,
-                            'sessionid': sessionid,
-                            'ret' : 255,
-                            'base64' : False,
-                            'data' : data_in_session
+        # mode push ARS to AM
+        # UPLOAD FILE PACKAGE to MACHINE, all dependency
+        # We are in the case where it is necessary to install all the packages for the deployment, dependency included
+        if ('pushinit' in data and data['pushinit'] == False)  or not objectxmpp.session.isexist(sessionid):
+            data['pushinit'] = True
+            objectxmpp.session.createsessiondatainfo(sessionid,  datasession = data, timevalid = 180)
+            if 'methodetransfert' in data and data['methodetransfert'] == "pushrsync":
+                # installkey sur agent machine authorized_keys
+                logger.debug("Install key ARS in authorized_keys on agent machine")
+                body = {'action' : 'installkey',
+                        'sessionid': sessionid,
+                        'data' : { 'jidAM' : data['jidmachine']
                         }
-
-                        objectxmpp.send_message(mto='log@pulse',
-                                                mbody=json.dumps(datalog),
-                                                mtype='chat')
-                        objectxmpp.send_message(mto="master@pulse/MASTER",
-                                                mbody=json.dumps(datalog),
-                                                mtype='chat')
-                        #termine session a tester
-                        #clean session
-                        if objectxmpp.session.isexist(sessionid):
-                            objectxmpp.session.clearnoevent(sessionid)
-                        return
-
-                        #if not 'folders_packages' in data_in_session or not 'keyinstall' in data_in_session:
-                    if not 'folders_packages' in data_in_session:
-                        # If the 2 conditions are not yet satisfied:
-                        # - Key public ARS installed on AM,
-                        # - And return the path or install the packages.
-                        # We leave and await message of the missing condition.
-                        return
-
-                    # We have all the information we continue deploy
-                    # You have to prepare the transfer of packages.
-                    # You must have a list of all the packages to install.
-                    # Because pakages can have dependencies
-
-                    list_of_deployment_packages = search_list_of_deployment_packages(data_in_session['path'].split('/')[-1]).search()
-                    #Install packages
-                    #logger.debug("#################LIST PACKAGE DEPLOY SESSION #######################")
-                    # saves the list of packages to be transferred in the session.
-                    data_in_session['transferfiles'] = [x for x in list(list_of_deployment_packages) if x != ""]
-                    objsession.setdatasession(data_in_session)
-                    ### this plugin will call itself itself is transfer each time a package from the list of packages to transfer.
-                    ### to make this call we prepare a message with the current session.
-                    ### on the message ['step'] of the message or resume processing.
-                    ### here data ['step'] = "transferfiles"
-                    logger.debug("APPEL POUR PHASE DE TRANSFERTS" )
-                    # call for aller step suivant transfert file
-                    msg_self_call = create_message_self_for_transfertfile(sessionid)
-                    objectxmpp.send_message(mto = strjidagent,
-                                            mbody = json.dumps(msg_self_call),
+                }
+                objectxmpp.send_message(  mto = strjidagent,
+                                            mbody = json.dumps(body),
                                             mtype = 'chat')
-                else:
-                    ########## session transfer file ##########
-                    #analysis of the resume variable (step)
-                    if data['step'] == "transferfiles":
-                        logger.debug("SESSION TRANSFERT PACKAGES" )
-                        #logger.debug("DATA est %s"%json.dumps(data, indent = 4) )
+                # give time to apply the key
+                time.sleep(8)
+            ## In push method you must know or install the packages on machine agent
+            ## In push mode, the packets are sent to a location depending on reception
+            ## one must make a request to AM to know or sent the files.
+            ## request message pacquage location
+            ## create a message with the deploy sessionid.
+            ## action will be a call to a plugin info request here the folder_packages
+            ## le resultat de cet appel est un appel a plugin_applicationdeploymentjson.py avec meme sessionid et info du directory
+            #logger.debug("search directory pakage flolder from AM")
+            askinfo( data['jidmachine'],
+                    sessionid,
+                    objectxmpp,
+                    informationasking = ['folders_packages', 'os'],
+                    replyaction = action)
+        else:
+            # The session exists
 
-                        if 'transferfiles' in data_in_session and len ( data_in_session['transferfiles']) != 0:
-                            uuidpackages = data_in_session['transferfiles'].pop(0)
-                            pathin = managepackage.getpathpackage(uuidpackages)
-                            #This variable will be in the future used for the transferrt version of rsync files
-                            #pathout = "%s/%s"%(data_in_session['folders_packages'],pathin.split('/')[-1])
-                            # Update the session for the next call.
-                            # The transferred package is excluded from the list of future packages to install
-                            objsession.setdatasession(data_in_session)
-                            logger.debug("SEND COMMANDE")
-                            logger.debug("TRANSFERT PACKAGE from %s"%pathin)
-                            #The rsync command will have this form
-                            packuuid = os.path.basename(pathin)
-                            if 'limit_rate_ko' in data_in_session and \
-                                data_in_session['limit_rate_ko'] != "" and\
-                                    int(data_in_session['limit_rate_ko']) > 0:
-                                cmdpre = "scp -C -r -l %s "%(int(data_in_session['limit_rate_ko']) * 8)
-                                cmdrsync = "rsync -z --rsync-path=%s --bwlimit=%s "%(data_in_session['rsyncpath'],int(data_in_session['limit_rate_ko']) * 8)
+            logger.debug("LA SESSION EXISTE")
+            objsession = objectxmpp.session.sessionfromsessiondata(sessionid)
+            data_in_session = objsession.getdatasession()
 
-                                msg = "push transfert package :%s to %s <span style='font-weight: bold;color : orange;'> [transfert rate %s ko]</span>"%(data_in_session['name'],data_in_session['jidmachine'], data_in_session['limit_rate_ko'])
-                            else:
-                                cmdpre = "scp -C -r "
-                                cmdrsync = "rsync -z --rsync-path=%s "%data_in_session['rsyncpath']
-                                msg = "push transfert package :%s to %s"%(data_in_session['name'],data_in_session['jidmachine'])
+            if 'step' not in data:
+                logger.debug("STEP NOT")
+                #if 'keyinstall' in data and data['keyinstall'] == True:
+                    ## We manage the message condition installation key
+                    #logger.debug("keyinstall in true")
+                    #data_in_session['keyinstall'] = True
+                    #objsession.setdatasession(data_in_session)
+
+                if 'actiontype' in data and data['actiontype'] == 'requestinfo' :
+                    if 'folders_packages' in data :
+                        data_in_session['folders_packages'] = data['folders_packages']
+                        logger.debug("folders_packages client machine %s"%data_in_session['folders_packages'])
+                    if 'os' in data:
+                        logger.debug("folders_packages")
+                        data_in_session['os'] = data['os']
+                        logger.debug("os client machine %s"%data_in_session['os'])
+                        data_in_session['os_version'] = data['os_version']
+                        #set  user ssh
+                        data_in_session['userssh'] = "pulseuser"
+                        if data_in_session['os'].startswith('linux'):
+                            data_in_session['rsyncpath'] = "rsync"
+                        elif data_in_session['os'].startswith('win'):
+                            data_in_session['rsyncpath'] = "C:\\\\Windows\\\\SysWOW64\\\\rsync.exe"
+                        elif data_in_session['os'].startswith('darwin'):
+                            data_in_session['rsyncpath'] = "rsync"
+                    # information set in session data
+                    objsession.setdatasession(data_in_session)
+
+                # We verify that we have all the information for the deployment
+                if not 'folders_packages' in data_in_session or not 'os' in data_in_session:
+                    # termine deploy on error
+                    # We do not know folders_packages
+                    logger.debug("SORRY DEPLOY TERMINATE FOLDERS_PACKAGE MISSING")
+                    objectxmpp.xmpplog('<span style="color: red;";>[xxx]: Terminate deploy ERROR folders_packages %s missing</span>',
+                                type = 'deploy',
+                                sessionname = sessionid,
+                                priority = 0,
+                                action = "",
+                                who = strjidagent,
+                                how = "",
+                                why = "",
+                                module = "Deployment | Error",
+                                date = None ,
+                                fromuser = data_in_session['name'],
+                                touser = "")
+                    #termine session a tester
+
+                    data_in_session['environ'] = {}
+                    cleandescriptor( data_in_session )
+                    datalog = {
+                        'action' : "result%s"%action,
+                        'sessionid': sessionid,
+                        'ret' : 255,
+                        'base64' : False,
+                        'data' : data_in_session
+                    }
+
+                    objectxmpp.send_message(mto='log@pulse',
+                                            mbody=json.dumps(datalog),
+                                            mtype='chat')
+                    objectxmpp.send_message(mto="master@pulse/MASTER",
+                                            mbody=json.dumps(datalog),
+                                            mtype='chat')
+                    #termine session a tester
+                    #clean session
+                    if objectxmpp.session.isexist(sessionid):
+                        objectxmpp.session.clearnoevent(sessionid)
+                    return
+
+                    #if not 'folders_packages' in data_in_session or not 'keyinstall' in data_in_session:
+                if not 'folders_packages' in data_in_session:
+                    # If the 2 conditions are not yet satisfied:
+                    # - Key public ARS installed on AM,
+                    # - And return the path or install the packages.
+                    # We leave and await message of the missing condition.
+                    return
+
+                # We have all the information we continue deploy
+                # You have to prepare the transfer of packages.
+                # You must have a list of all the packages to install.
+                # Because pakages can have dependencies
+
+                list_of_deployment_packages = search_list_of_deployment_packages(data_in_session['path'].split('/')[-1]).search()
+                #Install packages
+                #logger.debug("#################LIST PACKAGE DEPLOY SESSION #######################")
+                # saves the list of packages to be transferred in the session.
+                data_in_session['transferfiles'] = [x for x in list(list_of_deployment_packages) if x != ""]
+                objsession.setdatasession(data_in_session)
+                ### this plugin will call itself itself is transfer each time a package from the list of packages to transfer.
+                ### to make this call we prepare a message with the current session.
+                ### on the message ['step'] of the message or resume processing.
+                ### here data ['step'] = "transferfiles"
+                logger.debug("APPEL POUR PHASE DE TRANSFERTS" )
+                # call for aller step suivant transfert file
+                msg_self_call = create_message_self_for_transfertfile(sessionid)
+                objectxmpp.send_message(mto = strjidagent,
+                                        mbody = json.dumps(msg_self_call),
+                                        mtype = 'chat')
+            else:
+                ########## session transfer file ##########
+                #analysis of the resume variable (step)
+                if data['step'] == "transferfiles":
+                    logger.debug("SESSION TRANSFERT PACKAGES" )
+                    #logger.debug("DATA est %s"%json.dumps(data, indent = 4) )
+
+                    if 'transferfiles' in data_in_session and len ( data_in_session['transferfiles']) != 0:
+                        uuidpackages = data_in_session['transferfiles'].pop(0)
+                        pathin = managepackage.getpathpackage(uuidpackages)
+                        #This variable will be in the future used for the transferrt version of rsync files
+                        #pathout = "%s/%s"%(data_in_session['folders_packages'],pathin.split('/')[-1])
+                        # Update the session for the next call.
+                        # The transferred package is excluded from the list of future packages to install
+                        objsession.setdatasession(data_in_session)
+                        logger.debug("SEND COMMANDE")
+                        logger.debug("TRANSFERT PACKAGE from %s"%pathin)
+                        #The rsync command will have this form
+                        packuuid = os.path.basename(pathin)
+                        if 'limit_rate_ko' in data_in_session and \
+                            data_in_session['limit_rate_ko'] != "" and\
+                                int(data_in_session['limit_rate_ko']) > 0:
+                            cmdpre = "scp -C -r -l %s "%(int(data_in_session['limit_rate_ko']) * 8)
+                            cmdrsync = "rsync -z --rsync-path=%s --bwlimit=%s "%(data_in_session['rsyncpath'],int(data_in_session['limit_rate_ko']) * 8)
+
+                            msg = "push transfert package :%s to %s <span style='font-weight: bold;color : orange;'> [transfert rate %s ko]</span>"%(data_in_session['name'],data_in_session['jidmachine'], data_in_session['limit_rate_ko'])
+                        else:
+                            cmdpre = "scp -C -r "
+                            cmdrsync = "rsync -z --rsync-path=%s "%data_in_session['rsyncpath']
+                            msg = "push transfert package :%s to %s"%(data_in_session['name'],data_in_session['jidmachine'])
+
+                        ipmachine = data_in_session['ipmachine']
+                        if not 'remoteport' in data_in_session:
                             if hasattr(objectxmpp.config, 'clients_ssh_port'):
                                 clientssshport = objectxmpp.config.clients_ssh_port
                             else:
-                                clientssshport = "22"
-                            optionscp = "-o IdentityFile=/root/.ssh/id_rsa "\
-                                     "-o StrictHostKeyChecking=no "\
-                                     "-o UserKnownHostsFile=/dev/null "\
-                                     "-o Batchmode=yes "\
-                                     "-o PasswordAuthentication=no "\
-                                     "-o ServerAliveInterval=10 "\
-                                     "-o CheckHostIP=no "\
-                                     "-o LogLevel=ERROR "\
-                                     "-o ConnectTimeout=10 "\
-                                     "-o Port=%s "\
-                                        "%s %s@%s:\"\\\"%s\\\"\""%( clientssshport,
-                                                        pathin,
-                                                        data_in_session['userssh'],
-                                                        data_in_session['ipmachine'],
-                                                        data_in_session['folders_packages'])
+                                clientssshport = Globaldata['port_local']
+                        else :
+                            clientssshport = data_in_session['remoteport']
+                            ipmachine = "localhost"
 
-                            if data_in_session['folders_packages'].lower().startswith('c:') or data_in_session['folders_packages'][1] == ":" :
-                                pathnew =  data_in_session['folders_packages'][2:]
-                                # cywin path
-                                pathnew = "/cygdrive/c/" + pathnew.replace("\\","/") + "/" + packuuid + "/"
-                                #compose name for rsync
-                                listpath = pathnew.split("/")
-                                p = []
-                                for indexpath in listpath:
-                                    if " " in indexpath:
-                                        p.append('"' + indexpath + '"')
-                                    else:
-                                        p.append(indexpath)
-                                pathnew = "/".join(p)
-                            else:
-                                pathnew = data_in_session['folders_packages'] + "/" + packuuid + "/"
-                            pathnew = pathnew.replace("//","/")
-                            optionrsync = " -e \"ssh -o IdentityFile=/root/.ssh/id_rsa "\
-                                            "-o UserKnownHostsFile=/dev/null "\
-                                            "-o StrictHostKeyChecking=no "\
-                                            "-o Batchmode=yes "\
-                                            "-o PasswordAuthentication=no "\
-                                            "-o ServerAliveInterval=10 "\
-                                            "-o CheckHostIP=no "\
-                                            "-o LogLevel=ERROR "\
-                                            "-o ConnectTimeout=10 "\
-                                            "-o Port=%s\" "\
-                                            "-av --chmod=777 %s/ %s@%s:'%s'"%( clientssshport,
-                                                                pathin,
-                                                                data_in_session['userssh'],
-                                                                data_in_session['ipmachine'],
-                                                                pathnew)
-                            cmdscp = cmdpre + optionscp
-                            cmdrsync = cmdrsync + optionrsync
+                        optionscp = "-o IdentityFile=/root/.ssh/id_rsa "\
+                                    "-o StrictHostKeyChecking=no "\
+                                    "-o UserKnownHostsFile=/dev/null "\
+                                    "-o Batchmode=yes "\
+                                    "-o PasswordAuthentication=no "\
+                                    "-o ServerAliveInterval=10 "\
+                                    "-o CheckHostIP=no "\
+                                    "-o LogLevel=ERROR "\
+                                    "-o ConnectTimeout=10 "\
+                                    "-o Port=%s "\
+                                    "%s %s@%s:\"\\\"%s\\\"\""%( clientssshport,
+                                                    pathin,
+                                                    data_in_session['userssh'],
+                                                    ipmachine,
+                                                    data_in_session['folders_packages'])
 
-                            if not os.path.isdir(data_in_session['path']):
-                                objectxmpp.xmpplog('<span style="color: red;";>ERROR transfert [Package Server does not have this package %s]</span>'%data_in_session['path'],
-                                                type = 'deploy',
-                                                sessionname = sessionid,
-                                                priority = -1,
-                                                action = "",
-                                                who = strjidagent,
-                                                how = "",
-                                                why = "",
-                                                module = "Deployment | Error | Download | Transfert",
-                                                date = None ,
-                                                fromuser = data_in_session['login'],
-                                                touser = "")
-                                objectxmpp.xmpplog('DEPLOYMENT TERMINATE',
-                                    type = 'deploy',
-                                    sessionname = sessionid,
-                                    priority = -1,
-                                    action = "",
-                                    who = strjidagent,
-                                    how = "",
-                                    why = "",
-                                    module = "Deployment | Terminate |Notify",
-                                    date = None ,
-                                    fromuser = "AM %s"% strjidagent,
-                                    touser = "")
-                                data_in_session['environ'] = {}
-                                cleandescriptor( data_in_session )
-                                datalog = {
-                                    'action' : "result%s"%action,
-                                    'sessionid': sessionid,
-                                    'ret' : 255,
-                                    'base64' : False,
-                                    'data' : data_in_session
-                                }
-
-                                objectxmpp.send_message(mto='log@pulse',
-                                                        mbody=json.dumps(datalog),
-                                                        mtype='chat')
-                                objectxmpp.send_message(mto="master@pulse/MASTER",
-                                                        mbody=json.dumps(datalog),
-                                                        mtype='chat')
-                                #termine session a tester
-                                #clean session
-                                if objectxmpp.session.isexist(sessionid):
-                                    objectxmpp.session.clearnoevent(sessionid)
-                                return
-                            #push transfert
-                            takeresource(data_in_session, objectxmpp, sessionid)
-                            if hasattr(objectxmpp.config, 'pushmethod') and objectxmpp.config.pushmethod == "scp":
-                                cmdexec = cmdscp
-                            else:
-                                objectxmpp.config.pushmethod = "rsync"
-                                cmdexec = cmdrsync
-                            logger.debug("tranfert cmd :\n %s"%cmdexec)
-                            objectxmpp.xmpplog( "cmd : <span style=\"font-weight: bold;font-style: italic; color: blue;\">" + cmdexec + "</span>",
-                                                type = 'deploy',
-                                                sessionname = sessionid,
-                                                priority = -1,
-                                                action = "",
-                                                who = strjidagent,
-                                                how = "",
-                                                why = "",
-                                                module = "Deployment | Error | Download | Transfert",
-                                                date = None ,
-                                                fromuser = data_in_session['login'],
-                                                touser = "")
-                            obcmd = simplecommandstr(cmdexec)
-                            objectxmpp.xmpplog( msg,
-                                                type = 'deploy',
-                                                sessionname = sessionid,
-                                                priority = -1,
-                                                action = "",
-                                                who = strjidagent,
-                                                how = "",
-                                                why = "",
-                                                module = "Deployment | Error | Download | Transfert",
-                                                date = None ,
-                                                fromuser = data_in_session['login'],
-                                                touser = "")
-                            time.sleep(2)
-                            removeresource(data_in_session, objectxmpp, sessionid)
-                            if obcmd['code'] != 0:
-                                objectxmpp.xmpplog('<span style="color: red;";>[xxx]: Terminate %s deploy ERROR transfert %s </span>'%(objectxmpp.config.pushmethod,obcmd['result']),
-                                                type = 'deploy',
-                                                sessionname = sessionid,
-                                                priority = -1,
-                                                action = "",
-                                                who = strjidagent,
-                                                how = "",
-                                                why = "",
-                                                module = "Deployment | Error | Download | Transfert",
-                                                date = None ,
-                                                fromuser = data_in_session['login'],
-                                                touser = "")
-                                objectxmpp.xmpplog('DEPLOYMENT TERMINATE',
-                                                    type = 'deploy',
-                                                    sessionname = sessionid,
-                                                    priority = -1,
-                                                    action = "",
-                                                    who = strjidagent,
-                                                    how = "",
-                                                    why = "",
-                                                    module = "Deployment | Terminate |Notify",
-                                                    date = None ,
-                                                    fromuser = "AM %s"% strjidagent,
-                                                    touser = "")
-                                data_in_session['environ'] = {}
-                                cleandescriptor( data_in_session )
-                                datalog = {
-                                    'action' : "result%s"%action,
-                                    'sessionid': sessionid,
-                                    'ret' : 255,
-                                    'base64' : False,
-                                    'data' : data_in_session
-                                }
-
-                                objectxmpp.send_message(mto='log@pulse',
-                                                        mbody=json.dumps(datalog),
-                                                        mtype='chat')
-                                objectxmpp.send_message(mto="master@pulse/MASTER",
-                                                        mbody=json.dumps(datalog),
-                                                        mtype='chat')
-                                #termine session a tester
-                                #clean session
-                                if objectxmpp.session.isexist(sessionid):
-                                    objectxmpp.session.clearnoevent(sessionid)
-                                return
-                            else:
-                                objectxmpp.xmpplog('Transfert %s Result : %s'%(obcmd['result'], objectxmpp.config.pushmethod),
-                                                    type = 'deploy',
-                                                    sessionname = sessionid,
-                                                    priority = -1,
-                                                    action = "",
-                                                    who = strjidagent,
-                                                    how = "",
-                                                    why = "",
-                                                    module = "Deployment | Terminate |Notify",
-                                                    date = None ,
-                                                    fromuser = "ARS %s"% strjidagent,
-                                                    touser = "")
-                            logger.debug("CALL FOR NEXT PACKAGE")
-                            # call for aller step suivant
-                            objectxmpp.send_message(mto = strjidagent,
-                                                mbody = json.dumps(create_message_self_for_transfertfile(sessionid)),
-                                                mtype = 'chat')
+                        if data_in_session['folders_packages'].lower().startswith('c:') or data_in_session['folders_packages'][1] == ":" :
+                            pathnew =  data_in_session['folders_packages'][2:]
+                            # cywin path
+                            pathnew = "/cygdrive/c/" + pathnew.replace("\\","/") + "/" + packuuid + "/"
+                            #compose name for rsync
+                            listpath = pathnew.split("/")
+                            p = []
+                            for indexpath in listpath:
+                                if " " in indexpath:
+                                    p.append('"' + indexpath + '"')
+                                else:
+                                    p.append(indexpath)
+                            pathnew = "/".join(p)
                         else:
-                            ##uninstall keypublic on machine after transfert package
-                            #keypublic = get_keypub_ssh()
-                            #uninstallkeypub = {
-                                                #'action': "setkeypubliconauthorizedkeys",
-                                                #'sessionid': sessionid,
-                                                #'data' : {'keypub' : keypublic, 'install' : False},
-                                                #'ret' : 0,
-                                                #'base64' : False }
-                            #objectxmpp.send_message(mto = data_in_session['jidmachine'],
-                                                #mbody = json.dumps(uninstallkeypub),
-                                                #mtype = 'chat')
-                            # Creation of the message from depoy to machine
-                            logger.debug("APPEL PLUGIN FOR DEPLOY ON MACHINE")
-                            transfertdeploy = {
-                                                'action': action,
-                                                'sessionid': sessionid,
-                                                'data' : data_in_session,
-                                                'ret' : 0,
-                                                'base64' : False }
-                            #logger.debug(json.dumps(transfertdeploy, indent = 4))
-                            objectxmpp.send_message(mto = data_in_session['jidmachine'],
-                                    mbody = json.dumps(transfertdeploy),
-                                    mtype = 'chat')
-                            #transfert terminer update Has_login_command
-                            datasend = {
-                                        'action':  "updatenbdeploy",
-                                        'sessionid' : sessionid,
-                                        'data' : data_in_session['advanced'],
-                                        'ret' : 1,
-                                        'base64' : False
-                                    }
-                            objectxmpp.send_message(mto=data_in_session['jidmaster'],
-                                                    mbody = json.dumps(datasend),
-                                                    mtype = 'chat')
+                            pathnew = data_in_session['folders_packages'] + "/" + packuuid + "/"
+                        pathnew = pathnew.replace("//","/")
+                        optionrsync = " -e \"ssh -o IdentityFile=/root/.ssh/id_rsa "\
+                                        "-o UserKnownHostsFile=/dev/null "\
+                                        "-o StrictHostKeyChecking=no "\
+                                        "-o Batchmode=yes "\
+                                        "-o PasswordAuthentication=no "\
+                                        "-o ServerAliveInterval=10 "\
+                                        "-o CheckHostIP=no "\
+                                        "-o LogLevel=ERROR "\
+                                        "-o ConnectTimeout=10 "\
+                                        "-o Port=%s\" "\
+                                        "-av --chmod=777 %s/ %s@%s:'%s'"%( clientssshport,
+                                                            pathin,
+                                                            data_in_session['userssh'],
+                                                            ipmachine,
+                                                            pathnew)
+                        cmdscp = cmdpre + optionscp
+                        cmdrsync = cmdrsync + optionrsync
+
+                        if not os.path.isdir(data_in_session['path']):
+                            objectxmpp.xmpplog('<span style="color: red;";>ERROR transfert [Package Server does not have this package %s]</span>'%data_in_session['path'],
+                                            type = 'deploy',
+                                            sessionname = sessionid,
+                                            priority = -1,
+                                            action = "",
+                                            who = strjidagent,
+                                            how = "",
+                                            why = "",
+                                            module = "Deployment | Error | Download | Transfert",
+                                            date = None ,
+                                            fromuser = data_in_session['login'],
+                                            touser = "")
+                            objectxmpp.xmpplog('DEPLOYMENT TERMINATE',
+                                type = 'deploy',
+                                sessionname = sessionid,
+                                priority = -1,
+                                action = "",
+                                who = strjidagent,
+                                how = "",
+                                why = "",
+                                module = "Deployment | Terminate |Notify",
+                                date = None ,
+                                fromuser = "AM %s"% strjidagent,
+                                touser = "")
+                            data_in_session['environ'] = {}
+                            cleandescriptor( data_in_session )
+                            datalog = {
+                                'action' : "result%s"%action,
+                                'sessionid': sessionid,
+                                'ret' : 255,
+                                'base64' : False,
+                                'data' : data_in_session
+                            }
+
+                            objectxmpp.send_message(mto='log@pulse',
+                                                    mbody=json.dumps(datalog),
+                                                    mtype='chat')
+                            objectxmpp.send_message(mto="master@pulse/MASTER",
+                                                    mbody=json.dumps(datalog),
+                                                    mtype='chat')
+                            #termine session a tester
+                            #clean session
                             if objectxmpp.session.isexist(sessionid):
                                 objectxmpp.session.clearnoevent(sessionid)
+                            return
+                        #push transfert
+                        takeresource(data_in_session, objectxmpp, sessionid)
+                        if hasattr(objectxmpp.config, 'pushmethod') and objectxmpp.config.pushmethod == "scp":
+                            cmdexec = cmdscp
+                        else:
+                            objectxmpp.config.pushmethod = "rsync"
+                            cmdexec = cmdrsync
+                        logger.debug("tranfert cmd :\n %s"%cmdexec)
+                        objectxmpp.xmpplog( "cmd : <span style=\"font-weight: bold;font-style: italic; color: blue;\">" + cmdexec + "</span>",
+                                            type = 'deploy',
+                                            sessionname = sessionid,
+                                            priority = -1,
+                                            action = "",
+                                            who = strjidagent,
+                                            how = "",
+                                            why = "",
+                                            module = "Deployment | Error | Download | Transfert",
+                                            date = None ,
+                                            fromuser = data_in_session['login'],
+                                            touser = "")
+                        obcmd = simplecommandstr(cmdexec)
+                        objectxmpp.xmpplog( msg,
+                                            type = 'deploy',
+                                            sessionname = sessionid,
+                                            priority = -1,
+                                            action = "",
+                                            who = strjidagent,
+                                            how = "",
+                                            why = "",
+                                            module = "Deployment | Error | Download | Transfert",
+                                            date = None ,
+                                            fromuser = data_in_session['login'],
+                                            touser = "")
+                        time.sleep(2)
+                        removeresource(data_in_session, objectxmpp, sessionid)
+                        if obcmd['code'] != 0:
+                            objectxmpp.xmpplog('<span style="color: red;";>[xxx]: Terminate %s deploy ERROR transfert %s </span>'%(objectxmpp.config.pushmethod,obcmd['result']),
+                                            type = 'deploy',
+                                            sessionname = sessionid,
+                                            priority = -1,
+                                            action = "",
+                                            who = strjidagent,
+                                            how = "",
+                                            why = "",
+                                            module = "Deployment | Error | Download | Transfert",
+                                            date = None ,
+                                            fromuser = data_in_session['login'],
+                                            touser = "")
+                            objectxmpp.xmpplog('DEPLOYMENT TERMINATE',
+                                                type = 'deploy',
+                                                sessionname = sessionid,
+                                                priority = -1,
+                                                action = "",
+                                                who = strjidagent,
+                                                how = "",
+                                                why = "",
+                                                module = "Deployment | Terminate |Notify",
+                                                date = None ,
+                                                fromuser = "AM %s"% strjidagent,
+                                                touser = "")
+                            data_in_session['environ'] = {}
+                            cleandescriptor( data_in_session )
+                            datalog = {
+                                'action' : "result%s"%action,
+                                'sessionid': sessionid,
+                                'ret' : 255,
+                                'base64' : False,
+                                'data' : data_in_session
+                            }
+
+                            objectxmpp.send_message(mto='log@pulse',
+                                                    mbody=json.dumps(datalog),
+                                                    mtype='chat')
+                            objectxmpp.send_message(mto="master@pulse/MASTER",
+                                                    mbody=json.dumps(datalog),
+                                                    mtype='chat')
+                            #termine session a tester
+                            #clean session
+                            if objectxmpp.session.isexist(sessionid):
+                                objectxmpp.session.clearnoevent(sessionid)
+                            return
+                        else:
+                            objectxmpp.xmpplog('Transfert %s Result : %s'%(obcmd['result'], objectxmpp.config.pushmethod),
+                                                type = 'deploy',
+                                                sessionname = sessionid,
+                                                priority = -1,
+                                                action = "",
+                                                who = strjidagent,
+                                                how = "",
+                                                why = "",
+                                                module = "Deployment | Terminate |Notify",
+                                                date = None ,
+                                                fromuser = "ARS %s"% strjidagent,
+                                                touser = "")
+                        logger.debug("CALL FOR NEXT PACKAGE")
+                        # call for aller step suivant
+                        objectxmpp.send_message(mto = strjidagent,
+                                            mbody = json.dumps(create_message_self_for_transfertfile(sessionid)),
+                                            mtype = 'chat')
+                    else:
+                        ##uninstall keypublic on machine after transfert package
+                        #keypublic = get_keypub_ssh()
+                        #uninstallkeypub = {
+                                            #'action': "setkeypubliconauthorizedkeys",
+                                            #'sessionid': sessionid,
+                                            #'data' : {'keypub' : keypublic, 'install' : False},
+                                            #'ret' : 0,
+                                            #'base64' : False }
+                        #objectxmpp.send_message(mto = data_in_session['jidmachine'],
+                                            #mbody = json.dumps(uninstallkeypub),
+                                            #mtype = 'chat')
+                        # Creation of the message from depoy to machine
+                        logger.debug("APPEL PLUGIN FOR DEPLOY ON MACHINE")
+                        transfertdeploy = {
+                                            'action': action,
+                                            'sessionid': sessionid,
+                                            'data' : data_in_session,
+                                            'ret' : 0,
+                                            'base64' : False }
+                        #logger.debug(json.dumps(transfertdeploy, indent = 4))
+                        objectxmpp.send_message(mto = data_in_session['jidmachine'],
+                                mbody = json.dumps(transfertdeploy),
+                                mtype = 'chat')
+                        #transfert terminer update Has_login_command
+                        datasend = {
+                                    'action':  "updatenbdeploy",
+                                    'sessionid' : sessionid,
+                                    'data' : data_in_session['advanced'],
+                                    'ret' : 1,
+                                    'base64' : False
+                                }
+                        objectxmpp.send_message(mto=data_in_session['jidmaster'],
+                                                mbody = json.dumps(datasend),
+                                                mtype = 'chat')
+                        if objectxmpp.session.isexist(sessionid):
+                            objectxmpp.session.clearnoevent(sessionid)
