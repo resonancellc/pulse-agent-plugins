@@ -21,16 +21,17 @@
 
 
 #This plugin needs to call back the plugin that made the request to return the result
- 
+
 import json
 from lib.managepackage import managepackage
 import logging
 import platform
 import sys
+from lib.utils import protoandport
 
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
-plugin = { "VERSION" : "1.2", "NAME" : "requestinfo", "TYPE" : "all" }
+plugin = { "VERSION" : "1.3", "NAME" : "requestinfo", "TYPE" : "all" }
 
 def action( objectxmpp, action, sessionid, data, message, dataerreur):
     logging.getLogger().debug("call %s from %s"%(plugin,message['from']))
@@ -48,7 +49,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
     # Can tell the requester where the call was received
     if 'step' in data:
         result['data']['step'] = data['step']
- 
+
     if 'actiontype' in data:
         result['data']['actiontype'] = data['actiontype']
 
@@ -60,6 +61,9 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             if informations == "os":
                     result['data']["os"] = sys.platform
                     result['data']["os_version"] = platform.platform()
+            if informations == "ssh_port":
+                    remoteservices = protoandport()
+                    result['data']["ssh_port"] = remoteservices['ssh']
 
     if 'sender' in data:
         for senderagent in data["sender"]:
