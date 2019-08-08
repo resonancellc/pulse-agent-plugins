@@ -1391,8 +1391,16 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                 if 'transfert' in data  and data['transfert'] == True \
                         and 'methodetransfert' in data \
                             and not data['methodetransfert'] in ["pullcurl",  "pullrsync", "pullscp"]:
-                    data['methodetransfert'] = "pullcurl"
-                    objectxmpp.xmpplog('Warning push methode impossible for machine nat: force pull curl method',
+                    try:
+                        if objectxmpp.config.pushsubstitutionmethod in ["pullcurl",  "pullrsync", "pullscp"]:
+                            data['methodetransfert'] = objectxmpp.config.pushsubstitutionmethod
+                        else:
+                            data['methodetransfert'] = "pullrsync"
+                            logger.warning("check typo parameters pushsubstitutionmethod")
+                    except:
+                        logger.warning("check parameters pushsubstitutionmethod")
+                        data['methodetransfert'] = "pullrsync"
+                    objectxmpp.xmpplog('Warning push methode impossible for machine nat: force %s method'%data['methodetransfert'],
                                         type = 'deploy',
                                         sessionname = sessionid,
                                         priority = -1,
