@@ -18,6 +18,7 @@
 # along with Pulse 2; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA 02110-1301, USA.
+
 # file plugin_reverse_ssh_on.py
 
 import sys
@@ -31,18 +32,22 @@ import shutil
 import logging
 import traceback
 
+if sys.platform.startswith('win'):
+    import win32security
+    import ntsecuritycon
+
 logger = logging.getLogger()
-plugin = {"VERSION" : "2.176", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
+plugin = {"VERSION" : "2.2", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
 
 def checkresult(result):
     if result['codereturn'] != 0:
         if len (result['result']) == 0:
             result['result'][0]=''
-        logging.getLogger().error("error : %s"%result['result'][-1])
+        logger.error("error : %s"%result['result'][-1])
     return result['codereturn'] == 0
 
 def genratekeyforARSreverseSSH():
-    print "############genratekeyforARSreverseSSH###############"
+    logger.debug("############genrate key for ARS reverseSSH ###############")
     if not os.path.isfile(os.path.join("/","var","lib","pulse2","clients","reversessh",".ssh","id_rsa")) or not \
         os.path.isfile(os.path.join("/","var","lib","pulse2","clients","reversessh",".ssh","id_rsa.pub")):
         os.system("useradd reversessh -md /var/lib/pulse2/clients/reversessh -s /bin/rbash")
@@ -75,7 +80,7 @@ def load_key_ssh_relayserver(private=False, user="reversessh"):
     return file_get_contents(filekey)
 
 def runProcess(cmd , shell= False, envoption = os.environ):
-    print "START COMMAND %s"%cmd
+    logger.debug("START COMMAND %s"%cmd)
     args = shlex.split(cmd)
     return Popen(args, env=envoption, shell=shell).pid
 
@@ -111,8 +116,6 @@ def install_key_ssh_relayserver(keypriv, private=False):
         os.remove(filekey)
     file_put_contents(filekey, keypriv)
     if sys.platform.startswith('win'):
-        import win32security
-        import ntsecuritycon
         user, domain, type = win32security.LookupAccountName ("", "System")
         #user1, domain, type = win32security.LookupAccountName ("", "pulseuser")
         #user2, domain, type = win32security.LookupAccountName ("", "Administrators")
@@ -135,7 +138,6 @@ def install_key_ssh_relayserver(keypriv, private=False):
                                 #user2)
         #sd.SetSecurityDescriptorDacl(1, dacl, 0)
         #win32security.SetFileSecurity(filekey, win32security.DACL_SECURITY_INFORMATION, sd)
-
     else:
         os.chmod(filekey, keyperm)
 
@@ -149,15 +151,18 @@ def set_authorized_keys(keypub):
             filekey = os.path.join(os.path.expanduser('~pulseuser'), ".ssh", "authorized_keys")
         if not os.path.isfile(file_authorized_keys):
             file_put_contents(file_authorized_keys, keypub)
+            logger.debug("set authorized_keys key %s"%keypub)
             return True
         else:
             content = file_get_contents(file_authorized_keys)
             if not keypub in content:
                 file_put_contents_w_a(file_authorized_keys, keypub, option = "a")
+                logger.debug("add key in authorized_keys %s"%keypub)
                 return True
     except:
         logger.error("\n%s"%(traceback.format_exc()))
-    return False
+        return False
+    return True
 
 def action( objectxmpp, action, sessionid, data, message, dataerreur ):
     logger.debug("###################################################")
@@ -171,15 +176,13 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur ):
         if not os.path.isfile(os.path.join("/","var","lib","pulse2","clients","reversessh",".ssh","id_rsa")) or not \
             os.path.isfile(os.path.join("/","var","lib","pulse2","clients","reversessh",".ssh","id_rsa.pub")):
             genratekeyforARSreverseSSH()
-        print "PROCESSING RELAYSERVER"
+        logger.debug("PROCESSING RELAYSERVER")
         if message['from'] == "console":
             if not "request" in data :
                 objectxmpp.send_message_agent("console", dataerreur)
                 return
-            print message['from']
-            print "master@pulse/MASTER"
             if data['request'] == "askinfo":
-                print "Processing of request askinfo"
+                logger.debug( "Processing of request askinfo")
                 returnmessage['data'] = data
                 returnmessage['data']['fromplugin'] = plugin['NAME']
                 returnmessage['data']['typeinfo']  = "info_xmppmachinebyuuid"
@@ -192,19 +195,19 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur ):
                 returnmessage['ret'] = 0
                 returnmessage['action'] = "askinfo"
                 del returnmessage['data']['request']
-                print "Send master this data"
-                print json.dumps(returnmessage, indent = 4)
+                logger.debug("Send master this data")
+                logger.debug("%s"%json.dumps(returnmessage, indent = 4))
                 objectxmpp.send_message_agent( "master@pulse/MASTER",
                                              returnmessage,
                                              mtype = 'chat')
                 objectxmpp.send_message_agent("console", returnmessage)
                 return
-        if message['from'] == message['to']:
+        if message['from'].bare == message['to'].bare:
             if not "request" in data :
                 objectxmpp.send_message_agent(message['to'], dataerreur)
                 return
             if data['request'] == "askinfo":
-                print "Processing of request askinfo"
+                logger.debug("Processing of request askinfo")
                 returnmessage['data'] = data
                 returnmessage['data']['fromplugin'] = plugin['NAME']
                 returnmessage['data']['typeinfo']  = "info_xmppmachinebyuuid"
@@ -218,26 +221,26 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur ):
                 returnmessage['action'] = "askinfo"
                 returnmessage['sessionid'] = sessionid
                 del returnmessage['data']['request']
-                print "Send relayagent this data"
-                print json.dumps(returnmessage, indent = 4)
-                objectxmpp.send_message_agent( "master@pulse/MASTER",
-                                             returnmessage,
-                                             mtype = 'chat')
+                logger.debug( "Send relayagent this data")
+                logger.debug("%s"%json.dumps(returnmessage, indent = 4))
+                objectxmpp.send_message_agent("master@pulse/MASTER",
+                                              returnmessage,
+                                              mtype = 'chat')
                 return
     else:
-        print "PROCESSING MACHINE \n%s\n"%json.dumps(data, indent = 4)
-        objectxmpp.xmpplog(  "REVERSE SSH",
-                                    type = 'noset',
-                                    sessionname = sessionid,
-                                    priority = -1,
-                                    action = "",
-                                    who = objectxmpp.boundjid.bare,
-                                    how = "",
-                                    why = "",
-                                    module = "Notify | Packaging | Reversessh",
-                                    date = None ,
-                                    fromuser = "",
-                                    touser = "")
+        logger.debug("PROCESSING MACHINE")
+        objectxmpp.xmpplog( "REVERSE SSH",
+                            type = 'noset',
+                            sessionname = sessionid,
+                            priority = -1,
+                            action = "",
+                            who = objectxmpp.boundjid.bare,
+                            how = "",
+                            why = "",
+                            module = "Notify | Packaging | Reversessh",
+                            date = None ,
+                            fromuser = "",
+                            touser = "")
 
         if data['options'] == "createreversessh":
             install_key_ssh_relayserver(data['key'], private=True)
@@ -283,9 +286,9 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur ):
                     data['persistance'] = "no"
                 if 'persistance' in data and data['persistance'].lower() != "no":
                     if data['persistance'] in objectxmpp.reversesshmanage:
-                        logging.getLogger().info("suppression reversessh %s"%str(objectxmpp.reversesshmanage[data['persistance']]))
+                        logger.info("suppression reversessh %s"%str(objectxmpp.reversesshmanage[data['persistance']]))
                         cmd = "kill -9 %s"%str(objectxmpp.reversesshmanage[data['persistance']])
-                        logging.getLogger().info(cmd)
+                        logger.info(cmd)
                         simplecommandstr(cmd)
                         objectxmpp.xmpplog( "suppression reversessh %s"%str(objectxmpp.reversesshmanage[data['persistance']]),
                                         type = 'noset',
@@ -304,7 +307,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur ):
                     objectxmpp.reversesshmanage[data['persistance']] = str(result.pid)
                 else:
                     objectxmpp.reversesshmanage['other'] = str(result.pid)
-                logging.getLogger().info("creation reverse ssh pid = %s"% str(result.pid))
+                logger.info("creation reverse ssh pid = %s"% str(result.pid))
                 objectxmpp.xmpplog( 'create reverse ssh on machine : %s '\
                                   'type reverse : %s port :%s'%(message['to'], reversetype, data['port']),
                                 type = 'noset',
@@ -340,9 +343,9 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur ):
                     ###### voir cela powershell.exe "Stop-Process -Force (Get-NetTCPConnection -LocalPort 22).OwningProcess"
                     #### cmd = 'wmic path win32_process Where "Commandline like \'%reversessh%\'" Call Terminate'
                     if data['persistance'] in objectxmpp.reversesshmanage:
-                        logging.getLogger().info("suppression reversessh %s"%str(objectxmpp.reversesshmanage[data['persistance']]))
+                        logger.info("suppression reversessh %s"%str(objectxmpp.reversesshmanage[data['persistance']]))
                         cmd = "taskkill /F /PID %s"%str(objectxmpp.reversesshmanage[data['persistance']])
-                        logging.getLogger().info(cmd)
+                        logger.info(cmd)
                         simplecommandstr(cmd)
                         objectxmpp.xmpplog( "suppression reversessh %s"%str(objectxmpp.reversesshmanage[data['persistance']]),
                                         type = 'noset',
@@ -363,7 +366,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur ):
                     objectxmpp.reversesshmanage[data['persistance']] = str(result.pid)
                 else:
                     objectxmpp.reversesshmanage['other'] = str(result.pid)
-                logging.getLogger().info("creation reverse ssh pid = %s"% str(result.pid))
+                logger.info("creation reverse ssh pid = %s"% str(result.pid))
                 objectxmpp.xmpplog( 'create reverse ssh on machine : %s '\
                                   'type reverse : %s port :%s'%(message['to'], reversetype, data['port']),
                                 type = 'noset',
@@ -391,9 +394,9 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur ):
                     data['persistance'] = "no"
                 if 'persistance' in data and data['persistance'].lower() != "no":
                     if data['persistance'] in objectxmpp.reversesshmanage:
-                        logging.getLogger().info("suppression reversessh %s"%str(objectxmpp.reversesshmanage[data['persistance']]))
+                        logger.info("suppression reversessh %s"%str(objectxmpp.reversesshmanage[data['persistance']]))
                         cmd = "kill -9 %s"%str(objectxmpp.reversesshmanage[data['persistance']])
-                        logging.getLogger().info(cmd)
+                        logger.info(cmd)
                         simplecommandstr(cmd)
                         objectxmpp.xmpplog( "suppression reversessh %s"%str(objectxmpp.reversesshmanage[data['persistance']]),
                                         type = 'noset',
@@ -413,7 +416,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur ):
                 else:
                     objectxmpp.reversesshmanage['other'] = str(result.pid)
                     data['persistance'] = "no"
-                logging.getLogger().info("creation reverse ssh pid = %s"% str(result.pid))
+                logger.info("creation reverse ssh pid = %s"% str(result.pid))
                 objectxmpp.xmpplog(  "creation reverse ssh pid = %s"% str(result.pid),
                                     type = 'noset',
                                     sessionname = sessionid,
@@ -427,7 +430,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur ):
                                     fromuser = "",
                                     touser = "")
             else:
-                dd=""
+                logger.warning("os not supported in plugin%s"%sys.platform)
         elif data['options'] == "stopreversessh":
             if sys.platform.startswith('win'):
                 ### voir cela powershell.exe "Stop-Process -Force (Get-NetTCPConnection -LocalPort 22).OwningProcess"
@@ -441,9 +444,3 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur ):
         returnmessage = dataerreur
         returnmessage['data'] = data
         returnmessage['ret'] = 0
-
-        #print json.dumps(returnmessage, indent = 4)
-        #print "################################################################################"
-
-
-        ##objectxmpp.send_message_agent("console", returnmessage)
