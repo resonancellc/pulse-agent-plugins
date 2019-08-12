@@ -245,7 +245,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur ):
         if data['options'] == "createreversessh":
             install_key_ssh_relayserver(data['key'], private=True)
             install_key_ssh_relayserver(data['keypub'])
-            set_authorized_keys(data['keypubroot'])
+            #set_authorized_keys(data['keypubroot'])
             if hasattr(objectxmpp.config, 'clients_ssh_port'):
                 clientssshport = objectxmpp.config.clients_ssh_port
             else:

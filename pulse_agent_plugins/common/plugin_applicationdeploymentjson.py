@@ -46,7 +46,7 @@ elif sys.platform.startswith('win'):
     pass
 
 
-plugin = {"VERSION" : "3.3", "NAME" : "applicationdeploymentjson", "VERSIONAGENT" : "2.0.0", "TYPE" : "all"}
+plugin = {"VERSION" : "3.31", "NAME" : "applicationdeploymentjson", "VERSIONAGENT" : "2.0.0", "TYPE" : "all"}
 
 Globaldata = { 'port_local' : 22 }
 logger = logging.getLogger()
@@ -1468,7 +1468,17 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                 date = None ,
                                 fromuser = data['login'],
                                 touser = "")
-            time.sleep(8)
+            time.sleep(2)
+            logger.debug("Install key ARS in authorized_keys on agent machine %s"%data['jidmachine'])
+            body = {'action' : 'installkey',
+                    'sessionid': sessionid,
+                    'data' : { 'jidAM' : data['jidmachine']
+                    }
+            }
+            objectxmpp.send_message(  mto = strjidagent,
+                                      mbody = json.dumps(body),
+                                      mtype = 'chat')
+            time.sleep(6)
         ########################################################
         #traitement mode push et les mode "pullrsync", "pullscp"
         ########################################################

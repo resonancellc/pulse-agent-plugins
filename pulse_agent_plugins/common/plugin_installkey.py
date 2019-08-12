@@ -31,7 +31,7 @@ import shutil
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
 
-plugin = { "VERSION" : "2.2", "NAME" : "installkey", "VERSIONAGENT" : "2.0.0", "TYPE" : "all" }
+plugin = { "VERSION" : "2.21", "NAME" : "installkey", "VERSIONAGENT" : "2.0.0", "TYPE" : "all" }
 
 def action( objectxmpp, action, sessionid, data, message, dataerreur):
     logging.getLogger().debug("###################################################")
@@ -145,9 +145,9 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             return
 
         authorized_keys_content = file_get_contents(authorized_keys_path)
-        if not data['key'] in authorized_keys_content:
+        if not data['key'].strip(' \t\n\r') in authorized_keys_content:
             #add en append la key dans le fichier
-            file_put_contents_w_a( authorized_keys_path, data['key'], "a" )
+            file_put_contents_w_a( authorized_keys_path, "\n"+data['key'], "a" )
             logging.getLogger().debug("install key ARS [%s]"%message['from'])
             if sessionid.startswith("command"):
                 notify = "Notify | QuickAction"
