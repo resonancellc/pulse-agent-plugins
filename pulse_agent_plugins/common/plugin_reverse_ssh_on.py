@@ -37,7 +37,7 @@ if sys.platform.startswith('win'):
     import ntsecuritycon
 
 logger = logging.getLogger()
-plugin = {"VERSION" : "2.2", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
+plugin = {"VERSION" : "2.42", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
 
 def checkresult(result):
     if result['codereturn'] != 0:
@@ -330,8 +330,26 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur ):
                     pass
                 sshexec =  os.path.join(os.environ["ProgramFiles"], "OpenSSH", "ssh.exe")
                 reversesshbat = os.path.join(os.environ["ProgramFiles"], "Pulse", "bin", "reversessh.bat")
-                dd = """"%s" -t -t -%s %s:localhost:%s -o StrictHostKeyChecking=no -i "%s" -l reversessh %s
-                """%(sshexec, reversetype, data['port'], remoteport, filekey, data['relayserverip'])
+
+                linecmd=[]
+                cmd ="""\\"%s\\" -t -t -%s %s:localhost:%s -o StrictHostKeyChecking=no -i \\"%s\\" -l reversessh %s"""%( sshexec,
+                                                                                                                     reversetype,
+                                                                                                                     data['port'],
+                                                                                                                     remoteport,
+                                                                                                                     filekey,
+                                                                                                                     data['relayserverip'])
+
+                linecmd.append( """@echo off""")
+                linecmd.append( """for /f "tokens=2 delims==; " %%%%a in (' wmic process call create "%s" ^| find "ProcessId" ') do set "$PID=%%%%a" """%cmd)
+                linecmd.append( """echo %$PID%""")
+                linecmd.append( """echo %$PID% > C:\\"Program Files"\\Pulse\\bin\\%$PID%.pid""")
+                dd = '\r\n'.join(linecmd)
+
+
+
+                #dd = """"%s" -t -t -%s %s:localhost:%s -o StrictHostKeyChecking=no -i "%s" -l reversessh %s
+                #"""%(sshexec, reversetype, data['port'], remoteport, filekey, data['relayserverip'])
+
                 if not os.path.exists(os.path.join(os.environ["ProgramFiles"], "Pulse", "bin")):
                     os.makedirs(os.path.join(os.environ["ProgramFiles"], "Pulse", "bin"))
                 file_put_contents(reversesshbat,  dd)
@@ -361,7 +379,11 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur ):
                                         touser = "")
 
                 result = subprocess.Popen(reversesshbat)
-
+                #pidfile = os.path.join(os.environ["ProgramFiles"],
+                                       #"Pulse", 
+                                       #"bin", 
+                                       #"%s.pid"%str(result.pid))
+                #file_put_contents(pidfile, str(result.pid))
                 if 'persistance' in data and data['persistance'].lower() != "no":
                     objectxmpp.reversesshmanage[data['persistance']] = str(result.pid)
                 else:
