@@ -29,6 +29,8 @@ Group:      System/Servers
 Requires:   python-netifaces
 Requires:   python-sleekxmpp
 
+Conflicts:  pulseagent-plugins-relay <= 1.11-20.git20190514173147.4bbbc13e.1.1
+
 %description -n pulse-xmppmaster-agentplugins
 plugins for pulse xmppmaster
 
