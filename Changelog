@@ -1,5 +1,8 @@
 pulse-agent-plugins 1.12
 =========================
+* [Feature] Allow to use pullrsync without package server
+* [BUGFIX]  Use pulseuser instead of pulse in windows
+* [BUGFIX]  Various fixes in the syncthing plugin
 
 
 pulse-agent-plugins 1.11
