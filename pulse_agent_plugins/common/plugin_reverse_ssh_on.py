@@ -35,9 +35,13 @@ import traceback
 if sys.platform.startswith('win'):
     import win32security
     import ntsecuritycon
+    import win32net
+    import win32security
+    import win32serviceutil
+
 
 logger = logging.getLogger()
-plugin = {"VERSION" : "2.42", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
+plugin = {"VERSION" : "2.43", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
 
 def checkresult(result):
     if result['codereturn'] != 0:
@@ -104,7 +108,13 @@ def install_key_ssh_relayserver(keypriv, private=False):
             os.makedirs(os.path.join(os.path.expanduser('~pulseuser'), ".ssh/"))
         filekey = os.path.join(os.path.expanduser('~pulseuser'), ".ssh", keyname)
     elif sys.platform.startswith('win'):
-        filekey = os.path.join("c:\Users\pulseuser", ".ssh", keyname)
+         # check if pulse account exists
+            try:
+                win32net.NetUserGetInfo('','pulse',0)
+                filekey = os.path.join(os.environ["ProgramFiles"], "pulse" ,'.ssh', keyname)
+            except:
+                filekey = os.path.join("c:\Users\pulseuser", ".ssh", keyname)
+
     elif sys.platform.startswith('darwin'):
         if not os.path.isdir(os.path.join(os.path.expanduser('~pulseuser'), ".ssh")):
             os.makedirs(os.path.join(os.path.expanduser('~pulseuser'), ".ssh"))
@@ -146,9 +156,17 @@ def set_authorized_keys(keypub):
         if sys.platform.startswith('linux'):
             file_authorized_keys=os.path.join(os.path.expanduser('~pulseuser'), ".ssh", "authorized_keys" )
         elif sys.platform.startswith('win'):
-            file_authorized_keys = os.path.join("c:\Users\pulseuser", ".ssh", "authorized_keys")
+            try:
+                win32net.NetUserGetInfo('','pulse',0)
+                file_authorized_keys = os.path.join(os.environ["ProgramFiles"],
+                                                    "pulse" ,
+                                                    '.ssh', 
+                                                    "authorized_keys")
+            except:
+                file_authorized_keys = os.path.join("c:\Users\pulseuser", ".ssh", "authorized_keys")
         elif sys.platform.startswith('darwin'):
-            filekey = os.path.join(os.path.expanduser('~pulseuser'), ".ssh", "authorized_keys")
+            file_authorized_keys = os.path.join(os.path.expanduser('~pulseuser'), ".ssh", "authorized_keys")
+
         if not os.path.isfile(file_authorized_keys):
             file_put_contents(file_authorized_keys, keypub)
             logger.debug("set authorized_keys key %s"%keypub)
