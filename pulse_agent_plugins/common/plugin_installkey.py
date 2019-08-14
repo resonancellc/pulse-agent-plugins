@@ -31,7 +31,7 @@ import shutil
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
 
-plugin = { "VERSION" : "2.21", "NAME" : "installkey", "VERSIONAGENT" : "2.0.0", "TYPE" : "all" }
+plugin = { "VERSION" : "2.22", "NAME" : "installkey", "VERSIONAGENT" : "2.0.0", "TYPE" : "all" }
 
 def action( objectxmpp, action, sessionid, data, message, dataerreur):
     logging.getLogger().debug("###################################################")
@@ -91,54 +91,78 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             import win32security
             import win32serviceutil
             # check if pulse account exists
+
+            booluser = "pulseuser"
             try:
-                win32net.NetUserGetInfo('','pulseuser',0)
+                win32net.NetUserGetInfo('','pulse',0)
+                booluser = "pulse"
             except:
-                # pulse account doesn't exist. Create it
-                logging.getLogger().warning("Pulse user account does not exist. Creating it.")
-                pulseuserpassword = uuid.uuid4().hex[:14]
-                result = simplecommand(encode_strconsole('net user "pulseuser" "%s" /ADD /COMMENT:"Pulse user with admin rights on the system"' % pulseuserpassword))
-                logging.getLogger().info("Creation of pulse user: %s" %result)
-                result = simplecommand(encode_strconsole('powershell -inputformat none -ExecutionPolicy RemoteSigned -Command "Import-Module .\script\create-profile.ps1; New-Profile -Account pulseuser"'))
-                logging.getLogger().info("Creation of pulseuser profile: %s" %result)
-                result = simplecommand(encode_strconsole('wmic useraccount where "Name=\'pulseuser\'" set PasswordExpires=False'))
-                adminsgrpsid = win32security.ConvertStringSidToSid('S-1-5-32-544')
-                adminsgroup = win32security.LookupAccountSid('',adminsgrpsid)[0]
-                result = simplecommand(encode_strconsole('net localgroup %s "pulseuser" /ADD' % adminsgroup))
-                logging.getLogger().info("Adding pulseuser to administrators group: %s" %result)
+                pass
+            #si utilisateur pulse exist. c'est lui qui est utiliser
 
-                # Reconfigure SSH server
-                logging.getLogger().info("Reconfiguring ssh server for using keys in pulseuser account")
-                sshdconfigfile = os.path.join(os.environ["ProgramFiles"], 'OpenSSH', 'sshd_config')
-                if os.path.isfile(sshdconfigfile):
-                    with open(sshdconfigfile) as infile:
-                        with open('sshd_config', 'w') as outfile:
-                            for line in infile:
-                                if line.startswith('AuthorizedKeysFile'):
-                                    outfile.write('#' + line)
-                                else:
-                                    outfile.write(line)
-                    shutil.move('sshd_config', sshdconfigfile)
-                    currentdir = os.getcwd()
-                    os.chdir(os.path.join(os.environ["ProgramFiles"], 'OpenSSH'))
-                    result = simplecommand(encode_strconsole('powershell -ExecutionPolicy Bypass -Command ". .\FixHostFilePermissions.ps1 -Confirm:$false"'))
-                    os.chdir(currentdir)
-                    win32serviceutil.StopService('sshd')
-                    win32serviceutil.StopService('ssh-agent')
-                    win32serviceutil.StartService('ssh-agent')
-                    win32serviceutil.StartService('sshd')
+            if booluser != "pulse":
+                try:
+                    win32net.NetUserGetInfo('','pulseuser',0)
+                except:
+                    # pulse account doesn't exist. Create it
+                    logging.getLogger().warning("Pulse user account does not exist. Creating it.")
+                    pulseuserpassword = uuid.uuid4().hex[:14]
+                    result = simplecommand(encode_strconsole('net user "pulseuser" "%s" /ADD /COMMENT:"Pulse user with admin rights on the system"' % pulseuserpassword))
+                    logging.getLogger().info("Creation of pulse user: %s" %result)
+                    result = simplecommand(encode_strconsole('powershell -inputformat none -ExecutionPolicy RemoteSigned -Command "Import-Module .\script\create-profile.ps1; New-Profile -Account pulseuser"'))
+                    logging.getLogger().info("Creation of pulseuser profile: %s" %result)
+                    result = simplecommand(encode_strconsole('wmic useraccount where "Name=\'pulseuser\'" set PasswordExpires=False'))
+                    adminsgrpsid = win32security.ConvertStringSidToSid('S-1-5-32-544')
+                    adminsgroup = win32security.LookupAccountSid('',adminsgrpsid)[0]
+                    result = simplecommand(encode_strconsole('net localgroup %s "pulseuser" /ADD' % adminsgroup))
+                    logging.getLogger().info("Adding pulseuser to administrators group: %s" %result)
 
-            logging.getLogger().info("Creating authorized_keys file in pulseuser account")
-            authorized_keys_path = os.path.join("c:\Users\pulseuser", '.ssh','authorized_keys' )
-            if not os.path.isdir(os.path.dirname(authorized_keys_path)):
-                os.makedirs(os.path.dirname(authorized_keys_path), 0700)
-            if not os.path.isfile(authorized_keys_path):
-                file_put_contents(authorized_keys_path,"")
-            currentdir = os.getcwd()
-            os.chdir(os.path.join(os.environ["ProgramFiles"], 'OpenSSH'))
-            result = simplecommand(encode_strconsole('powershell -ExecutionPolicy Bypass -Command ". .\FixHostFilePermissions.ps1 -Confirm:$false"'))
-            os.chdir(currentdir)
-            logging.getLogger().info("Reset of permissions on ssh keys and folders: %s" %result)
+                    # Reconfigure SSH server
+                    logging.getLogger().info("Reconfiguring ssh server for using keys in pulseuser account")
+                    sshdconfigfile = os.path.join(os.environ["ProgramFiles"], 'OpenSSH', 'sshd_config')
+                    if os.path.isfile(sshdconfigfile):
+                        with open(sshdconfigfile) as infile:
+                            with open('sshd_config', 'w') as outfile:
+                                for line in infile:
+                                    if line.startswith('AuthorizedKeysFile'):
+                                        outfile.write('#' + line)
+                                    else:
+                                        outfile.write(line)
+                        shutil.move('sshd_config', sshdconfigfile)
+                        currentdir = os.getcwd()
+                        os.chdir(os.path.join(os.environ["ProgramFiles"], 'OpenSSH'))
+                        result = simplecommand(encode_strconsole('powershell -ExecutionPolicy Bypass -Command ". .\FixHostFilePermissions.ps1 -Confirm:$false"'))
+                        os.chdir(currentdir)
+                        win32serviceutil.StopService('sshd')
+                        win32serviceutil.StopService('ssh-agent')
+                        win32serviceutil.StartService('ssh-agent')
+                        win32serviceutil.StartService('sshd')
+
+
+                logging.getLogger().info("Creating authorized_keys file in pulseuser account")
+                authorized_keys_path = os.path.join("c:\Users\pulseuser", '.ssh','authorized_keys' )
+                if not os.path.isdir(os.path.dirname(authorized_keys_path)):
+                    os.makedirs(os.path.dirname(authorized_keys_path), 0700)
+                if not os.path.isfile(authorized_keys_path):
+                    file_put_contents(authorized_keys_path,"")
+                currentdir = os.getcwd()
+                os.chdir(os.path.join(os.environ["ProgramFiles"], 'OpenSSH'))
+                result = simplecommand(encode_strconsole('powershell -ExecutionPolicy Bypass -Command ". .\FixHostFilePermissions.ps1 -Confirm:$false"'))
+                os.chdir(currentdir)
+                logging.getLogger().info("Reset of permissions on ssh keys and folders: %s" %result)
+            else:
+                 # compte is in C:\Program Files\Pulse
+                logging.getLogger().info("Creating authorized_keys file in pulse account")
+                authorized_keys_path = os.path.join(os.environ["ProgramFiles"], "pulse" ,'.ssh', 'authorized_keys' )
+                if not os.path.isdir(os.path.dirname(authorized_keys_path)):
+                    os.makedirs(os.path.dirname(authorized_keys_path), 0700)
+                if not os.path.isfile(authorized_keys_path):
+                    file_put_contents(authorized_keys_path,"")
+                currentdir = os.getcwd()
+                os.chdir(os.path.join(os.environ["ProgramFiles"], 'OpenSSH'))
+                result = simplecommand(encode_strconsole('powershell -ExecutionPolicy Bypass -Command ". .\FixHostFilePermissions.ps1 -Confirm:$false"'))
+                os.chdir(currentdir)
+                logging.getLogger().info("Reset of permissions on ssh keys and folders: %s" %result)
         elif sys.platform.startswith('darwin'):
             authorized_keys_path = os.path.join(os.path.join(os.path.expanduser('~pulseuser'), '.ssh', 'authorized_keys') )
         else:
@@ -147,7 +171,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         authorized_keys_content = file_get_contents(authorized_keys_path)
         if not data['key'].strip(' \t\n\r') in authorized_keys_content:
             #add en append la key dans le fichier
-            file_put_contents_w_a( authorized_keys_path, "\n"+data['key'], "a" )
+            file_put_contents_w_a( authorized_keys_path, "\n"+ data['key'], "a" )
             logging.getLogger().debug("install key ARS [%s]"%message['from'])
             if sessionid.startswith("command"):
                 notify = "Notify | QuickAction"
