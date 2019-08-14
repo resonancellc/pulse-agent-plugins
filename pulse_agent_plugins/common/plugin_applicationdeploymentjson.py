@@ -46,7 +46,7 @@ elif sys.platform.startswith('win'):
     pass
 
 
-plugin = {"VERSION" : "3.33", "NAME" : "applicationdeploymentjson", "VERSIONAGENT" : "2.0.0", "TYPE" : "all"}
+plugin = {"VERSION" : "3.35", "NAME" : "applicationdeploymentjson", "VERSIONAGENT" : "2.0.0", "TYPE" : "all"}
 
 Globaldata = { 'port_local' : 22 }
 logger = logging.getLogger()
@@ -383,19 +383,46 @@ def pull_package_transfert_rsync(datasend, objectxmpp, ippackage, sessionid, cmd
                     fromuser = datasend['data']['advanced']['login'],
                     touser = "")
         obj = simplecommand(cmdexec)
-        if obj['code'] != 0:
+        if obcmd['code'] != 0:
             objectxmpp.xmpplog("cmd result : \n %s"%obj['result'],
-                    type = 'deploy',
-                    sessionname = datasend['sessionid'],
-                    priority = -1,
-                    action = "",
-                    who = strjidagent,
-                    how = "",
-                    why = "",
-                    module = "Deployment | Download | Transfert",
-                    date = None ,
-                    fromuser = datasend['data']['advanced']['login'],
-                    touser = "")
+                                type = 'deploy',
+                                sessionname = datasend['sessionid'],
+                                priority = -1,
+                                action = "",
+                                who = strjidagent,
+                                how = "",
+                                why = "",
+                                module = "Deployment | Download | Transfert",
+                                date = None ,
+                                fromuser = datasend['data']['advanced']['login'],
+                                touser = "")
+            cmdexec = cmdexec.replace("pulseuser","pulse")
+            objectxmpp.xmpplog("test cmd transfert is : \n %s"%cmdexec,
+                                type = 'deploy',
+                                sessionname = datasend['sessionid'],
+                                priority = -1,
+                                action = "",
+                                who = strjidagent,
+                                how = "",
+                                why = "",
+                                module = "Deployment | Download | Transfert",
+                                date = None ,
+                                fromuser = datasend['data']['advanced']['login'],
+                                touser = "")
+            obcmd = simplecommandstr(cmdexec)
+            if obcmd['code'] != 0:
+                objectxmpp.xmpplog("cmd result : \n %s"%obj['result'],
+                                type = 'deploy',
+                                sessionname = datasend['sessionid'],
+                                priority = -1,
+                                action = "",
+                                who = strjidagent,
+                                how = "",
+                                why = "",
+                                module = "Deployment | Download | Transfert",
+                                date = None ,
+                                fromuser = datasend['data']['advanced']['login'],
+                                touser = "")
             error=True
             return False
         error=False
