@@ -46,7 +46,7 @@ elif sys.platform.startswith('win'):
     pass
 
 
-plugin = {"VERSION" : "3.32", "NAME" : "applicationdeploymentjson", "VERSIONAGENT" : "2.0.0", "TYPE" : "all"}
+plugin = {"VERSION" : "3.33", "NAME" : "applicationdeploymentjson", "VERSIONAGENT" : "2.0.0", "TYPE" : "all"}
 
 Globaldata = { 'port_local' : 22 }
 logger = logging.getLogger()
@@ -1780,6 +1780,9 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                             fromuser = data_in_session['login'],
                                             touser = "")
                         obcmd = simplecommandstr(cmdexec)
+                        if obcmd['code'] != 0:
+                            cmdexec = cmdexec.replace("pulseuser","pulse")
+                            obcmd = simplecommandstr(cmdexec)
                         objectxmpp.xmpplog( msg,
                                             type = 'deploy',
                                             sessionname = sessionid,
