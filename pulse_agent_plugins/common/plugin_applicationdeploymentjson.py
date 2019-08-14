@@ -46,7 +46,7 @@ elif sys.platform.startswith('win'):
     pass
 
 
-plugin = {"VERSION" : "3.31", "NAME" : "applicationdeploymentjson", "VERSIONAGENT" : "2.0.0", "TYPE" : "all"}
+plugin = {"VERSION" : "3.32", "NAME" : "applicationdeploymentjson", "VERSIONAGENT" : "2.0.0", "TYPE" : "all"}
 
 Globaldata = { 'port_local' : 22 }
 logger = logging.getLogger()
@@ -1456,7 +1456,9 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             objectxmpp.send_message(mto = message['to'],
                                     mbody = json.dumps(datareversessh),
                                     mtype = 'chat')
-            objectxmpp.xmpplog('creation reverse ssh remote (port %s->%s)'%(Globaldata['port_local'], remoteport),
+            objectxmpp.xmpplog('creation reverse ssh remote (port %s->%s) from %s'%(Globaldata['port_local'],
+                                                                                    remoteport,
+                                                                                    str(objectxmpp.boundjid.bare)),
                                 type = 'deploy',
                                 sessionname = sessionid,
                                 priority = -1,
