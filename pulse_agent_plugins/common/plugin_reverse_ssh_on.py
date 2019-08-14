@@ -41,7 +41,7 @@ if sys.platform.startswith('win'):
 
 
 logger = logging.getLogger()
-plugin = {"VERSION" : "2.43", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
+plugin = {"VERSION" : "2.51", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
 
 def checkresult(result):
     if result['codereturn'] != 0:
@@ -340,7 +340,12 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur ):
                                 fromuser = "",
                                 touser = "")
             elif sys.platform.startswith('win'):
-                filekey = os.path.join("c:\Users\pulseuser", ".ssh", "id_rsa")
+                try:
+                    win32net.NetUserGetInfo('','pulse',0)
+                    filekey = os.path.join(os.environ["ProgramFiles"], 'pulse', ".ssh", "id_rsa")
+                except:
+                    filekey = os.path.join("c:\Users\pulseuser", ".ssh", "id_rsa")
+
                 os_platform = os.environ['PROCESSOR_ARCHITECTURE']
                 try:
                     os_platform = os.environ["PROCESSOR_ARCHITEW6432"] # Will raise exception if x86 arch
