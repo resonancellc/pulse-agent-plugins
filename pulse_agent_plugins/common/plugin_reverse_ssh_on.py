@@ -41,7 +41,7 @@ if sys.platform.startswith('win'):
 
 
 logger = logging.getLogger()
-plugin = {"VERSION" : "2.51", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
+plugin = {"VERSION" : "2.54", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
 
 def checkresult(result):
     if result['codereturn'] != 0:
@@ -152,6 +152,7 @@ def install_key_ssh_relayserver(keypriv, private=False):
         os.chmod(filekey, keyperm)
 
 def set_authorized_keys(keypub):
+    compte = "pulseuser"
     try:
         if sys.platform.startswith('linux'):
             file_authorized_keys=os.path.join(os.path.expanduser('~pulseuser'), ".ssh", "authorized_keys" )
@@ -162,10 +163,58 @@ def set_authorized_keys(keypub):
                                                     "pulse" ,
                                                     '.ssh', 
                                                     "authorized_keys")
+                compte = "pulse"
             except:
                 file_authorized_keys = os.path.join("c:\Users\pulseuser", ".ssh", "authorized_keys")
+            if not os.path.isfile(file_authorized_keys):
+                file_put_contents(file_authorized_keys, "\n")
+            user, domain, type = win32security.LookupAccountName ("", compte)
+            user1, domain, type = win32security.LookupAccountName ("", "sshd")
+            user2, domain, type = win32security.LookupAccountName ("", "Administrators")
+            user3, domain, type = win32security.LookupAccountName ("", "system")
+            sd = win32security.GetFileSecurity(file_authorized_keys,
+                                               win32security.DACL_SECURITY_INFORMATION)
+            dacl = win32security.ACL ()
+            dacl.AddAccessAllowedAce(win32security.ACL_REVISION, 
+                                    ntsecuritycon.FILE_GENERIC_READ | ntsecuritycon.FILE_GENERIC_WRITE, 
+                                    user)
+
+            sd.SetSecurityDescriptorDacl(1, dacl, 0)
+
+
+            win32security.SetFileSecurity(file_authorized_keys,
+                                          win32security.DACL_SECURITY_INFORMATION, sd)
+
+
+
+            dacl.AddAccessAllowedAce(win32security.ACL_REVISION, 
+                                    ntsecuritycon.FILE_GENERIC_READ , 
+                                    user1)
+            sd.SetSecurityDescriptorDacl(1, dacl, 0)
+            win32security.SetFileSecurity(file_authorized_keys, win32security.DACL_SECURITY_INFORMATION, sd)
+
+
+            dacl.AddAccessAllowedAce(win32security.ACL_REVISION, 
+                                    ntsecuritycon.FILE_GENERIC_READ | ntsecuritycon.FILE_GENERIC_WRITE, 
+                                    user2)
+            sd.SetSecurityDescriptorDacl(1, dacl, 0)
+            win32security.SetFileSecurity(file_authorized_keys, win32security.DACL_SECURITY_INFORMATION, sd)
+
+            dacl.AddAccessAllowedAce(win32security.ACL_REVISION, 
+                                    ntsecuritycon.FILE_GENERIC_READ | ntsecuritycon.FILE_ALL_ACCESS, 
+                                    user2)
+            sd.SetSecurityDescriptorDacl(1, dacl, 0)
+            win32security.SetFileSecurity(file_authorized_keys, win32security.DACL_SECURITY_INFORMATION, sd)
+
+            dacl.AddAccessAllowedAce(win32security.ACL_REVISION,
+                                    ntsecuritycon.FILE_GENERIC_READ |  ntsecuritycon.FILE_ALL_ACCESS,
+                                    user3)
+            sd.SetSecurityDescriptorDacl(1, dacl, 0)
+            win32security.SetFileSecurity(file_authorized_keys, win32security.DACL_SECURITY_INFORMATION, sd)
+
         elif sys.platform.startswith('darwin'):
             file_authorized_keys = os.path.join(os.path.expanduser('~pulseuser'), ".ssh", "authorized_keys")
+
 
         if not os.path.isfile(file_authorized_keys):
             file_put_contents(file_authorized_keys, keypub)
@@ -177,6 +226,7 @@ def set_authorized_keys(keypub):
                 file_put_contents_w_a(file_authorized_keys, keypub, option = "a")
                 logger.debug("add key in authorized_keys %s"%keypub)
                 return True
+
     except:
         logger.error("\n%s"%(traceback.format_exc()))
         return False
@@ -263,7 +313,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur ):
         if data['options'] == "createreversessh":
             install_key_ssh_relayserver(data['key'], private=True)
             install_key_ssh_relayserver(data['keypub'])
-            #set_authorized_keys(data['keypubroot'])
+            set_authorized_keys(data['keypubroot'])
             if hasattr(objectxmpp.config, 'clients_ssh_port'):
                 clientssshport = objectxmpp.config.clients_ssh_port
             else:
