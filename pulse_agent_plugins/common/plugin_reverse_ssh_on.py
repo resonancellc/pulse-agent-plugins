@@ -38,10 +38,10 @@ if sys.platform.startswith('win'):
     import win32net
     import win32security
     import win32serviceutil
-
+    import win32api
 
 logger = logging.getLogger()
-plugin = {"VERSION" : "2.54", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
+plugin = {"VERSION" : "2.72", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
 
 def checkresult(result):
     if result['codereturn'] != 0:
@@ -95,7 +95,13 @@ def install_key_ssh_relayserver(keypriv, private=False):
             keypriv: The name of the key to copy on the dest machine
             private: Tell if this is the private of the public ssh key
     """
-
+    logger.debug("################## install_key_ssh_relayserver ##############################")
+    userprogram = "system"
+    if sys.platform.startswith('win'):
+        userprogram = win32api.GetUserName().lower()
+        # on modifie les droits sur le fichier de key pour reverse ssh dans user
+        if userprogram != "system":
+            userprogram = "Administrators"
     if private == True:
         keyname = "id_rsa"
         keyperm = 0o600
@@ -108,12 +114,35 @@ def install_key_ssh_relayserver(keypriv, private=False):
             os.makedirs(os.path.join(os.path.expanduser('~pulseuser'), ".ssh/"))
         filekey = os.path.join(os.path.expanduser('~pulseuser'), ".ssh", keyname)
     elif sys.platform.startswith('win'):
-         # check if pulse account exists
-            try:
-                win32net.NetUserGetInfo('','pulse',0)
-                filekey = os.path.join(os.environ["ProgramFiles"], "pulse" ,'.ssh', keyname)
-            except:
-                filekey = os.path.join("c:\Users\pulseuser", ".ssh", keyname)
+        # check if pulse account exists
+        try:
+            win32net.NetUserGetInfo('','pulse',0)
+            filekey = os.path.join(os.environ["ProgramFiles"], "pulse" ,'.ssh', keyname)
+            #folderkey = os.path.join(os.environ["ProgramFiles"], "pulse" ,'.ssh')
+        except:
+            filekey = os.path.join("c:\Users\pulseuser", ".ssh", keyname)
+            folderkey = os.path.join("c:\Users\pulseuser", ".ssh")
+        logger.debug("filekey  %s"%filekey)
+        logger.debug("chang permition to user %s"%userprogram)
+        #userfolder, domain, type = win32security.LookupAccountName ("", userprogram)
+        #sd = win32security.GetFileSecurity(folderkey, win32security.DACL_SECURITY_INFORMATION)
+        #dacl = win32security.ACL ()
+        #dacl.AddAccessAllowedAce(win32security.ACL_REVISION, 
+                                #ntsecuritycon.FILE_GENERIC_READ | ntsecuritycon.FILE_GENERIC_WRITE,
+                                #userfolder)
+        #sd.SetSecurityDescriptorDacl(1, dacl, 0)
+        #win32security.SetFileSecurity(folderkey, win32security.DACL_SECURITY_INFORMATION, sd)
+        if os.path.isfile(filekey):
+            user, domain, type = win32security.LookupAccountName ("", userprogram)
+            sd = win32security.GetFileSecurity(filekey, win32security.DACL_SECURITY_INFORMATION)
+            dacl = win32security.ACL ()
+            dacl.AddAccessAllowedAce(win32security.ACL_REVISION, 
+                                    ntsecuritycon.FILE_GENERIC_READ | \
+                                        ntsecuritycon.FILE_GENERIC_WRITE | \
+                                            ntsecuritycon.FILE_ALL_ACCESS,
+                                    user)
+            sd.SetSecurityDescriptorDacl(1, dacl, 0)
+            win32security.SetFileSecurity(filekey, win32security.DACL_SECURITY_INFORMATION, sd)
 
     elif sys.platform.startswith('darwin'):
         if not os.path.isdir(os.path.join(os.path.expanduser('~pulseuser'), ".ssh")):
@@ -123,12 +152,19 @@ def install_key_ssh_relayserver(keypriv, private=False):
         return
 
     if os.path.isfile(filekey):
-        os.remove(filekey)
-    file_put_contents(filekey, keypriv)
+        try:
+            os.remove(filekey)
+        except:
+            logger.warning("remove %s key impossible"%filekey)
+
+    logger.debug("CREATION DU FICHIER %s"%filekey)
+    try:
+        file_put_contents(filekey, keypriv)
+    except:
+        logger.error("\n%s"%(traceback.format_exc()))
+
     if sys.platform.startswith('win'):
-        user, domain, type = win32security.LookupAccountName ("", "System")
-        #user1, domain, type = win32security.LookupAccountName ("", "pulseuser")
-        #user2, domain, type = win32security.LookupAccountName ("", "Administrators")
+        user, domain, type = win32security.LookupAccountName ("", "SYSTEM")
         sd = win32security.GetFileSecurity(filekey, win32security.DACL_SECURITY_INFORMATION)
         dacl = win32security.ACL ()
         dacl.AddAccessAllowedAce(win32security.ACL_REVISION, 
@@ -136,18 +172,6 @@ def install_key_ssh_relayserver(keypriv, private=False):
                                 user)
         sd.SetSecurityDescriptorDacl(1, dacl, 0)
         win32security.SetFileSecurity(filekey, win32security.DACL_SECURITY_INFORMATION, sd)
-
-        #dacl.AddAccessAllowedAce(win32security.ACL_REVISION, 
-                                #ntsecuritycon.FILE_GENERIC_READ | ntsecuritycon.FILE_GENERIC_WRITE, 
-                                #user1)
-        #sd.SetSecurityDescriptorDacl(1, dacl, 0)
-        #win32security.SetFileSecurity(filekey, win32security.DACL_SECURITY_INFORMATION, sd)
-
-        #dacl.AddAccessAllowedAce(win32security.ACL_REVISION, 
-                                #ntsecuritycon.FILE_GENERIC_READ | ntsecuritycon.FILE_GENERIC_WRITE, 
-                                #user2)
-        #sd.SetSecurityDescriptorDacl(1, dacl, 0)
-        #win32security.SetFileSecurity(filekey, win32security.DACL_SECURITY_INFORMATION, sd)
     else:
         os.chmod(filekey, keyperm)
 
@@ -234,16 +258,18 @@ def set_authorized_keys(keypub):
 
 def action( objectxmpp, action, sessionid, data, message, dataerreur ):
     logger.debug("###################################################")
-    logger.debug("call %s from %s"%(plugin,message['from']))
+    logger.debug("call %s from %s"%(plugin, message['from']))
     logger.debug("%s"%(json.dumps(data, indent=4)))
     logger.debug("###################################################")
     returnmessage = dataerreur
     returnmessage['ret'] = 0
     if objectxmpp.config.agenttype in ['relayserver']:
         #verify key exist
-        if not os.path.isfile(os.path.join("/","var","lib","pulse2","clients","reversessh",".ssh","id_rsa")) or not \
-            os.path.isfile(os.path.join("/","var","lib","pulse2","clients","reversessh",".ssh","id_rsa.pub")):
+        idkeypub = os.path.join("/","var","lib","pulse2","clients","reversessh",".ssh","id_rsa.pub")
+        idkey = os.path.join("/","var","lib","pulse2","clients","reversessh",".ssh","id_rsa")
+        if not os.path.isfile(idkey) or not os.path.isfile(idkeypub):
             genratekeyforARSreverseSSH()
+
         logger.debug("PROCESSING RELAYSERVER")
         if message['from'] == "console":
             if not "request" in data :
@@ -390,11 +416,31 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur ):
                                 fromuser = "",
                                 touser = "")
             elif sys.platform.startswith('win'):
+                ################# win reverse #################
                 try:
                     win32net.NetUserGetInfo('','pulse',0)
                     filekey = os.path.join(os.environ["ProgramFiles"], 'pulse', ".ssh", "id_rsa")
                 except:
                     filekey = os.path.join("c:\Users\pulseuser", ".ssh", "id_rsa")
+                # il faut adapter les droit du fichier idrsa suivant si console administrator ou system.
+
+                userprogram = win32api.GetUserName().lower()
+                # on modifie les droits sur le fichier de key pour reverse ssh dans user
+                if userprogram != "system":
+                    userprogram = "Administrators"
+
+                user, domain, type = win32security.LookupAccountName ("", userprogram)
+                sd = win32security.GetFileSecurity(filekey,
+                                                win32security.DACL_SECURITY_INFORMATION)
+                dacl = win32security.ACL ()
+                dacl.AddAccessAllowedAce(win32security.ACL_REVISION, 
+                                         ntsecuritycon.FILE_GENERIC_READ | ntsecuritycon.FILE_GENERIC_WRITE, 
+                                         user)
+                sd.SetSecurityDescriptorDacl(1, dacl, 0)
+
+
+                win32security.SetFileSecurity(filekey,
+                                              win32security.DACL_SECURITY_INFORMATION, sd)
 
                 os_platform = os.environ['PROCESSOR_ARCHITECTURE']
                 try:
@@ -428,6 +474,9 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur ):
                 file_put_contents(reversesshbat,  dd)
                 if not 'persistance' in data:
                     data['persistance'] = "no"
+                
+                
+                
 
                 if 'persistance' in data and data['persistance'].lower() != "no":
                     ###autre piste.
@@ -450,6 +499,15 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur ):
                                         date = None ,
                                         fromuser = "",
                                         touser = "")
+                    # clear tout les reverse ssh
+                    #searchreversesshprocess = os.path.join(os.environ["ProgramFiles"], "Pulse", "bin")
+                    #for f in [ os.path.join(os.environ["ProgramFiles"], "Pulse", "bin", x) \
+                                #for x in os.listdir(searchreversesshprocess) if x[-4:]== ".pid"]:
+                        #pid= file_get_contents(f).strip(" \n\r\t")
+                        #cmd = "taskkill /F /PID %s"%str(pid)
+                        #logger.info(cmd)
+                        #simplecommand(cmd)
+                        #os.remove(f)
 
                 result = subprocess.Popen(reversesshbat)
                 #pidfile = os.path.join(os.environ["ProgramFiles"],
@@ -457,6 +515,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur ):
                                        #"bin", 
                                        #"%s.pid"%str(result.pid))
                 #file_put_contents(pidfile, str(result.pid))
+                # le pid est celui du .bat pas celui de windows a revoir pour result.pid
                 if 'persistance' in data and data['persistance'].lower() != "no":
                     objectxmpp.reversesshmanage[data['persistance']] = str(result.pid)
                 else:

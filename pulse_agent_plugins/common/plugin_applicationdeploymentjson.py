@@ -46,7 +46,7 @@ elif sys.platform.startswith('win'):
     pass
 
 
-plugin = {"VERSION" : "3.35", "NAME" : "applicationdeploymentjson", "VERSIONAGENT" : "2.0.0", "TYPE" : "all"}
+plugin = {"VERSION" : "3.36", "NAME" : "applicationdeploymentjson", "VERSIONAGENT" : "2.0.0", "TYPE" : "all"}
 
 Globaldata = { 'port_local' : 22 }
 logger = logging.getLogger()
@@ -423,8 +423,8 @@ def pull_package_transfert_rsync(datasend, objectxmpp, ippackage, sessionid, cmd
                                 date = None ,
                                 fromuser = datasend['data']['advanced']['login'],
                                 touser = "")
-            error=True
-            return False
+                error=True
+                return False
         error=False
         return True
     except Exception as e:
@@ -1498,15 +1498,15 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                 fromuser = data['login'],
                                 touser = "")
             time.sleep(2)
-            logger.debug("Install key ARS in authorized_keys on agent machine %s"%data['jidmachine'])
-            body = {'action' : 'installkey',
-                    'sessionid': sessionid,
-                    'data' : { 'jidAM' : data['jidmachine']
-                    }
-            }
-            objectxmpp.send_message(  mto = strjidagent,
-                                      mbody = json.dumps(body),
-                                      mtype = 'chat')
+            #logger.debug("Install key ARS in authorized_keys on agent machine %s"%data['jidmachine'])
+            #body = {'action' : 'installkey',
+                    #'sessionid': sessionid,
+                    #'data' : { 'jidAM' : data['jidmachine']
+                    #}
+            #}
+            #objectxmpp.send_message(  mto = strjidagent,
+                                      #mbody = json.dumps(body),
+                                      #mtype = 'chat')
             time.sleep(6)
         ########################################################
         #traitement mode push et les mode "pullrsync", "pullscp"
