@@ -46,7 +46,7 @@ elif sys.platform.startswith('win'):
     pass
 
 
-plugin = {"VERSION" : "3.36", "NAME" : "applicationdeploymentjson", "VERSIONAGENT" : "2.0.0", "TYPE" : "all"}
+plugin = {"VERSION" : "3.37", "NAME" : "applicationdeploymentjson", "VERSIONAGENT" : "2.0.0", "TYPE" : "all"}
 
 Globaldata = { 'port_local' : 22 }
 logger = logging.getLogger()
@@ -1808,7 +1808,32 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                             touser = "")
                         obcmd = simplecommandstr(cmdexec)
                         if obcmd['code'] != 0:
+                            objectxmpp.xmpplog('<span style="color: red;";>[xxx]:  %s deploy ERROR transfert %s </span>'%(objectxmpp.config.pushmethod,
+                                                                                                                          obcmd['result']),
+                                            type = 'deploy',
+                                            sessionname = sessionid,
+                                            priority = -1,
+                                            action = "",
+                                            who = strjidagent,
+                                            how = "",
+                                            why = "",
+                                            module = "Deployment | Error | Download | Transfert",
+                                            date = None ,
+                                            fromuser = data_in_session['login'],
+                                            touser = "")
                             cmdexec = cmdexec.replace("pulseuser","pulse")
+                            objectxmpp.xmpplog( "cmd : <span style=\"font-weight: bold;font-style: italic; color: blue;\">" + cmdexec + "</span>",
+                                            type = 'deploy',
+                                            sessionname = sessionid,
+                                            priority = -1,
+                                            action = "",
+                                            who = strjidagent,
+                                            how = "",
+                                            why = "",
+                                            module = "Deployment | Error | Download | Transfert",
+                                            date = None ,
+                                            fromuser = data_in_session['login'],
+                                            touser = "")
                             obcmd = simplecommandstr(cmdexec)
                         objectxmpp.xmpplog( msg,
                                             type = 'deploy',
