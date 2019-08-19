@@ -46,7 +46,7 @@ elif sys.platform.startswith('win'):
     pass
 
 
-plugin = {"VERSION" : "3.37", "NAME" : "applicationdeploymentjson", "VERSIONAGENT" : "2.0.0", "TYPE" : "all"}
+plugin = {"VERSION" : "3.385", "NAME" : "applicationdeploymentjson", "VERSIONAGENT" : "2.0.0", "TYPE" : "all"}
 
 Globaldata = { 'port_local' : 22 }
 logger = logging.getLogger()
@@ -1204,7 +1204,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
 
                     levelchoisie = objectxmpp.levelcharge['charge'] +\
                                     objectxmpp.charge_apparente_cluster[strjidagent]['charge']
-                    arsselection = strjidagent
+                    arsselection = str(strjidagent)
                     # on clear toutes les charges apparentes de plud de 5 seconde
                     for ars in objectxmpp.jidclusterlistrelayservers:
                         if not ars in objectxmpp.charge_apparente_cluster:
@@ -1213,15 +1213,15 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                  objectxmpp.charge_apparente_cluster[ars]['charge']
                         if charge < levelchoisie :
                             levelchoisie = objectxmpp.jidclusterlistrelayservers[ars]['chargenumber']
-                            arsselection = ars
+                            arsselection = str(ars)
                     if arsselection != strjidagent:
                         logger.debug("Charge ARS ( %s ) is %s"%(strjidagent, objectxmpp.levelcharge['charge']))
                         ###if (arsselection
                         logger.debug("DISPACHE VERS AUTRE ARS POUR LE DEPLOIEMENT : %s (charge level distant is : %s) "%(arsselection, levelchoisie) )
                     ## modify descriptor for new ARS
-                    data['jidrelay'] = arsselection
+                    data['jidrelay'] = str(arsselection)
                     data['iprelay'] = objectxmpp.infomain['packageserver']['public_ip']
-                    data['descriptor']['jidrelay'] = arsselection
+                    data['descriptor']['jidrelay'] = str(arsselection)
                     data['descriptor']['iprelay'] = objectxmpp.infomain['packageserver']['public_ip']
                     data['descriptor']['portpackageserver'] = objectxmpp.infomain['packageserver']['port']
                     data['ippackageserver'] = objectxmpp.infomain['packageserver']['public_ip']
@@ -1787,83 +1787,85 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                 objectxmpp.session.clearnoevent(sessionid)
                             return
                         #push transfert
-                        takeresource(data_in_session, objectxmpp, sessionid)
-                        if hasattr(objectxmpp.config, 'pushmethod') and objectxmpp.config.pushmethod == "scp":
-                            cmdexec = cmdscp
-                        else:
-                            objectxmpp.config.pushmethod = "rsync"
-                            cmdexec = cmdrsync
-                        logger.debug("tranfert cmd :\n %s"%cmdexec)
-                        objectxmpp.xmpplog( "cmd : <span style=\"font-weight: bold;font-style: italic; color: blue;\">" + cmdexec + "</span>",
-                                            type = 'deploy',
-                                            sessionname = sessionid,
-                                            priority = -1,
-                                            action = "",
-                                            who = strjidagent,
-                                            how = "",
-                                            why = "",
-                                            module = "Deployment | Error | Download | Transfert",
-                                            date = None ,
-                                            fromuser = data_in_session['login'],
-                                            touser = "")
-                        obcmd = simplecommandstr(cmdexec)
-                        if obcmd['code'] != 0:
-                            objectxmpp.xmpplog('<span style="color: red;";>[xxx]:  %s deploy ERROR transfert %s </span>'%(objectxmpp.config.pushmethod,
-                                                                                                                          obcmd['result']),
-                                            type = 'deploy',
-                                            sessionname = sessionid,
-                                            priority = -1,
-                                            action = "",
-                                            who = strjidagent,
-                                            how = "",
-                                            why = "",
-                                            module = "Deployment | Error | Download | Transfert",
-                                            date = None ,
-                                            fromuser = data_in_session['login'],
-                                            touser = "")
-                            cmdexec = cmdexec.replace("pulseuser","pulse")
+                        try:
+                            takeresource(data_in_session, objectxmpp, sessionid)
+                            if hasattr(objectxmpp.config, 'pushmethod') and objectxmpp.config.pushmethod == "scp":
+                                cmdexec = cmdscp
+                            else:
+                                objectxmpp.config.pushmethod = "rsync"
+                                cmdexec = cmdrsync
+                            logger.debug("tranfert cmd :\n %s"%cmdexec)
                             objectxmpp.xmpplog( "cmd : <span style=\"font-weight: bold;font-style: italic; color: blue;\">" + cmdexec + "</span>",
-                                            type = 'deploy',
-                                            sessionname = sessionid,
-                                            priority = -1,
-                                            action = "",
-                                            who = strjidagent,
-                                            how = "",
-                                            why = "",
-                                            module = "Deployment | Error | Download | Transfert",
-                                            date = None ,
-                                            fromuser = data_in_session['login'],
-                                            touser = "")
+                                                type = 'deploy',
+                                                sessionname = sessionid,
+                                                priority = -1,
+                                                action = "",
+                                                who = strjidagent,
+                                                how = "",
+                                                why = "",
+                                                module = "Deployment | Error | Download | Transfert",
+                                                date = None ,
+                                                fromuser = data_in_session['login'],
+                                                touser = "")
                             obcmd = simplecommandstr(cmdexec)
-                        objectxmpp.xmpplog( msg,
-                                            type = 'deploy',
-                                            sessionname = sessionid,
-                                            priority = -1,
-                                            action = "",
-                                            who = strjidagent,
-                                            how = "",
-                                            why = "",
-                                            module = "Deployment | Error | Download | Transfert",
-                                            date = None ,
-                                            fromuser = data_in_session['login'],
-                                            touser = "")
-                        time.sleep(2)
-                        removeresource(data_in_session, objectxmpp, sessionid)
+                            if obcmd['code'] != 0:
+                                objectxmpp.xmpplog('<span style="color: red;";>[xxx]:  %s deploy ERROR transfert %s </span>'%(objectxmpp.config.pushmethod,
+                                                                                                                            obcmd['result']),
+                                                type = 'deploy',
+                                                sessionname = sessionid,
+                                                priority = -1,
+                                                action = "",
+                                                who = strjidagent,
+                                                how = "",
+                                                why = "",
+                                                module = "Deployment | Error | Download | Transfert",
+                                                date = None ,
+                                                fromuser = data_in_session['login'],
+                                                touser = "")
+                                cmdexec = cmdexec.replace("pulseuser","pulse")
+                                objectxmpp.xmpplog( "cmd : <span style=\"font-weight: bold;font-style: italic; color: blue;\">" + cmdexec + "</span>",
+                                                type = 'deploy',
+                                                sessionname = sessionid,
+                                                priority = -1,
+                                                action = "",
+                                                who = strjidagent,
+                                                how = "",
+                                                why = "",
+                                                module = "Deployment | Error | Download | Transfert",
+                                                date = None ,
+                                                fromuser = data_in_session['login'],
+                                                touser = "")
+                                obcmd = simplecommandstr(cmdexec)
+                            objectxmpp.xmpplog( msg,
+                                                type = 'deploy',
+                                                sessionname = sessionid,
+                                                priority = -1,
+                                                action = "",
+                                                who = strjidagent,
+                                                how = "",
+                                                why = "",
+                                                module = "Deployment | Error | Download | Transfert",
+                                                date = None ,
+                                                fromuser = data_in_session['login'],
+                                                touser = "")
+                        finally:
+                            time.sleep(2)
+                            removeresource(data_in_session, objectxmpp, sessionid)
+
                         if obcmd['code'] != 0:
                             objectxmpp.xmpplog('<span style="color: red;";>[xxx]: Terminate %s deploy ERROR transfert %s </span>'%(objectxmpp.config.pushmethod,obcmd['result']),
-                                            type = 'deploy',
-                                            sessionname = sessionid,
-                                            priority = -1,
-                                            action = "",
-                                            who = strjidagent,
-                                            how = "",
-                                            why = "",
-                                            module = "Deployment | Error | Download | Transfert",
-                                            date = None ,
-                                            fromuser = data_in_session['login'],
-                                            touser = "")
+                                                type = 'deploy',
+                                                sessionname = sessionid,
+                                                priority = -1,
+                                                action = "",
+                                                who = strjidagent,
+                                                how = "",
+                                                why = "",
+                                                module = "Deployment | Error | Download | Transfert",
+                                                date = None ,
+                                                fromuser = data_in_session['login'],
+                                                touser = "")
                             objectxmpp.xmpplog('DEPLOYMENT TERMINATE',
-
                                                 type = 'deploy',
                                                 sessionname = sessionid,
                                                 priority = -1,
