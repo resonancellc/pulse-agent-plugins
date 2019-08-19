@@ -41,7 +41,7 @@ if sys.platform.startswith('win'):
     import win32api
 
 logger = logging.getLogger()
-plugin = {"VERSION" : "2.72", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
+plugin = {"VERSION" : "2.73", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
 
 def checkresult(result):
     if result['codereturn'] != 0:
@@ -96,6 +96,8 @@ def install_key_ssh_relayserver(keypriv, private=False):
             private: Tell if this is the private of the public ssh key
     """
     logger.debug("################## install_key_ssh_relayserver ##############################")
+    logger.debug("################## install_key_ssh_relayserver ##############################")
+    logger.debug("################## install_key_ssh_relayserver ##############################")
     userprogram = "system"
     if sys.platform.startswith('win'):
         userprogram = win32api.GetUserName().lower()
@@ -114,6 +116,7 @@ def install_key_ssh_relayserver(keypriv, private=False):
             os.makedirs(os.path.join(os.path.expanduser('~pulseuser'), ".ssh/"))
         filekey = os.path.join(os.path.expanduser('~pulseuser'), ".ssh", keyname)
     elif sys.platform.startswith('win'):
+        
         # check if pulse account exists
         try:
             win32net.NetUserGetInfo('','pulse',0)
@@ -133,6 +136,7 @@ def install_key_ssh_relayserver(keypriv, private=False):
         #sd.SetSecurityDescriptorDacl(1, dacl, 0)
         #win32security.SetFileSecurity(folderkey, win32security.DACL_SECURITY_INFORMATION, sd)
         if os.path.isfile(filekey):
+            logger.warning("change permition to %s"%userprogram)
             user, domain, type = win32security.LookupAccountName ("", userprogram)
             sd = win32security.GetFileSecurity(filekey, win32security.DACL_SECURITY_INFORMATION)
             dacl = win32security.ACL ()
@@ -143,6 +147,8 @@ def install_key_ssh_relayserver(keypriv, private=False):
                                     user)
             sd.SetSecurityDescriptorDacl(1, dacl, 0)
             win32security.SetFileSecurity(filekey, win32security.DACL_SECURITY_INFORMATION, sd)
+        else:
+            logger.debug("filekey not exist %s"%filekey)
 
     elif sys.platform.startswith('darwin'):
         if not os.path.isdir(os.path.join(os.path.expanduser('~pulseuser'), ".ssh")):
