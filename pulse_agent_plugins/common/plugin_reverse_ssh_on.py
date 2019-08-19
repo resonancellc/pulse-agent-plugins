@@ -41,7 +41,7 @@ if sys.platform.startswith('win'):
     import win32api
 
 logger = logging.getLogger()
-plugin = {"VERSION" : "2.73", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
+plugin = {"VERSION" : "2.75", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
 
 def checkresult(result):
     if result['codereturn'] != 0:
@@ -87,6 +87,53 @@ def runProcess(cmd , shell= False, envoption = os.environ):
     logger.debug("START COMMAND %s"%cmd)
     args = shlex.split(cmd)
     return Popen(args, env=envoption, shell=shell).pid
+
+def prepare_ssh_repertoire_window_user_pulse():
+    if sys.platform.startswith('win'):
+        try:
+            win32net.NetUserGetInfo('','pulse',0)
+            # permision total for les user pulse, userconnecter, system, et administrators.
+            userprogram = win32api.GetUserName().lower()
+
+            filekey = os.path.join(os.environ["ProgramFiles"], "pulse" ,'.ssh')
+
+            user, domain, type = win32security.LookupAccountName ("", userprogram)
+            user1, domain, type = win32security.LookupAccountName ("", "pulse")
+            user2, domain, type = win32security.LookupAccountName ("", "Administrators")
+            user3, domain, type = win32security.LookupAccountName ("", "system")
+            sd = win32security.GetFileSecurity(file_authorized_keys,
+                                               win32security.DACL_SECURITY_INFORMATION)
+            dacl = win32security.ACL ()
+            #--------------------------------user program-------------------------------------
+            dacl.AddAccessAllowedAce(win32security.ACL_REVISION,
+                                    ntsecuritycon.FILE_ALL_ACCESS,
+                                    user)
+            sd.SetSecurityDescriptorDacl(1, dacl, 0)
+            win32security.SetFileSecurity(filekey,
+                                          win32security.DACL_SECURITY_INFORMATION, sd)
+            #--------------------------------pulse------------------------------------
+            dacl.AddAccessAllowedAce(win32security.ACL_REVISION, 
+                                    ntsecuritycon.FILE_ALL_ACCESS , 
+                                    user1)
+            sd.SetSecurityDescriptorDacl(1, dacl, 0)
+            win32security.SetFileSecurity(filekey, win32security.DACL_SECURITY_INFORMATION, sd)
+
+            #---------------------------------Administrators------------------------------------
+            #if userprogram != "system":
+            #dacl.AddAccessAllowedAce(win32security.ACL_REVISION, 
+                                    #ntsecuritycon.FILE_ALL_ACCESS, 
+                                    #user2)
+            #sd.SetSecurityDescriptorDacl(1, dacl, 0)
+            #win32security.SetFileSecurity(filekey, win32security.DACL_SECURITY_INFORMATION, sd)
+            #else:
+            ##----------------------------------system-------------------------------
+            dacl.AddAccessAllowedAce(win32security.ACL_REVISION,
+                                    ntsecuritycon.FILE_ALL_ACCESS,
+                                    user3)
+            sd.SetSecurityDescriptorDacl(1, dacl, 0)
+            win32security.SetFileSecurity(filekey, win32security.DACL_SECURITY_INFORMATION, sd)
+        except:
+            return
 
 def install_key_ssh_relayserver(keypriv, private=False):
     """
@@ -196,71 +243,83 @@ def set_authorized_keys(keypub):
                 compte = "pulse"
             except:
                 file_authorized_keys = os.path.join("c:\Users\pulseuser", ".ssh", "authorized_keys")
-            if not os.path.isfile(file_authorized_keys):
-                file_put_contents(file_authorized_keys, "\n")
-            user, domain, type = win32security.LookupAccountName ("", compte)
-            user1, domain, type = win32security.LookupAccountName ("", "sshd")
-            user2, domain, type = win32security.LookupAccountName ("", "Administrators")
-            user3, domain, type = win32security.LookupAccountName ("", "system")
-            sd = win32security.GetFileSecurity(file_authorized_keys,
-                                               win32security.DACL_SECURITY_INFORMATION)
-            dacl = win32security.ACL ()
-            dacl.AddAccessAllowedAce(win32security.ACL_REVISION, 
-                                    ntsecuritycon.FILE_GENERIC_READ | ntsecuritycon.FILE_GENERIC_WRITE, 
-                                    user)
-
-            sd.SetSecurityDescriptorDacl(1, dacl, 0)
-
-
-            win32security.SetFileSecurity(file_authorized_keys,
-                                          win32security.DACL_SECURITY_INFORMATION, sd)
-
-
-
-            dacl.AddAccessAllowedAce(win32security.ACL_REVISION, 
-                                    ntsecuritycon.FILE_GENERIC_READ , 
-                                    user1)
-            sd.SetSecurityDescriptorDacl(1, dacl, 0)
-            win32security.SetFileSecurity(file_authorized_keys, win32security.DACL_SECURITY_INFORMATION, sd)
-
-
-            dacl.AddAccessAllowedAce(win32security.ACL_REVISION, 
-                                    ntsecuritycon.FILE_GENERIC_READ | ntsecuritycon.FILE_GENERIC_WRITE, 
-                                    user2)
-            sd.SetSecurityDescriptorDacl(1, dacl, 0)
-            win32security.SetFileSecurity(file_authorized_keys, win32security.DACL_SECURITY_INFORMATION, sd)
-
-            dacl.AddAccessAllowedAce(win32security.ACL_REVISION, 
-                                    ntsecuritycon.FILE_GENERIC_READ | ntsecuritycon.FILE_ALL_ACCESS, 
-                                    user2)
-            sd.SetSecurityDescriptorDacl(1, dacl, 0)
-            win32security.SetFileSecurity(file_authorized_keys, win32security.DACL_SECURITY_INFORMATION, sd)
-
-            dacl.AddAccessAllowedAce(win32security.ACL_REVISION,
-                                    ntsecuritycon.FILE_GENERIC_READ |  ntsecuritycon.FILE_ALL_ACCESS,
-                                    user3)
-            sd.SetSecurityDescriptorDacl(1, dacl, 0)
-            win32security.SetFileSecurity(file_authorized_keys, win32security.DACL_SECURITY_INFORMATION, sd)
+            try:
+                if not os.path.isfile(file_authorized_keys):
+                    file_put_contents(file_authorized_keys, "\n")
+            except:
+                logger.warning("\n%s"%(traceback.format_exc()))
+            
+            #user, domain, type = win32security.LookupAccountName ("", compte)
+            #user1, domain, type = win32security.LookupAccountName ("", "sshd")
+            #user2, domain, type = win32security.LookupAccountName ("", "Administrators")
+            #user3, domain, type = win32security.LookupAccountName ("", "system")
+            #sd = win32security.GetFileSecurity(file_authorized_keys,
+                                               #win32security.DACL_SECURITY_INFORMATION)
+            #dacl = win32security.ACL ()
+            ####-------------------------------------------------
+            #try:
+                #dacl.AddAccessAllowedAce(win32security.ACL_REVISION, 
+                                        #ntsecuritycon.FILE_GENERIC_READ | ntsecuritycon.FILE_GENERIC_WRITE, 
+                                        #user)
+                #sd.SetSecurityDescriptorDacl(1, dacl, 0)
+                #win32security.SetFileSecurity(file_authorized_keys,
+                                            #win32security.DACL_SECURITY_INFORMATION, sd)
+            #except:
+                #logger.warning("permition compte %s \n%s"%(compte, traceback.format_exc()))
+            ####-------------------------------------------------
+            #try:
+                #dacl.AddAccessAllowedAce(win32security.ACL_REVISION, 
+                                        #ntsecuritycon.FILE_GENERIC_READ , 
+                                        #user1)
+                #sd.SetSecurityDescriptorDacl(1, dacl, 0)
+                #win32security.SetFileSecurity(file_authorized_keys, win32security.DACL_SECURITY_INFORMATION, sd)
+            #except:
+                #logger.warning("permition sshd \n%s"%(traceback.format_exc()))
+            ####-------------------------------------------------
+            #try:
+                #dacl.AddAccessAllowedAce(win32security.ACL_REVISION, 
+                                        #ntsecuritycon.FILE_GENERIC_READ | ntsecuritycon.FILE_ALL_ACCESS, 
+                                        #user2)
+                #sd.SetSecurityDescriptorDacl(1, dacl, 0)
+                #win32security.SetFileSecurity(file_authorized_keys, win32security.DACL_SECURITY_INFORMATION, sd)
+            #except:
+                #logger.warning("permition Administrators \n%s"%(traceback.format_exc()))
+            ####-------------------------------------------------
+            #try:
+                #dacl.AddAccessAllowedAce(win32security.ACL_REVISION,
+                                        #ntsecuritycon.FILE_GENERIC_READ |  ntsecuritycon.FILE_ALL_ACCESS,
+                                        #user3)
+                #sd.SetSecurityDescriptorDacl(1, dacl, 0)
+                #win32security.SetFileSecurity(file_authorized_keys, win32security.DACL_SECURITY_INFORMATION, sd)
+            #except:
+                #logger.warning("permition System \n%s"%(traceback.format_exc()))
 
         elif sys.platform.startswith('darwin'):
             file_authorized_keys = os.path.join(os.path.expanduser('~pulseuser'), ".ssh", "authorized_keys")
 
 
         if not os.path.isfile(file_authorized_keys):
-            file_put_contents(file_authorized_keys, keypub)
-            logger.debug("set authorized_keys key %s"%keypub)
+            try:
+                file_put_contents(file_authorized_keys, keypub)
+                logger.debug("set authorized_keys key %s"%keypub)
+            except:
+                logger.warning("\n%s"%(traceback.format_exc()))
             return True
         else:
-            content = file_get_contents(file_authorized_keys)
-            if not keypub in content:
-                file_put_contents_w_a(file_authorized_keys, keypub, option = "a")
-                logger.debug("add key in authorized_keys %s"%keypub)
-                return True
+            try:
+                content = file_get_contents(file_authorized_keys)
+                if not keypub in content:
+                    file_put_contents_w_a(file_authorized_keys, keypub, option = "a")
+                    logger.debug("add key in authorized_keys %s"%keypub)
+            except:
+                logger.warning("\n%s"%(traceback.format_exc()))
+            return True
 
     except:
         logger.error("\n%s"%(traceback.format_exc()))
         return False
     return True
+
 
 def action( objectxmpp, action, sessionid, data, message, dataerreur ):
     logger.debug("###################################################")
@@ -343,9 +402,10 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur ):
                             touser = "")
 
         if data['options'] == "createreversessh":
+            #prepare_ssh_repertoire_window_user_pulse()
             install_key_ssh_relayserver(data['key'], private=True)
             install_key_ssh_relayserver(data['keypub'])
-            set_authorized_keys(data['keypubroot'])
+            # set_authorized_keys(data['keypubroot'])
             if hasattr(objectxmpp.config, 'clients_ssh_port'):
                 clientssshport = objectxmpp.config.clients_ssh_port
             else:
