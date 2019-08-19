@@ -25,7 +25,7 @@ logger = logging.getLogger()
 
 DEBUGPULSEPLUGIN = 25
 
-plugin = { "VERSION" : "1.11", "NAME" : "cluster", "VERSIONAGENT" : "2.0.0", "TYPE" : "relayserver", "DESC" : "update list ARS cluster" }
+plugin = { "VERSION" : "1.12", "NAME" : "cluster", "VERSIONAGENT" : "2.0.0", "TYPE" : "relayserver", "DESC" : "update list ARS cluster" }
 
 def refreshremotears(objectxmpp, action, sessionid):
     for ars in objectxmpp.jidclusterlistrelayservers:
@@ -100,7 +100,10 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             logger.debug("new ARS list friend of cluster : %s"% objectxmpp.jidclusterlistrelayservers)
         elif data['subaction'] == "removeresource":
             #resource = objectxmpp.checklevelcharge(ressource = -1)
-            objectxmpp.delmachineinlevelmachinelist(data['data']['machinejid'])
+            if 'machinejid' in data['data']:
+                objectxmpp.delmachineinlevelmachinelist(data['data']['machinejid'])
+            else:
+                objectxmpp.delmachineinlevelmachinelist(message['from'])
             logger.debug("levelcharge %s %s"%(objectxmpp.boundjid.bare,
                                               json.dumps(objectxmpp.levelcharge, indent =4)))
             refreshremotears(objectxmpp, action, sessionid)
