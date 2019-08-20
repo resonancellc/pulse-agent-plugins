@@ -98,6 +98,7 @@ def changown_dir_of_file(dest, nameuser = None):
                           encode_strconsole(dest),
                           "/setowner",
                           encode_strconsole(nameuser),
+                          "/t"], stderr=STDOUT)
 
         except Exception as e:
             logger.error("\n%s"%(traceback.format_exc()))
