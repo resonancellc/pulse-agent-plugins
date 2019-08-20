@@ -191,7 +191,6 @@ def takeresource(datasend, objectxmpp, sessionid):
         datasendl = datasend
 
     logger.debug('take ressourse : %s'%datasendl['data']['jidrelay'])
-    jidrs = JID(datasendl['data']['jidrelay'])
     msgresource = {'action': "cluster",
                     'sessionid': sessionid,
                     'data' :  {"subaction" : "takeresource",
@@ -225,7 +224,6 @@ def removeresource(datasend, objectxmpp, sessionid):
     else:
         datasendl = datasend
     logger.debug('restores ressource : %s'%datasendl['data']['jidrelay'])
-    jidrs = JID(datasendl['data']['jidrelay'])
     msgresource = {'action': "cluster",
                     'sessionid': sessionid,
                     'data' :  { "subaction" : "removeresource",
