@@ -29,7 +29,7 @@ import sys
 import logging
 import zlib
 from time import sleep
-from utils import file_put_contents, file_get_contents, getRandomName
+from utils import file_get_contents, getRandomName
 import traceback
 
 logger = logging.getLogger()

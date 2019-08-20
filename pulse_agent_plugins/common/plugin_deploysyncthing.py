@@ -21,18 +21,12 @@
 # file : /common/deploysyncthing.py
 
 import os
-import sys
 import logging
 import json
-import zlib
-import base64
-from random import randint
 import traceback
-from lib.utils import file_put_contents, file_get_contents, getRandomName, simplecommand
+from lib.utils import file_put_contents, simplecommand
 #from lib.update_remote_agent import Update_Remote_Agent
-import time
 from lib.managepackage import managepackage, search_list_of_deployment_packages
-import shutil
 from sleekxmpp import jid
 
 plugin={"VERSION": "1.0660", 'VERSIONAGENT' : '2.0.0', "NAME" : "deploysyncthing", "TYPE" : "all"}
@@ -227,11 +221,6 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                     objectxmpp.syncthing.maxSendKbps( kb=0)
 
                     objectxmpp.syncthing.validate_chang_config()
-                    #objectxmpp.syncthing.post_config()
-                    #time.sleep(3)
-                    #objectxmpp.syncthing.post_restart()
-                    #time.sleep(1)
-                    #objectxmpp.syncthing.reload_config()
                 elif data['subaction'] == "cleandeploy":
                     objectxmpp.syncthing.maxSendKbps( kb=0)
                     #TODO: this action will be implemented
@@ -281,8 +270,8 @@ def add_folder_dict_if_not_exist_id(dictaddfolder, config):
         return True
     return False
 
-def add_device_in_folder_if_not_exist( folderid, 
-                                          keydevice, 
+def add_device_in_folder_if_not_exist( folderid,
+                                          keydevice,
                                           config,
                                           introducedBy = ""):
         result = False
@@ -293,7 +282,7 @@ def add_device_in_folder_if_not_exist( folderid,
                     if device['deviceID'] == keydevice:
                         #device existe
                         result = False
-                new_device = {"deviceID": keydevice, 
+                new_device = {"deviceID": keydevice,
                                 "introducedBy": introducedBy}
                 folder['devices'].append(new_device)
                 result =  True

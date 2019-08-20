@@ -22,7 +22,6 @@
 
 import logging
 import os
-import json
 plugin = {"VERSION" : "1.2", "NAME" : "force_setup_agent",  "TYPE" : "all"}
 
 logger = logging.getLogger()

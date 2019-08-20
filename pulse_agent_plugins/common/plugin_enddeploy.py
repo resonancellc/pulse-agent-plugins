@@ -20,8 +20,7 @@
 # MA 02110-1301, USA.
 
 import logging
-from lib.utils import file_get_contents, file_put_contents_w_a, simplecommand, encode_strconsole, decode_strconsole, file_put_contents
-import json
+from lib.utils import simplecommand, encode_strconsole
 import time
 
 plugin = {"VERSION" : "1.2", "NAME" : "enddeploy",  "TYPE" : "all"}
@@ -43,10 +42,10 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                     if "ssh" in parameterconnection[6]:
                         processus = parameterconnection[6].split('/')[0]
                         logger.debug("termine transfert files list %s package [%s] to machine: %s"%( datesession['packagefile'],
-                                                                                                     datesession['name'], 
+                                                                                                     datesession['name'],
                                                                                                      datesession['jidmachine'].split("/")[1]))
                         objectxmpp.xmpplog( "termine transfert files list %s package [%s] to machine: %s"%( datesession['packagefile'],
-                                                                                                     datesession['name'], 
+                                                                                                     datesession['name'],
                                                                                                      datesession['jidmachine'].split("/")[1]),
                                             type = 'deploy',
                                             sessionname = sessionid,
@@ -66,5 +65,3 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         objectxmpp.banterminate[sessionid] = time.time()
     # add session id pour bloquage message
     objectxmpp.ban_deploy_sessionid_list.add(sessionid)
-
-

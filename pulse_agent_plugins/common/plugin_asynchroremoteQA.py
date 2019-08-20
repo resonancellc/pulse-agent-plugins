@@ -21,10 +21,10 @@
 # file : plugin_asynchroreremoteQA.py
 
 
-from  lib.utils import simplecommand, decode_strconsole, encode_strconsole,shellcommandtimeout
+from  lib.utils import decode_strconsole, encode_strconsole,shellcommandtimeout
 import json
 import traceback
-import sys, os
+import sys
 import logging
 
 plugin = {"VERSION": "1.0", "NAME" : "asynchroremoteQA", "TYPE" : "all"}

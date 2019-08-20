@@ -20,13 +20,9 @@
 # MA 02110-1301, USA.
 # file  pulse_xmpp_agent/pluginsmachine/plugin_start.py
 
-import base64
-import json
 import sys, os
 import logging
-import platform
 from lib.utils import file_get_contents
-import traceback
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
 
@@ -48,12 +44,11 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                 if len(version) < 20:
                     logger.debug("Version AGENT is " + version)
                     import _winreg
-                    agentversion = os.path.join(objectxmpp.pathagent, "agentversion")
                     key = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE,
                                         "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Pulse Agent\\",
                                         0 ,
                                         _winreg.KEY_SET_VALUE | _winreg.KEY_WOW64_64KEY)
-                    _winreg.SetValueEx ( key, 
+                    _winreg.SetValueEx ( key,
                                         'DisplayVersion'  ,
                                         0,
                                         _winreg.REG_SZ,

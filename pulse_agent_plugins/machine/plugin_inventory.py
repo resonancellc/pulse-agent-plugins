@@ -20,7 +20,7 @@
 # MA 02110-1301, USA.
 # file : plugin_inventory.py
 
-from  lib.utils import simplecommand, file_put_contents_w_a, file_get_contents
+from  lib.utils import simplecommand, file_put_contents_w_a
 import os, sys, platform
 import zlib
 import base64
@@ -29,7 +29,6 @@ import json
 import logging
 import subprocess
 import lxml.etree as ET
-from sleekxmpp import jid
 
 logger = logging.getLogger()
 if sys.platform.startswith('win'):

@@ -30,14 +30,13 @@ import logging
 import pycurl
 import platform
 from random import randint
-#from lib.utils import save_back_to_deploy, cleanbacktodeploy, simplecommandstr, get_keypub_ssh
 from lib.utils import save_back_to_deploy, cleanbacktodeploy, simplecommandstr,\
-    isBase64, simplecommand, decode_strconsole, encode_strconsole
+    simplecommand, encode_strconsole
 import copy
 import traceback
 from sleekxmpp.xmlstream import  JID
 import time
-from subprocess import STDOUT, check_output, CalledProcessError
+from subprocess import STDOUT, check_output
 
 if sys.platform.startswith('linux') or sys.platform.startswith('darwin'):
     import grp
@@ -95,13 +94,11 @@ def changown_dir_of_file(dest, nameuser = None):
             logger.error("%s changown_dir_of_file : %s"%(dest, str(e) ))
     elif sys.platform.startswith('win'):
         try:
-            result = check_output(["icacls",
-                                    encode_strconsole(dest),
-                                    "/setowner",
-                                    encode_strconsole(nameuser),
-                                    "/t"], stderr=STDOUT)
-        #except CalledProcessError as e:
-            #logger.error("%s changown_dir_of_file : %s"%(dest, str(e.output)))
+            check_output(["icacls",
+                          encode_strconsole(dest),
+                          "/setowner",
+                          encode_strconsole(nameuser),
+
         except Exception as e:
             logger.error("\n%s"%(traceback.format_exc()))
 
@@ -194,7 +191,6 @@ def takeresource(datasend, objectxmpp, sessionid):
 
     logger.debug('take ressourse : %s'%datasendl['data']['jidrelay'])
     jidrs = JID(datasendl['data']['jidrelay'])
-    jidr = "%s@%s"%(jidrs.user, jidrs.domain)
     msgresource = {'action': "cluster",
                     'sessionid': sessionid,
                     'data' :  {"subaction" : "takeresource",
@@ -229,7 +225,6 @@ def removeresource(datasend, objectxmpp, sessionid):
         datasendl = datasend
     logger.debug('restores ressource : %s'%datasendl['data']['jidrelay'])
     jidrs = JID(datasendl['data']['jidrelay'])
-    jidr = "%s@%s"%(jidrs.user, jidrs.domain)
     msgresource = {'action': "cluster",
                     'sessionid': sessionid,
                     'data' :  { "subaction" : "removeresource",
@@ -348,8 +343,6 @@ def pull_package_transfert_rsync(datasend, objectxmpp, ippackage, sessionid, cmd
         remotesrc = """%s@%s:'%s' """%(userpackage , ippackage, packagename)
         execrsync = "rsync"
         execscp   = "scp"
-        boolcmdexist = True
-        boolsuccess  = True
         error=False
         if sys.platform.startswith('linux'):
             path_key_priv =  os.path.join("/", "var", "lib", "pulse2", ".ssh", "id_rsa")
@@ -427,7 +420,7 @@ def pull_package_transfert_rsync(datasend, objectxmpp, ippackage, sessionid, cmd
                 return False
         error=False
         return True
-    except Exception as e:
+    except Exception:
         logger.error("\n%s"%(traceback.format_exc()))
         error=True
         return False
@@ -1046,10 +1039,10 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             ### data['methodetransfert'] =  'pullrsync'
             if data['transfert'] and data['methodetransfert'] in ["pullcurl"]:
                 #pull method download file
-                recupfile = recuperefile(datasend, 
-                                         objectxmpp,  
-                                         data['ippackageserver'], 
-                                         data['portpackageserver'], 
+                recupfile = recuperefile(datasend,
+                                         objectxmpp,
+                                         data['ippackageserver'],
+                                         data['portpackageserver'],
                                          sessionid)
                 #removeresource(datasend, objectxmpp, sessionid)
                 if not recupfile:

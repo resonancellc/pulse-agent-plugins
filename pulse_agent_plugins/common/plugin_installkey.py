@@ -23,9 +23,8 @@
 import sys
 import os
 import logging
-from lib.utils import file_get_contents, file_put_contents_w_a, simplecommand, encode_strconsole, decode_strconsole, file_put_contents
+from lib.utils import file_get_contents, file_put_contents_w_a, simplecommand, encode_strconsole, file_put_contents
 import subprocess
-import json
 import uuid
 import shutil
 

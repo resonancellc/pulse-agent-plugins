@@ -25,11 +25,9 @@ import logging
 import json
 import zlib
 import base64
-from random import randint
 import traceback
-from lib.utils import file_put_contents, file_get_contents, getRandomName, simplecommand
+from lib.utils import file_put_contents, getRandomName
 from lib.update_remote_agent import Update_Remote_Agent
-import time
 
 plugin={"VERSION": "1.34", 'VERSIONAGENT' : '1.9.9',  "NAME" : "updateagent", "TYPE" : "all", "waittingmax" : 35, "waittingmin" : 5}
 
@@ -62,7 +60,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
 
             for directory_agent in objectxmpp.descriptor_master:
                 if directory_agent  in ["fingerprint",
-                                        "version", 
+                                        "version",
                                         "version_agent"]:
                     continue
 
@@ -117,8 +115,6 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                     if 'ars_update' in data and data['ars_update'] != "" :
                         agent_installor = data['ars_update']
                         msgupdate_me['action'] = "relayupdateagent"
-                    # temporisation pour envoi demande attente entre
-                    # time.sleep(randint(plugin['waittingmin'],plugin['waittingmax']))
                     objectxmpp.send_message( mto=agent_installor,
                                              mbody=json.dumps(msgupdate_me),
                                              mtype='chat')
@@ -170,7 +166,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             senddescriptormd5(objectxmpp, data)
 
 def search_action_on_agent_cp_and_del(fromimg, frommachine):
-    """ 
+    """
         return 2 lists
         list files to copi from img to mach
         list files to supp in mach
@@ -193,7 +189,7 @@ def search_action_on_agent_cp_and_del(fromimg, frommachine):
         #search fichier missing dans mach
         if not namefichier in frommachine:
             file_missing_in_mach.append(namefichier)
-    #les fichiers manquant dans machine sont aussi des fichier a rajouter.  
+    #les fichiers manquant dans machine sont aussi des fichier a rajouter.
     fichier_to_copie =  list(replace_file_mach_by_file_img)
     fichier_to_copie.extend(file_missing_in_mach)
     return fichier_to_copie, file_supp_in_mach
@@ -223,7 +219,7 @@ def dump_file_in_img(objectxmpp, namescript, content, typescript):
 
 def senddescriptormd5(objectxmpp, data):
     """
-    send the agent's figerprint  descriptor in database to the machine for update 
+    send the agent's figerprint  descriptor in database to the machine for update
     Update remote agent
     """
     objectxmpp.Update_Remote_Agentbase = Update_Remote_Agent(objectxmpp.config.diragentbase)
