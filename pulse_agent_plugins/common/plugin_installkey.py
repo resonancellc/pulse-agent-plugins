@@ -23,7 +23,11 @@
 import sys
 import os
 import logging
-from lib.utils import file_get_contents, file_put_contents_w_a, simplecommand, encode_strconsole, file_put_contents
+from lib.utils import file_get_contents,\
+                      file_put_contents_w_a, \
+                      simplecommand, \
+                      encode_strconsole, \
+                      file_put_contents
 import subprocess
 import uuid
 import shutil
@@ -31,7 +35,7 @@ import shutil
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
 
-plugin = { "VERSION" : "2.24", "NAME" : "installkey", "VERSIONAGENT" : "2.0.0", "TYPE" : "all" }
+plugin = { "VERSION" : "2.25", "NAME" : "installkey", "VERSIONAGENT" : "2.0.0", "TYPE" : "all" }
 
 def action( objectxmpp, action, sessionid, data, message, dataerreur):
     logging.getLogger().debug("###################################################")
@@ -63,7 +67,8 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                 gidroot = grp.getgrnam("root").gr_gid
             except:
                 #le compte n'existe pas
-                result = simplecommand(encode_strconsole("adduser --system --group --home /var/lib/pulse2 --shell /bin/rbash --disabled-password pulseuser"))
+                result = simplecommand(encode_strconsole("adduser --system --group --home /var/lib/pulse2 '\
+                    '--shell /bin/rbash --disabled-password pulseuser"))
             uid = pwd.getpwnam("pulseuser").pw_uid
             gid = grp.getgrnam("pulseuser").gr_gid
             gidroot = grp.getgrnam("root").gr_gid
@@ -107,9 +112,11 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                     # pulse account doesn't exist. Create it
                     logging.getLogger().warning("Pulse user account does not exist. Creating it.")
                     pulseuserpassword = uuid.uuid4().hex[:14]
-                    result = simplecommand(encode_strconsole('net user "pulseuser" "%s" /ADD /COMMENT:"Pulse user with admin rights on the system"' % pulseuserpassword))
+                    result = simplecommand(encode_strconsole('net user "pulseuser" "%s" /ADD /COMMENT:"Pulse '\
+                        'user with admin rights on the system"' % pulseuserpassword))
                     logging.getLogger().info("Creation of pulse user: %s" %result)
-                    result = simplecommand(encode_strconsole('powershell -inputformat none -ExecutionPolicy RemoteSigned -Command "Import-Module .\script\create-profile.ps1; New-Profile -Account pulseuser"'))
+                    result = simplecommand(encode_strconsole('powershell -inputformat none -ExecutionPolicy RemoteSigned -Command'\
+                        ' "Import-Module .\script\create-profile.ps1; New-Profile -Account pulseuser"'))
                     logging.getLogger().info("Creation of pulseuser profile: %s" %result)
                     result = simplecommand(encode_strconsole('wmic useraccount where "Name=\'pulseuser\'" set PasswordExpires=False'))
                     adminsgrpsid = win32security.ConvertStringSidToSid('S-1-5-32-544')
@@ -131,7 +138,9 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                         shutil.move('sshd_config', sshdconfigfile)
                         currentdir = os.getcwd()
                         os.chdir(os.path.join(os.environ["ProgramFiles"], 'OpenSSH'))
-                        result = simplecommand(encode_strconsole('powershell -ExecutionPolicy Bypass -Command ". .\FixHostFilePermissions.ps1 -Confirm:$false"'))
+                        result = simplecommand(encode_strconsole('powershell '\
+                            '-ExecutionPolicy Bypass -Command ". '\
+                            '.\FixHostFilePermissions.ps1 -Confirm:$false"'))
                         os.chdir(currentdir)
                         win32serviceutil.StopService('sshd')
                         win32serviceutil.StopService('ssh-agent')
@@ -147,7 +156,8 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                     file_put_contents(authorized_keys_path,"")
                 currentdir = os.getcwd()
                 os.chdir(os.path.join(os.environ["ProgramFiles"], 'OpenSSH'))
-                result = simplecommand(encode_strconsole('powershell -ExecutionPolicy Bypass -Command ". .\FixHostFilePermissions.ps1 -Confirm:$false"'))
+                result = simplecommand(encode_strconsole('powershell -ExecutionPolicy Bypass -Command ". '\
+                    '.\FixHostFilePermissions.ps1 -Confirm:$false"'))
                 os.chdir(currentdir)
                 logging.getLogger().info("Reset of permissions on ssh keys and folders: %s" %result)
             else:
@@ -170,14 +180,15 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                 sid = output[1].rstrip(' \t\n\r')
                 logging.getLogger().info("SID compte Pulse : %s "%sid)
                 logging.getLogger().info("path compte is  pathcompte : %s "%pathcompte)
-                #cmdNSIS = 'WriteRegExpandStr HKLM "Software\Microsoft\Windows NT\CurrentVersion\ProfileList\%s" "ProfileImagePath" "%s"'%(sid,
-                                                                                                                                      #pathcompte)
-                cmd = 'REG ADD "HKLM\Software\Microsoft\Windows NT\CurrentVersion\ProfileList\%s" /v "ProfileImagePath" /t REG_SZ  /d "%s" /f'%(sid,
-                                                                                                                                                pathcompte)
-                result = simplecommand(encode_strconsole("cmd"))
-###AccessControl::ClearOnFile /NOINHERIT "$INSTDIR" pulse FullAccess
+                cmd = 'REG ADD "HKLM\Software\Microsoft\Windows NT\CurrentVersion\ProfileList\%s" '\
+                    '/v "ProfileImagePath" /t REG_SZ  /d "%s" /f'%(sid,
+                                                                   pathcompte)
+                result = simplecommand(encode_strconsole(cmd))
                 logging.getLogger().info("Creating authorized_keys file in pulse account")
-                authorized_keys_path = os.path.join(os.environ["ProgramFiles"], "pulse" ,'.ssh', 'authorized_keys' )
+                authorized_keys_path = os.path.join(os.environ["ProgramFiles"],
+                                                    "pulse",
+                                                    '.ssh',
+                                                    'authorized_keys' )
                 # creation if no exist
                 if not os.path.isdir(os.path.dirname(authorized_keys_path)):
                     os.makedirs(os.path.dirname(authorized_keys_path), 0700)
@@ -186,11 +197,14 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
 
                 currentdir = os.getcwd()
                 os.chdir(os.path.join(os.environ["ProgramFiles"], 'OpenSSH'))
-                result = simplecommand(encode_strconsole('powershell -ExecutionPolicy Bypass -Command ". .\FixHostFilePermissions.ps1 -Confirm:$false"'))
+                result = simplecommand(encode_strconsole('powershell -ExecutionPolicy Bypass -Command ". '\
+                    '.\FixHostFilePermissions.ps1 -Confirm:$false"'))
                 os.chdir(currentdir)
                 logging.getLogger().info("Reset of permissions on ssh keys and folders: %s" %result)
         elif sys.platform.startswith('darwin'):
-            authorized_keys_path = os.path.join(os.path.join(os.path.expanduser('~pulseuser'), '.ssh', 'authorized_keys') )
+            authorized_keys_path = os.path.join(os.path.join(os.path.expanduser('~pulseuser'),
+                                                             '.ssh',
+                                                             'authorized_keys') )
         else:
             return
 
@@ -204,7 +218,8 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             else:
                 notify = "Deployment | Cluster | Notify"
 
-            objectxmpp.xmpplog( 'INSTALL key ARS %s on AM %s'%(message['from'], objectxmpp.boundjid.bare),
+            objectxmpp.xmpplog( 'INSTALL key ARS %s on AM %s'%(message['from'],
+                                                               objectxmpp.boundjid.bare),
                                 type = 'deploy',
                                 sessionname = sessionid,
                                 priority = -1,
@@ -223,7 +238,8 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                 #notify = "Notify | QuickAction"
             #else:
                 #notify = "Deployment | Cluster | Notify"
-            #objectxmpp.xmpplog("key ARS [%s] : is already installed on AM %s."%(message['from'], objectxmpp.boundjid.bare),
+            #objectxmpp.xmpplog("key ARS [%s] : is already installed on AM %s."%(message['from'],
+            #objectxmpp.boundjid.bare),
                                     #type = 'deploy',
                                     #sessionname = sessionid,
                                     #priority = -1,
