@@ -32,8 +32,16 @@ import socket
 from random import randint
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
-plugin = { "VERSION" : "2.0", "NAME" : "downloadfile", "TYPE" : "relayserver" }
+plugin = { "VERSION" : "2.1", "NAME" : "downloadfile", "TYPE" : "relayserver" }
 paramglobal = {"timeupreverssh" : 20 , "portsshmaster" : 22, "filetmpconfigssh" : "/tmp/tmpsshconf", "remoteport" : 22}
+
+def get_free_tcp_port():
+    tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    tcp.bind(('', 0))
+    addr, port = tcp.getsockname()
+    tcp.close()
+    return port
+
 def create_path(type ="windows", host="", ipordomain="", path=""):
     """
         warning you must enter a raw string for parameter path
@@ -121,7 +129,8 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
     try:
         sock.connect((data['ipmachine'], localport))
     except socket.error:
-        localport = randint(49152, 65535)
+        #localport = randint(49152, 65535)
+        localport = get_free_tcp_port()
         reversessh = True
         #send create reverse ssh to machine
     finally:

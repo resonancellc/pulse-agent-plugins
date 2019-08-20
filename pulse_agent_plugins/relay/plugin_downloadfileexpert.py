@@ -33,8 +33,16 @@ from random import randint
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
 
-plugin = { "VERSION" : "1.4", "NAME" : "downloadfileexpert", "TYPE" : "relayserver" }
+plugin = { "VERSION" : "1.5", "NAME" : "downloadfileexpert", "TYPE" : "relayserver" }
 paramglobal = {"timeupreverssh" : 30 , "portsshmaster" : 22, "filetmpconfigssh" : "/tmp/tmpsshconf", "remoteport" : 22}
+
+def get_free_tcp_port():
+    tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    tcp.bind(('', 0))
+    addr, port = tcp.getsockname()
+    tcp.close()
+    return port
+
 def create_path(type ="windows", host="", ipordomain="", path=""):
     """
         warning you must enter a raw string for parameter path
@@ -129,7 +137,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
         #create file for command scp remote to remote direct connection remote
         cretefileconfigrescp = "Host %s\nPort %s\nHost %s\nPort %s\n"%(data['ipmaster'], paramglobal['portsshmaster'], data['ipmachine'], localport)
     except socket.error:
-        localport = randint(49152, 65535)
+        localport = get_free_tcp_port()
         reversessh = True
         #send create reverse ssh to machine
         objectxmpp.xmpplog( 'Call Reverse ssh for nat machine %s'% data['hostname'],

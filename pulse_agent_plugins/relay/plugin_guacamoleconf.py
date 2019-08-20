@@ -26,7 +26,14 @@ import traceback
 from random import randint
 import socket
 
-plugin = {"VERSION": "1.13", "NAME" :"guacamoleconf", "TYPE":"relayserver"}
+plugin = {"VERSION": "1.14", "NAME" :"guacamoleconf", "TYPE":"relayserver"}
+
+def get_free_tcp_port():
+    tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    tcp.bind(('', 0))
+    addr, port = tcp.getsockname()
+    tcp.close()
+    return port
 
 def insertprotocole(protocole, hostname):
     return """INSERT INTO guacamole_connection (connection_name, protocol) VALUES ( '%s_%s', '%s');"""%(protocole.upper(), hostname, protocole.lower())
@@ -97,7 +104,7 @@ def action(objetxmpp, action, sessionid, data, message, dataerreur, result):
                 # Machine is not reachable. We will need a reversessh connection
                 hostname = 'localhost'
                 cursor.execute(insertparameter(result['data']['connection'][proto.upper()], 'hostname', hostname))
-                port = randint(49152, 65535)
+                port = get_free_tcp_port()
                 cursor.execute(insertparameter(result['data']['connection'][proto.upper()], 'port', port))
                 if proto.upper() == 'VNC':
                     # We need additional options for reverse VNC
