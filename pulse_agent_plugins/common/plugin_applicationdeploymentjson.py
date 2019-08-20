@@ -45,7 +45,7 @@ elif sys.platform.startswith('win'):
     pass
 
 
-plugin = {"VERSION" : "3.389", "NAME" : "applicationdeploymentjson", "VERSIONAGENT" : "2.0.0", "TYPE" : "all"}
+plugin = {"VERSION" : "3.390", "NAME" : "applicationdeploymentjson", "VERSIONAGENT" : "2.0.0", "TYPE" : "all"}
 
 Globaldata = { 'port_local' : 22 }
 logger = logging.getLogger()
@@ -58,6 +58,13 @@ def maximum(x,y) :
         return(x)
     else :
         return(y)
+
+def get_free_tcp_port():
+    tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    tcp.bind(('', 0))
+    addr, port = tcp.getsockname()
+    tcp.close()
+    return port
 
 def clear_chargeapparente(objectxmpp):
     timechargeapparente = 3 #duree de la valeur de la charge apparente.
@@ -1459,7 +1466,8 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             data['transfertpullrsync'] = True
             # creation d'un reverce ssh
             # pour avoir 1 canal de transfert.
-            remoteport = randint(49152, 65535)
+            #remoteport = randint(49152, 65535)
+            remoteport = get_free_tcp_port()
             data['remoteport'] = remoteport
             datareversessh = {  'action': 'reverse_ssh_on',
                                 'sessionid': sessionid,
