@@ -37,8 +37,6 @@ if sys.platform.startswith('win'):
     import win32security
     import ntsecuritycon
     import win32net
-    import win32security
-    import win32serviceutil
     import win32api
 
 logger = logging.getLogger()
@@ -234,7 +232,6 @@ def install_key_ssh_relayserver(keypriv, private=False):
         os.chmod(filekey, keyperm)
 
 def set_authorized_keys(keypub):
-    compte = "pulse"
     try:
         if sys.platform.startswith('linux'):
             file_authorized_keys=os.path.join(os.path.expanduser('~pulseuser'), ".ssh", "authorized_keys" )
@@ -242,7 +239,6 @@ def set_authorized_keys(keypub):
             try:
                 win32net.NetUserGetInfo('','pulseuser',0)
                 file_authorized_keys = os.path.join("c:\Users\pulseuser", ".ssh", "authorized_keys")
-                compte = "pulseuser"
             except:
                 file_authorized_keys = os.path.join(os.environ["ProgramFiles"],
                                                     "pulse" ,
@@ -253,51 +249,6 @@ def set_authorized_keys(keypub):
                     file_put_contents(file_authorized_keys, "\n")
             except:
                 logger.warning("\n%s"%(traceback.format_exc()))
-
-            #user, domain, type = win32security.LookupAccountName ("", compte)
-            #user1, domain, type = win32security.LookupAccountName ("", "sshd")
-            #user2, domain, type = win32security.LookupAccountName ("", "Administrators")
-            #user3, domain, type = win32security.LookupAccountName ("", "system")
-            #sd = win32security.GetFileSecurity(file_authorized_keys,
-                                               #win32security.DACL_SECURITY_INFORMATION)
-            #dacl = win32security.ACL ()
-            ####-------------------------------------------------
-            #try:
-                #dacl.AddAccessAllowedAce(win32security.ACL_REVISION, 
-                                        #ntsecuritycon.FILE_GENERIC_READ | ntsecuritycon.FILE_GENERIC_WRITE, 
-                                        #user)
-                #sd.SetSecurityDescriptorDacl(1, dacl, 0)
-                #win32security.SetFileSecurity(file_authorized_keys,
-                                            #win32security.DACL_SECURITY_INFORMATION, sd)
-            #except:
-                #logger.warning("permition compte %s \n%s"%(compte, traceback.format_exc()))
-            ####-------------------------------------------------
-            #try:
-                #dacl.AddAccessAllowedAce(win32security.ACL_REVISION, 
-                                        #ntsecuritycon.FILE_GENERIC_READ , 
-                                        #user1)
-                #sd.SetSecurityDescriptorDacl(1, dacl, 0)
-                #win32security.SetFileSecurity(file_authorized_keys, win32security.DACL_SECURITY_INFORMATION, sd)
-            #except:
-                #logger.warning("permition sshd \n%s"%(traceback.format_exc()))
-            ####-------------------------------------------------
-            #try:
-                #dacl.AddAccessAllowedAce(win32security.ACL_REVISION, 
-                                        #ntsecuritycon.FILE_GENERIC_READ | ntsecuritycon.FILE_ALL_ACCESS, 
-                                        #user2)
-                #sd.SetSecurityDescriptorDacl(1, dacl, 0)
-                #win32security.SetFileSecurity(file_authorized_keys, win32security.DACL_SECURITY_INFORMATION, sd)
-            #except:
-                #logger.warning("permition Administrators \n%s"%(traceback.format_exc()))
-            ####-------------------------------------------------
-            #try:
-                #dacl.AddAccessAllowedAce(win32security.ACL_REVISION,
-                                        #ntsecuritycon.FILE_GENERIC_READ |  ntsecuritycon.FILE_ALL_ACCESS,
-                                        #user3)
-                #sd.SetSecurityDescriptorDacl(1, dacl, 0)
-                #win32security.SetFileSecurity(file_authorized_keys, win32security.DACL_SECURITY_INFORMATION, sd)
-            #except:
-                #logger.warning("permition System \n%s"%(traceback.format_exc()))
 
         elif sys.platform.startswith('darwin'):
             file_authorized_keys = os.path.join(os.path.expanduser('~pulseuser'), ".ssh", "authorized_keys")
