@@ -46,7 +46,7 @@ elif sys.platform.startswith('win'):
     pass
 
 
-plugin = {"VERSION" : "3.385", "NAME" : "applicationdeploymentjson", "VERSIONAGENT" : "2.0.0", "TYPE" : "all"}
+plugin = {"VERSION" : "3.389", "NAME" : "applicationdeploymentjson", "VERSIONAGENT" : "2.0.0", "TYPE" : "all"}
 
 Globaldata = { 'port_local' : 22 }
 logger = logging.getLogger()
@@ -383,7 +383,7 @@ def pull_package_transfert_rsync(datasend, objectxmpp, ippackage, sessionid, cmd
                     fromuser = datasend['data']['advanced']['login'],
                     touser = "")
         obj = simplecommand(cmdexec)
-        if obcmd['code'] != 0:
+        if obj['code'] != 0:
             objectxmpp.xmpplog("cmd result : \n %s"%obj['result'],
                                 type = 'deploy',
                                 sessionname = datasend['sessionid'],
@@ -409,8 +409,8 @@ def pull_package_transfert_rsync(datasend, objectxmpp, ippackage, sessionid, cmd
                                 date = None ,
                                 fromuser = datasend['data']['advanced']['login'],
                                 touser = "")
-            obcmd = simplecommandstr(cmdexec)
-            if obcmd['code'] != 0:
+            obj = simplecommandstr(cmdexec)
+            if obj['code'] != 0:
                 objectxmpp.xmpplog("cmd result : \n %s"%obj['result'],
                                 type = 'deploy',
                                 sessionname = datasend['sessionid'],
@@ -1672,13 +1672,17 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                             data_in_session['limit_rate_ko'] != "" and\
                                 int(data_in_session['limit_rate_ko']) > 0:
                             cmdpre = "scp -C -r -l %s "%(int(data_in_session['limit_rate_ko']) * 8)
-                            cmdrsync = "rsync -z --rsync-path=%s --bwlimit=%s "%(data_in_session['rsyncpath'],int(data_in_session['limit_rate_ko']) * 8)
+                            cmdrsync = "rsync -z --rsync-path=%s --bwlimit=%s "%(data_in_session['rsyncpath'],
+                                                                                 int(data_in_session['limit_rate_ko']) * 8)
 
-                            msg = "push transfert package :%s to %s <span style='font-weight: bold;color : orange;'> [transfert rate %s ko]</span>"%(data_in_session['name'],data_in_session['jidmachine'], data_in_session['limit_rate_ko'])
+                            msg = "rsync transfert package :%s to %s <span style='font-weight: "\
+                                "bold;color : orange;'> [transfert rate %s ko]</span>"%(data_in_session['name'],
+                                                                                        data_in_session['jidmachine'], 
+                                                                                        data_in_session['limit_rate_ko'])
                         else:
                             cmdpre = "scp -C -r "
                             cmdrsync = "rsync -z --rsync-path=%s "%data_in_session['rsyncpath']
-                            msg = "push transfert package :%s to %s"%(data_in_session['name'],data_in_session['jidmachine'])
+                            msg = "scp transfert package :%s to %s"%(data_in_session['name'],data_in_session['jidmachine'])
 
                         ipmachine = data_in_session['ipmachine']
                         if not 'remoteport' in data_in_session:
@@ -1899,7 +1903,10 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                                 objectxmpp.session.clearnoevent(sessionid)
                             return
                         else:
-                            objectxmpp.xmpplog('Transfert %s Result : %s'%(obcmd['result'], objectxmpp.config.pushmethod),
+                            objectxmpp.xmpplog('Result : %s'\
+                                               '\nTransfert <span style="color:'\
+                                               ' blue;">%s </span>'%(objectxmpp.config.pushmethod,
+                                                                     obcmd['result']),
                                                 type = 'deploy',
                                                 sessionname = sessionid,
                                                 priority = -1,
