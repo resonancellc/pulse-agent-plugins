@@ -45,7 +45,7 @@ elif sys.platform.startswith('win'):
     pass
 
 
-plugin = {"VERSION" : "3.390", "NAME" : "applicationdeploymentjson", "VERSIONAGENT" : "2.0.0", "TYPE" : "all"}
+plugin = {"VERSION" : "3.392", "NAME" : "applicationdeploymentjson", "VERSIONAGENT" : "2.0.0", "TYPE" : "all"}
 
 Globaldata = { 'port_local' : 22 }
 logger = logging.getLogger()
@@ -541,6 +541,9 @@ def signalendsessionforARS(datasend , objectxmpp, sessionid, error = False):
 
 def action( objectxmpp, action, sessionid, data, message, dataerreur):
     strjidagent = str(objectxmpp.boundjid.bare)
+    if hasattr(objectxmpp.config, 'clients_ssh_port'):
+        Globaldata['port_local'] = int(objectxmpp.config.clients_ssh_port)
+        logger.debug("Clients SSH port %s"%Globaldata['port_local'])
     if objectxmpp.config.agenttype in ['machine']:
         logger.debug("###################################################")
         logger.debug("call %s from %s"%(plugin,message['from']))
@@ -1686,10 +1689,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
 
                         ipmachine = data_in_session['ipmachine']
                         if not 'remoteport' in data_in_session:
-                            if hasattr(objectxmpp.config, 'clients_ssh_port'):
-                                clientssshport = objectxmpp.config.clients_ssh_port
-                            else:
-                                clientssshport = Globaldata['port_local']
+                            clientssshport = Globaldata['port_local']
                         else :
                             clientssshport = data_in_session['remoteport']
                             ipmachine = "localhost"
