@@ -40,7 +40,7 @@ if sys.platform.startswith('win'):
     import win32api
 
 logger = logging.getLogger()
-plugin = {"VERSION" : "2.10", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
+plugin = {"VERSION" : "2.11", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
 
 def checkresult(result):
     if result['codereturn'] != 0:
@@ -363,7 +363,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur ):
             install_key_ssh_relayserver(data['keypub'])
             # set_authorized_keys(data['keypubroot'])
             if hasattr(objectxmpp.config, 'clients_ssh_port'):
-                clientssshport = objectxmpp.config.clients_ssh_port
+                clientssshport = int(objectxmpp.config.clients_ssh_port)
             else:
                 clientssshport = "22"
             try:

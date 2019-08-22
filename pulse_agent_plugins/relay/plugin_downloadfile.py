@@ -32,7 +32,7 @@ import socket
 from random import randint
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
-plugin = { "VERSION" : "2.1", "NAME" : "downloadfile", "TYPE" : "relayserver" }
+plugin = { "VERSION" : "2.2", "NAME" : "downloadfile", "TYPE" : "relayserver" }
 paramglobal = {"timeupreverssh" : 20 , "portsshmaster" : 22, "filetmpconfigssh" : "/tmp/tmpsshconf", "remoteport" : 22}
 
 def get_free_tcp_port():
@@ -109,6 +109,9 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
     logging.getLogger().debug("call %s from %s"%(plugin,message['from']))
     logging.getLogger().debug("###################################################")
     # print json.dumps(data,indent=4)
+    if hasattr(objectxmpp.config, 'clients_ssh_port'):
+        paramglobal['remoteport'] = int(objectxmpp.config.clients_ssh_port)
+        logger.debug("Clients SSH port %s"%paramglobal['remoteport'])
     logger.debug("Install key ARS in authorized_keys on agent machine")
     body = {'action' : 'installkey',
             'sessionid': sessionid,
@@ -120,8 +123,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                              mtype = 'chat')
     reversessh = False
     if hasattr(objectxmpp.config, 'clients_ssh_port'):
-        localport = objectxmpp.config.clients_ssh_port
-        paramglobal['remoteport'] = objectxmpp.config.clients_ssh_port
+        localport = int(objectxmpp.config.clients_ssh_port)
     else:
         localport = 22
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

@@ -28,7 +28,7 @@ import time
 import logging
 import os
 
-plugin = {"VERSION" : "1.11", "NAME" : "guacamole",  "TYPE" : "all"}
+plugin = {"VERSION" : "1.12", "NAME" : "guacamole",  "TYPE" : "all"}
 
 
 logger = logging.getLogger()
@@ -62,7 +62,7 @@ def action( xmppobject, action, sessionid, data, message, dataerreur ):
                 localport = results[0][0]
                 if data['cux_type'] == 'SSH':
                     if hasattr(xmppobject.config, 'clients_ssh_port'):
-                        remoteport = xmppobject.config.clients_ssh_port
+                        remoteport = int(xmppobject.config.clients_ssh_port)
                     else:
                         remoteport = 22
                     reversetype = 'R'
@@ -73,7 +73,7 @@ def action( xmppobject, action, sessionid, data, message, dataerreur ):
                     # Specific VNC case. We will use a listener
                     remoteport = localport
                     if hasattr(xmppobject.config, 'clients_vnc_port'):
-                        localport = xmppobject.config.clients_vnc_port
+                        localport = int(xmppobject.config.clients_vnc_port)
                     else:
                         localport = 5900
                     reversetype = 'L'
