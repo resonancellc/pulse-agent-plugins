@@ -40,7 +40,7 @@ if sys.platform.startswith('win'):
     import win32api
 
 logger = logging.getLogger()
-plugin = {"VERSION" : "2.8", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
+plugin = {"VERSION" : "2.10", "NAME" : "reverse_ssh_on",  "TYPE" : "all"}
 
 def checkresult(result):
     if result['codereturn'] != 0:
@@ -161,8 +161,8 @@ def install_key_ssh_relayserver(keypriv, private=False):
     if sys.platform.startswith('win'):
         userprogram = win32api.GetUserName().lower()
         # on modifie les droits sur le fichier de key pour reverse ssh dans user
-        if userprogram != "system":
-            userprogram = "Administrators"
+        if not userprogram.startswith("syst"):
+            userprogram = "Administrator"
     if private == True:
         keyname = "id_rsa"
         keyperm = 0o600
@@ -448,8 +448,8 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur ):
 
                 userprogram = win32api.GetUserName().lower()
                 # on modifie les droits sur le fichier de key pour reverse ssh dans user
-                if userprogram != "system":
-                    userprogram = "Administrators"
+                if not userprogram.startswith("syst"):
+                    userprogram = "Administrator"
 
                 user, domain, type = win32security.LookupAccountName ("", userprogram)
                 sd = win32security.GetFileSecurity(filekey,
