@@ -31,7 +31,7 @@ from lib.utils import protoandport
 
 logger = logging.getLogger()
 DEBUGPULSEPLUGIN = 25
-plugin = { "VERSION" : "1.3", "NAME" : "requestinfo", "TYPE" : "all" }
+plugin = { "VERSION" : "1.4", "NAME" : "requestinfo", "TYPE" : "all" }
 
 def action( objectxmpp, action, sessionid, data, message, dataerreur):
     logging.getLogger().debug("call %s from %s"%(plugin,message['from']))
@@ -59,11 +59,13 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             if informations == "folders_packages":
                 result['data']["folders_packages"] = managepackage.packagedir()
             if informations == "os":
-                    result['data']["os"] = sys.platform
-                    result['data']["os_version"] = platform.platform()
+                result['data']["os"] = sys.platform
+                result['data']["os_version"] = platform.platform()
             if informations == "ssh_port":
-                    remoteservices = protoandport()
-                    result['data']["ssh_port"] = remoteservices['ssh']
+                remoteservices = protoandport()
+                result['data']["ssh_port"] = remoteservices['ssh']
+            if informations == "cpu_arch":
+                result['data']["cpu_arch"] = platform.machine()
 
     if 'sender' in data:
         for senderagent in data["sender"]:

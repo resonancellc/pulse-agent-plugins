@@ -45,7 +45,7 @@ elif sys.platform.startswith('win'):
     pass
 
 
-plugin = {"VERSION" : "3.392", "NAME" : "applicationdeploymentjson", "VERSIONAGENT" : "2.0.0", "TYPE" : "all"}
+plugin = {"VERSION" : "3.393", "NAME" : "applicationdeploymentjson", "VERSIONAGENT" : "2.0.0", "TYPE" : "all"}
 
 Globaldata = { 'port_local' : 22 }
 logger = logging.getLogger()
@@ -357,7 +357,10 @@ def pull_package_transfert_rsync(datasend, objectxmpp, ippackage, sessionid, cmd
         elif sys.platform.startswith('win'):
             path_key_priv =  os.path.join("c:\Users\pulseuser", ".ssh", "id_rsa")
             localdest = " '%s/%s'"%(managepackage.packagedir(), packagename)
-            execrsync = "C:\\\\Windows\\\\SysWOW64\\\\rsync.exe"
+            if platform.machine().endswith('64'):
+                execrsync = "C:\\\\Windows\\\\SysWOW64\\\\rsync.exe"
+            else:
+                execrsync = "C:\\\\Windows\\\\System32\\\\rsync.exe"
             execscp   = os.path.join(os.environ["ProgramFiles"], "OpenSSH", "scp.exe")
         elif sys.platform.startswith('darwin'):
             path_key_priv =  os.path.join("/", "var", "root", ".ssh", "id_rsa")
@@ -1545,7 +1548,7 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
             askinfo( data['jidmachine'],
                     sessionid,
                     objectxmpp,
-                    informationasking = ['folders_packages', 'os'],
+                    informationasking = ['folders_packages', 'os', 'cpu_arch'],
                     replyaction = action)
         else:
             # The session exists
@@ -1566,8 +1569,10 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                     if 'folders_packages' in data :
                         data_in_session['folders_packages'] = data['folders_packages']
                         logger.debug("folders_packages client machine %s"%data_in_session['folders_packages'])
+                    if 'cpu_arch' in data:
+                        data_in_session['cpu_arch'] = data['cpu_arch']
+                        logger.debug("cpu architecture client machine %s"%data_in_session['cpu_arch'])
                     if 'os' in data:
-                        logger.debug("folders_packages")
                         data_in_session['os'] = data['os']
                         logger.debug("os client machine %s"%data_in_session['os'])
                         data_in_session['os_version'] = data['os_version']
@@ -1576,7 +1581,10 @@ def action( objectxmpp, action, sessionid, data, message, dataerreur):
                         if data_in_session['os'].startswith('linux'):
                             data_in_session['rsyncpath'] = "rsync"
                         elif data_in_session['os'].startswith('win'):
-                            data_in_session['rsyncpath'] = "C:\\\\Windows\\\\SysWOW64\\\\rsync.exe"
+                            if data_in_session['cpu_arch'].endswith('64'):
+                                data_in_session['rsyncpath'] = "C:\\\\Windows\\\\SysWOW64\\\\rsync.exe"
+                            else:
+                                data_in_session['rsyncpath'] = "C:\\\\Windows\\\\System32\\\\rsync.exe"
                         elif data_in_session['os'].startswith('darwin'):
                             data_in_session['rsyncpath'] = "rsync"
                     # information set in session data
